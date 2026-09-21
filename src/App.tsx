@@ -3,6 +3,7 @@ import { Scene } from './components/3d/Scene';
 import { HUD } from './components/ui/HUD';
 import { ControlsGuide } from './components/ui/ControlsGuide';
 import { ViewControls } from './components/ui/ViewControls';
+import { TransitionOverlay } from './components/ui/TransitionOverlay';
 
 export const App: React.FC = () => {
   return (
@@ -17,6 +18,7 @@ export const App: React.FC = () => {
         <HUD />
         <ControlsGuide />
         <ViewControls />
+        <TransitionOverlay />
       </div>
     </main>
   );

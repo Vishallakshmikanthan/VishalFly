@@ -1,7 +1,7 @@
 import React, { Suspense } from 'react';
 import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
-import { BedroomEnvironment } from './Bedroom/BedroomEnvironment';
+import { WorldSceneManager } from './WorldSceneManager';
 import { FlyController } from './Character/FlyController';
 import { CameraController } from './CameraController';
 
@@ -24,11 +24,11 @@ export const Scene: React.FC = () => {
       >
         {/* Deep dark void color with subtle fog */}
         <color attach="background" args={['#080a0f']} />
-        <fog attach="fog" args={['#080a0f', 12, 24]} />
+        <fog attach="fog" args={['#080a0f', 13, 26]} />
 
         <Suspense fallback={null}>
           <CameraController />
-          <BedroomEnvironment />
+          <WorldSceneManager />
           <FlyController />
         </Suspense>
       </Canvas>

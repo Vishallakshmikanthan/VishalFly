@@ -1,6 +1,8 @@
 import React from 'react';
 import { Compass, Clock, MapPin } from 'lucide-react';
 import { useGameStore } from '../../store/useGameStore';
+import { LocationSelector } from './LocationSelector';
+import { LOCATIONS } from '../../navigation/locationGraph';
 
 export const HUD: React.FC = () => {
   const simulatedTime = useGameStore((state) => state.simulatedTime);
@@ -8,9 +10,12 @@ export const HUD: React.FC = () => {
   const roomSubLocation = useGameStore((state) => state.roomSubLocation);
   const flyActivity = useGameStore((state) => state.flyActivity);
   const currentSpot = useGameStore((state) => state.currentSpot);
+  const currentLocation = useGameStore((state) => state.currentLocation);
+
+  const currentLocConfig = LOCATIONS[currentLocation] || LOCATIONS.bedroom;
 
   return (
-    <header className="absolute top-0 left-0 right-0 p-4 md:p-6 pointer-events-none flex justify-between items-start z-10">
+    <header className="absolute top-0 left-0 right-0 p-4 md:p-6 pointer-events-none flex flex-col md:flex-row justify-between items-start md:items-center gap-3 z-10">
       {/* Top Left: VishalFly Branding & Location */}
       <div className="flex flex-col gap-2 pointer-events-auto">
         <div className="glass-panel px-4 py-2.5 rounded-xl flex items-center gap-3">
@@ -32,7 +37,7 @@ export const HUD: React.FC = () => {
                 Vishal<span className="text-amber-400">Fly</span>
               </h1>
               <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 font-semibold border border-amber-500/20">
-                PG Sim
+                World v2
               </span>
             </div>
             <p className="text-xs text-slate-400 flex items-center gap-1 font-sans">
@@ -46,24 +51,29 @@ export const HUD: React.FC = () => {
 
         {/* Live Sub-location pill */}
         <div className="glass-pill px-3 py-1.5 rounded-lg flex items-center gap-2 text-xs text-slate-300 self-start transition-all">
-          <Compass className="w-3.5 h-3.5 text-amber-400 animate-spin-slow" />
+          <Compass className="w-3.5 h-3.5 text-amber-400" />
           <span className="text-slate-400">Zone:</span>
           <span className="text-amber-200 font-medium">{currentSpot}</span>
         </div>
       </div>
 
+      {/* Top Center: Location Navigation Selector */}
+      <div className="pointer-events-auto self-start md:self-auto">
+        <LocationSelector />
+      </div>
+
       {/* Top Right: Clock & Simulation State */}
-      <div className="flex flex-col items-end gap-2 pointer-events-auto">
+      <div className="flex flex-col items-end gap-2 pointer-events-auto self-end md:self-auto">
         <div className="glass-panel px-4 py-2.5 rounded-xl flex items-center gap-3.5">
           {/* Simulated Time */}
           <div className="flex items-center gap-2 pr-3 border-r border-slate-700/60">
             <Clock className="w-4 h-4 text-amber-400" />
             <div>
               <div className="font-mono text-sm md:text-base font-bold text-white tracking-wider">
-                {simulatedTime} <span className="text-xs text-amber-400 font-normal">AM</span>
+                {simulatedTime}
               </div>
               <div className="text-[10px] uppercase font-mono text-slate-400">
-                Morning Twilight
+                {currentLocConfig.timeLabel}
               </div>
             </div>
           </div>

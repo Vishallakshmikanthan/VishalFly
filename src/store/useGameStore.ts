@@ -1,7 +1,12 @@
 import { create } from 'zustand';
-import { Vector3Tuple, FlyActivity, RoomBounds, LightingPreset } from '../types';
+import { Vector3Tuple, FlyActivity, RoomBounds, LightingPreset, LocationId, TransitionState } from '../types';
+import { LOCATIONS } from '../navigation/locationGraph';
 
 interface GameState {
+  // Active Location
+  currentLocation: LocationId;
+  transitionState: TransitionState;
+
   // Fly state
   flyPosition: Vector3Tuple;
   flyRotation: [number, number, number];
@@ -34,27 +39,29 @@ interface GameState {
   setLightingPreset: (preset: LightingPreset) => void;
   cycleLightingPreset: () => void;
   resetFlyToCenter: () => void;
+  switchLocation: (targetId: LocationId) => void;
 }
 
+const initialLoc = LOCATIONS.bedroom;
+
 export const useGameStore = create<GameState>((set, get) => ({
-  flyPosition: [0, 1.8, 0],
+  currentLocation: 'bedroom',
+  transitionState: {
+    isTransitioning: false,
+    targetLocation: null,
+    message: '',
+  },
+
+  flyPosition: [...initialLoc.spawnPosition] as Vector3Tuple,
   flyRotation: [0, 0, 0],
   flyActivity: 'hovering',
   currentSpot: 'Center Room Airspace',
   
-  // Room bounds (room floor is 8x8 units, centered around (0,0,0), walls from -4 to 4, height from 0 to 4.5)
-  roomBounds: {
-    minX: -3.6,
-    maxX: 3.6,
-    minY: 0.35,
-    maxY: 4.2,
-    minZ: -3.6,
-    maxZ: 3.6,
-  },
+  roomBounds: { ...initialLoc.bounds },
   
-  simulatedTime: '06:00',
-  locationName: "Vishal's PG Bedroom",
-  roomSubLocation: 'Room 204 • South Wing',
+  simulatedTime: initialLoc.initialTime,
+  locationName: initialLoc.name,
+  roomSubLocation: initialLoc.subLocation,
   
   resetCameraTrigger: 0,
   followFly: false,
@@ -80,11 +87,57 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
   
   resetFlyToCenter: () => {
+    const currentLoc = LOCATIONS[get().currentLocation];
     set({
-      flyPosition: [0, 1.8, 0],
+      flyPosition: [...currentLoc.spawnPosition] as Vector3Tuple,
       flyRotation: [0, 0, 0],
       flyActivity: 'hovering',
-      currentSpot: 'Center Room Airspace',
+      currentSpot: 'Spawning at ' + currentLoc.name,
     });
-  }
+  },
+
+  switchLocation: (targetId: LocationId) => {
+    const state = get();
+    if (state.currentLocation === targetId || state.transitionState.isTransitioning) {
+      return;
+    }
+
+    const targetConfig = LOCATIONS[targetId];
+
+    // 1. Begin transition overlay
+    set({
+      transitionState: {
+        isTransitioning: true,
+        targetLocation: targetId,
+        message: `Traveling to ${targetConfig.name}...`,
+      },
+    });
+
+    // 2. Midpoint of transition: swap environment, bounds, spawn position, metadata
+    setTimeout(() => {
+      set((prev) => ({
+        currentLocation: targetId,
+        roomBounds: { ...targetConfig.bounds },
+        flyPosition: [...targetConfig.spawnPosition] as Vector3Tuple,
+        flyRotation: [0, 0, 0],
+        flyActivity: 'hovering',
+        locationName: targetConfig.name,
+        roomSubLocation: targetConfig.subLocation,
+        simulatedTime: targetConfig.initialTime,
+        currentSpot: `Arrived at ${targetConfig.name}`,
+        resetCameraTrigger: prev.resetCameraTrigger + 1, // trigger smooth camera re-orientation
+      }));
+    }, 380);
+
+    // 3. Complete transition: remove overlay
+    setTimeout(() => {
+      set({
+        transitionState: {
+          isTransitioning: false,
+          targetLocation: null,
+          message: '',
+        },
+      });
+    }, 850);
+  },
 }));

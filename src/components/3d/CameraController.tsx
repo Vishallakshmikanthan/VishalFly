@@ -4,6 +4,7 @@ import { useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { OrbitControls } from '@react-three/drei';
 import { useGameStore } from '../../store/useGameStore';
+import { LOCATIONS } from '../../navigation/locationGraph';
 
 export const CameraController: React.FC = () => {
   const controlsRef = useRef<OrbitControlsImpl>(null);
@@ -12,15 +13,27 @@ export const CameraController: React.FC = () => {
   const resetCameraTrigger = useGameStore((state) => state.resetCameraTrigger);
   const followFly = useGameStore((state) => state.followFly);
   const flyPosition = useGameStore((state) => state.flyPosition);
+  const currentLocation = useGameStore((state) => state.currentLocation);
 
-  // Default isometric three-quarter coordinates
-  const defaultPos = useRef(new THREE.Vector3(7.2, 6.2, 7.2));
-  const defaultTarget = useRef(new THREE.Vector3(0, 1.2, 0));
+  const locConfig = LOCATIONS[currentLocation] || LOCATIONS.bedroom;
+
+  // Target coordinates for active location
+  const defaultPos = useRef(new THREE.Vector3(...locConfig.camera.position));
+  const defaultTarget = useRef(new THREE.Vector3(...locConfig.camera.target));
 
   const isResetting = useRef(false);
   const resetProgress = useRef(0);
 
-  // When reset is triggered from HUD or keyboard
+  // Update target coordinates whenever location changes
+  useEffect(() => {
+    const active = LOCATIONS[currentLocation] || LOCATIONS.bedroom;
+    defaultPos.current.set(...active.camera.position);
+    defaultTarget.current.set(...active.camera.target);
+    isResetting.current = true;
+    resetProgress.current = 0;
+  }, [currentLocation]);
+
+  // When manual reset is triggered from HUD or keyboard
   useEffect(() => {
     if (resetCameraTrigger > 0) {
       isResetting.current = true;
@@ -65,10 +78,10 @@ export const CameraController: React.FC = () => {
       enableDamping
       dampingFactor={0.06}
       minDistance={2.8}
-      maxDistance={16.0}
+      maxDistance={18.0}
       minPolarAngle={0.1}
       maxPolarAngle={Math.PI / 2.06} // Keep above floor
-      target={[0, 1.2, 0]}
+      target={locConfig.camera.target}
     />
   );
 };

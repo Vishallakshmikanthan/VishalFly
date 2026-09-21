@@ -2,14 +2,16 @@ import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useGameStore } from '../../../store/useGameStore';
+import { LOCATIONS } from '../../../navigation/locationGraph';
 import { FruitFly } from './FruitFly';
 
 /**
  * FlyController:
  * - Manages WASD / Arrow Keys + Space/Shift 3D flight mechanics
- * - Applies velocity damping, banking, and orientation slerp
- * - Enforces strict room collision boundaries (cannot escape PG room)
- * - Updates global fly position and location detection (Desk, Bed, Balcony, etc.)
+ * - Velocity damping, smooth banking, and heading rotation
+ * - Strictly enforces active environment's room collision boundaries
+ * - Teleports & synchronizes fly position when location changes
+ * - Dynamic landmark detection for the active location
  */
 export const FlyController: React.FC = () => {
   const groupRef = useRef<THREE.Group>(null);
@@ -19,9 +21,11 @@ export const FlyController: React.FC = () => {
   const setFlyActivity = useGameStore((state) => state.setFlyActivity);
   const setCurrentSpot = useGameStore((state) => state.setCurrentSpot);
   const roomBounds = useGameStore((state) => state.roomBounds);
+  const currentLocation = useGameStore((state) => state.currentLocation);
+  const flyPosition = useGameStore((state) => state.flyPosition);
 
   // Flight vectors
-  const position = useRef(new THREE.Vector3(0, 1.8, 0));
+  const position = useRef(new THREE.Vector3(...flyPosition));
   const velocity = useRef(new THREE.Vector3(0, 0, 0));
   const targetRotation = useRef(0);
   const currentRotation = useRef(0);
@@ -29,6 +33,19 @@ export const FlyController: React.FC = () => {
   const roll = useRef(0);
 
   const [isMoving, setIsMoving] = useState(false);
+
+  // Sync position whenever location changes or external teleport happens
+  useEffect(() => {
+    position.current.set(...flyPosition);
+    velocity.current.set(0, 0, 0);
+    targetRotation.current = 0;
+    currentRotation.current = 0;
+    pitch.current = 0;
+    roll.current = 0;
+    if (groupRef.current) {
+      groupRef.current.position.set(...flyPosition);
+    }
+  }, [currentLocation]);
 
   // Keyboard state
   const keys = useRef({
@@ -42,7 +59,6 @@ export const FlyController: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Prevent scrolling on space / arrows
       if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
         e.preventDefault();
       }
@@ -114,7 +130,6 @@ export const FlyController: React.FC = () => {
   }, []);
 
   useFrame((_, delta) => {
-    // Clamp delta to avoid large leaps if tab was backgrounded
     const dt = Math.min(delta, 0.1);
 
     const moveSpeed = 4.2;
@@ -169,12 +184,12 @@ export const FlyController: React.FC = () => {
     // Update position
     position.current.addScaledVector(velocity.current, dt);
 
-    // Enforce strict room boundaries
+    // Enforce active room boundaries
     const { minX, maxX, minY, maxY, minZ, maxZ } = roomBounds;
 
     if (position.current.x < minX) {
       position.current.x = minX;
-      velocity.current.x *= -0.3; // Gentle bounce
+      velocity.current.x *= -0.3; // Gentle bumper bounce
     } else if (position.current.x > maxX) {
       position.current.x = maxX;
       velocity.current.x *= -0.3;
@@ -211,33 +226,34 @@ export const FlyController: React.FC = () => {
       groupRef.current.rotation.z = roll.current;
     }
 
-    // Update global store coordinates (throttled)
+    // Update global store coordinates
     setFlyPosition([position.current.x, position.current.y, position.current.z]);
 
-    // Detect landmark locations
+    // Dynamic landmark location detection based on active location
     const px = position.current.x;
     const py = position.current.y;
     const pz = position.current.z;
 
-    let spot = 'Center Room Airspace';
-    if (px > 1.0 && pz < -1.6 && py < 1.6) {
-      spot = 'Near Study Desk & Laptop';
-    } else if (px < -1.0 && pz < -0.8 && py < 1.6) {
-      spot = 'Hovering over Bed & Orange Blanket';
-    } else if (pz < -3.2 && px > 0.5) {
-      spot = 'Near Window & Balcony Door';
-    } else if (px > 2.5 && pz > -1.8 && pz < 0.2) {
-      spot = 'Inspecting Indoor Houseplant';
-    } else if (px < -2.6 && pz < -1.8) {
-      spot = 'Near PG Wardrobe';
-    } else if (px < -2.5 && pz > 0.2) {
-      spot = 'Near Bedroom Entrance';
+    const currentLocConfig = LOCATIONS[currentLocation];
+    const activeLandmarks = currentLocConfig ? currentLocConfig.landmarks : [];
+    let spot = `Airspace • ${currentLocConfig ? currentLocConfig.name : 'Room'}`;
+
+    for (const lm of activeLandmarks) {
+      if (
+        px >= lm.minX && px <= lm.maxX &&
+        pz >= lm.minZ && pz <= lm.maxZ &&
+        (lm.minY === undefined || py >= lm.minY) &&
+        (lm.maxY === undefined || py <= lm.maxY)
+      ) {
+        spot = lm.name;
+        break;
+      }
     }
     setCurrentSpot(spot);
   });
 
   return (
-    <group ref={groupRef} position={[0, 1.8, 0]}>
+    <group ref={groupRef} position={[...flyPosition]}>
       <FruitFly isMoving={isMoving} />
     </group>
   );
