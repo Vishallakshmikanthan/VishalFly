@@ -2,6 +2,12 @@ export interface CognitiveConfig {
   /** Master switch for cognitive decision layer */
   isCognitionEnabled: boolean;
 
+  /** Master switch for memory influence on candidate scoring */
+  isMemoryInfluenceEnabled: boolean;
+
+  /** Master switch for adaptive behavior adjustments */
+  isAdaptationEnabled: boolean;
+
   /** Minimum commitment time before non-urgent behaviors can switch (in sim seconds) */
   minimumCommitmentIntervalSimSeconds: number;
 
@@ -10,6 +16,9 @@ export interface CognitiveConfig {
 
   /** Memory record retention duration in simulated minutes */
   memoryRetentionDurationSimMinutes: number;
+
+  /** Max number of relevant memories retrieved per decision evaluation */
+  memoryRetrievalLimit: number;
 
   /** Interval between regular cognitive evaluations (in simulated minutes) */
   evaluationIntervalSimMinutes: number;
@@ -26,6 +35,15 @@ export interface CognitiveConfig {
   /** Penalty applied per recent repetition of distracting behaviors [0 - 30] */
   repetitionPenaltyPerOccurrence: number;
 
+  /** Maximum score adjustment allowed by adaptive behavior experiments [-40, +40] */
+  adaptationMaxAdjustment: number;
+
+  /** Weight applied to recent outcome records (successes/failures) */
+  outcomeInfluenceWeight: number;
+
+  /** Rolling window (in sim minutes) to inspect routine completions */
+  routineMemoryWindowMinutes: number;
+
   /** Thresholds for urgent need override (allows candidate override if permitted) */
   urgencyThresholds: {
     criticalEnergyLow: number;      // e.g. < 12 triggers emergency rest desire
@@ -39,14 +57,20 @@ export interface CognitiveConfig {
 
 export const DEFAULT_COGNITIVE_CONFIG: CognitiveConfig = {
   isCognitionEnabled: true,
+  isMemoryInfluenceEnabled: true,
+  isAdaptationEnabled: true,
   minimumCommitmentIntervalSimSeconds: 15 * 60, // 15 sim minutes minimum commitment
   memoryCapacity: 50,
   memoryRetentionDurationSimMinutes: 180, // 3 hours
+  memoryRetrievalLimit: 5,
   evaluationIntervalSimMinutes: 15,
   scheduleWeight: 1.0,
   needReliefWeight: 1.0,
   continuityBonusMax: 20,
   repetitionPenaltyPerOccurrence: 12,
+  adaptationMaxAdjustment: 20,
+  outcomeInfluenceWeight: 10,
+  routineMemoryWindowMinutes: 180,
   urgencyThresholds: {
     criticalEnergyLow: 12,
     criticalHungerHigh: 85,
@@ -58,6 +82,8 @@ export const DEFAULT_COGNITIVE_CONFIG: CognitiveConfig = {
 export function validateCognitiveConfig(config: Partial<CognitiveConfig>): CognitiveConfig {
   return {
     isCognitionEnabled: config.isCognitionEnabled ?? DEFAULT_COGNITIVE_CONFIG.isCognitionEnabled,
+    isMemoryInfluenceEnabled: config.isMemoryInfluenceEnabled ?? DEFAULT_COGNITIVE_CONFIG.isMemoryInfluenceEnabled,
+    isAdaptationEnabled: config.isAdaptationEnabled ?? DEFAULT_COGNITIVE_CONFIG.isAdaptationEnabled,
     minimumCommitmentIntervalSimSeconds: Math.max(
       60,
       config.minimumCommitmentIntervalSimSeconds ?? DEFAULT_COGNITIVE_CONFIG.minimumCommitmentIntervalSimSeconds
@@ -70,6 +96,10 @@ export function validateCognitiveConfig(config: Partial<CognitiveConfig>): Cogni
       30,
       config.memoryRetentionDurationSimMinutes ?? DEFAULT_COGNITIVE_CONFIG.memoryRetentionDurationSimMinutes
     ),
+    memoryRetrievalLimit: Math.max(
+      1,
+      Math.min(20, config.memoryRetrievalLimit ?? DEFAULT_COGNITIVE_CONFIG.memoryRetrievalLimit)
+    ),
     evaluationIntervalSimMinutes: Math.max(
       1,
       config.evaluationIntervalSimMinutes ?? DEFAULT_COGNITIVE_CONFIG.evaluationIntervalSimMinutes
@@ -80,6 +110,18 @@ export function validateCognitiveConfig(config: Partial<CognitiveConfig>): Cogni
     repetitionPenaltyPerOccurrence: Math.max(
       0,
       Math.min(30, config.repetitionPenaltyPerOccurrence ?? DEFAULT_COGNITIVE_CONFIG.repetitionPenaltyPerOccurrence)
+    ),
+    adaptationMaxAdjustment: Math.max(
+      5,
+      Math.min(40, config.adaptationMaxAdjustment ?? DEFAULT_COGNITIVE_CONFIG.adaptationMaxAdjustment)
+    ),
+    outcomeInfluenceWeight: Math.max(
+      0,
+      Math.min(30, config.outcomeInfluenceWeight ?? DEFAULT_COGNITIVE_CONFIG.outcomeInfluenceWeight)
+    ),
+    routineMemoryWindowMinutes: Math.max(
+      30,
+      Math.min(720, config.routineMemoryWindowMinutes ?? DEFAULT_COGNITIVE_CONFIG.routineMemoryWindowMinutes)
     ),
     urgencyThresholds: {
       criticalEnergyLow: Math.max(

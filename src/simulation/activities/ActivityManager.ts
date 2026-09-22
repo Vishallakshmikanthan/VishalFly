@@ -9,6 +9,8 @@ import { EventLogger } from '../events/EventLogger';
 export interface ActivityManagerCallbacks {
   onLocationChangeRequest?: (targetLocation: string, message: string) => void;
   onActivityStateChange?: (instance: ActivityInstance) => void;
+  onActivityCompleted?: (instance: ActivityInstance, timestamp: string, dayNumber: number) => void;
+  onActivityInterrupted?: (instance: ActivityInstance, timestamp: string, dayNumber: number) => void;
 }
 
 export class ActivityManager {
@@ -72,6 +74,12 @@ export class ActivityManager {
 
     // Complete previous activity if one was active
     if (this.currentInstance && this.currentInstance.state !== 'completed') {
+      const prev = this.currentInstance;
+      if (prev.state === 'active' || prev.state === 'travelling') {
+        if (this.callbacks.onActivityInterrupted) {
+          this.callbacks.onActivityInterrupted(prev, timestamp, dayNumber);
+        }
+      }
       this.completeCurrentActivity(timestamp, dayNumber);
     }
 
@@ -168,6 +176,10 @@ export class ActivityManager {
         activityId: this.currentInstance.definition.id,
         locationId: this.currentLocationId,
       });
+    }
+
+    if (this.callbacks.onActivityCompleted) {
+      this.callbacks.onActivityCompleted(this.currentInstance, timestamp, dayNumber);
     }
   }
 

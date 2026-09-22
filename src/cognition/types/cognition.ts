@@ -12,6 +12,41 @@ import {
 } from '../../types';
 
 /**
+/**
+ * Destination reachability metadata for perception.
+ */
+export interface NearbyDestinationInfo {
+  locationId: LocationId;
+  name: string;
+  isCurrent: boolean;
+  reachable: boolean;
+  distanceMeters?: number;
+  travelTimeMinutes?: number;
+}
+
+/**
+ * Interaction points / waypoints in the current location.
+ */
+export interface InteractionPointInfo {
+  id?: string;
+  name: string;
+  waypointKey: string;
+  type?: string;
+  distanceMeters?: number;
+  coordinates?: [number, number, number];
+}
+
+/**
+ * High-level agent motion / activity state.
+ */
+export type AgentMotionState = 'resting' | 'travelling' | 'performing_activity' | 'idle' | 'grounded' | 'airborne' | 'takeoff' | 'landing';
+
+/**
+ * Outcome status for actions and activities.
+ */
+export type MemoryOutcome = 'completed' | 'interrupted' | 'rejected' | 'failed' | 'cancelled';
+
+/**
  * Perception modalities available from the existing simulation.
  */
 export interface AvailableSensoryData {
@@ -38,6 +73,24 @@ export interface AvailableSensoryData {
   isAssignmentActive: boolean;
   isFamilyCallActive: boolean;
   isLaundryActive: boolean;
+  isMorningRoutineActive?: boolean;
+
+  // Milestone 7 Perception Expansions
+  nearbyDestinations?: NearbyDestinationInfo[];
+  availableInteractionPoints?: InteractionPointInfo[];
+  motionState?: AgentMotionState;
+  travelTargetLocation?: LocationId | null;
+  travelProgressPercent?: number;
+  activityPhase?: string | null;
+  recentEventsSummary?: string[];
+  relevantMemories?: MemoryRecord[];
+  isFoodOrderActive?: boolean;
+
+  // Sensory Grounding Declarations (Biological receptors are explicitly unavailable)
+  isCameraVisionAvailable?: boolean;
+  isOmmatidiaPhotoreceptorsAvailable?: boolean;
+  isOlfactorySensillaAvailable?: boolean;
+  isAntennalMechanoreceptorsAvailable?: boolean;
 }
 
 /**
@@ -70,6 +123,21 @@ export interface PerceptionSnapshot {
   timestamp: string;
   simulatedMinutes: number;
   dayNumber: number;
+  motionState?: AgentMotionState;
+  activityPhase?: string | null;
+  nearbyDestinations?: NearbyDestinationInfo[];
+  nearbyInteractionPoints?: InteractionPointInfo[];
+  travelProgress?: {
+    isTraveling: boolean;
+    fromLocation?: string;
+    toLocation?: string;
+    progress?: number;
+  };
+  unavailableSensory?: {
+    channel: string;
+    simulated: boolean;
+    reason: string;
+  }[];
   available: AvailableSensoryData;
   unavailable: UnavailableSensoryData;
 }
@@ -113,16 +181,23 @@ export interface InternalState {
 }
 
 /**
- * Memory Record stored in CognitiveMemory.
+ * Bounded Episodic Memory Record stored in CognitiveMemory.
  */
 export interface MemoryRecord {
   id: string;
   timestamp: string;
   simulatedMinutes: number;
   dayNumber: number;
-  category: 'behavior' | 'location' | 'activity' | 'distraction' | 'need_alert';
+  eventType: string; // e.g. 'lecture_completed', 'workout_finished', 'meal_completed', 'action_rejected'
+  category: 'behavior' | 'location' | 'activity' | 'distraction' | 'need_alert' | 'routine' | 'outcome';
   key: string;
   value: string;
+  location: LocationId;
+  locationId?: LocationId;
+  outcome: MemoryOutcome;
+  context?: Record<string, any>;
+  tags: string[];
+  sourceBehaviorId?: string;
   salience: number; // 0.0 to 1.0
   expiresAtSimMinutes?: number;
 }
@@ -160,7 +235,7 @@ export interface CognitiveEvent {
   id: string;
   timestamp: string;
   simulatedMinutes: number;
-  category: 'evaluation' | 'selection' | 'interruption' | 'rejection' | 'adapter';
+  category: 'evaluation' | 'selection' | 'interruption' | 'rejection' | 'adapter' | 'adaptation' | 'memory';
   message: string;
   behaviorId?: string;
   details?: Record<string, any>;
@@ -194,6 +269,15 @@ export interface BehaviorEvaluation {
   needUrgencyBonus: number;   // [0, 100]
   continuityBonus: number;    // [0, 50] (hysteresis)
   repetitionPenalty: number;  // [0, 50]
+  memoryScoreContribution?: number; // [-20, 20] from relevant memories
+  adaptationScoreContribution?: number; // [-20, 20] bounded adaptation
+  adaptationScoreDelta?: number; // alias for adaptation score adjustment
+  adaptationRulesApplied?: string[]; // list of rules applied
+  adaptationDetails?: {
+    rulesApplied: string[];
+    memoryIds: string[];
+    scoreDelta: number;
+  };
   finalScore: number;         // [0, 100]
   explanation: string;
 }
@@ -273,10 +357,13 @@ export interface ConnectomeModel {
  */
 export interface SerializedCognitiveData {
   isCognitionEnabled: boolean;
+  isMemoryInfluenceEnabled?: boolean;
+  isAdaptationEnabled?: boolean;
   currentGoal: string;
   activeBehaviorId: string | null;
   behaviorCommitmentElapsedSimSeconds: number;
   memoryRecords: MemoryRecord[];
+  adaptationConfig?: Record<string, any>;
   lastDecision?: {
     selectedCandidateId: string;
     timestamp: string;

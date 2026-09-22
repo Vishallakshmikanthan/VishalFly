@@ -55,6 +55,7 @@ export class SimulationEngine {
   private currentFlyActivity: FlyActivity = 'hovering';
   private selectedCollegeBehavior: CollegeSubBehavior | null = null;
   private lastHandledActivityId: string | null = null;
+  private recordedSubsystemCompletions: Set<string> = new Set();
 
   // Running loop state
   private timerId: ReturnType<typeof setInterval> | null = null;
@@ -76,7 +77,35 @@ export class SimulationEngine {
     this.activityManager = new ActivityManager(
       'bedroom',
       this.eventLogger,
-      settings.travelDurationSeconds
+      settings.travelDurationSeconds,
+      {
+        onActivityCompleted: (instance, timestamp, dayNumber) => {
+          this.cognitiveEngine.recordConfirmedOutcome({
+            eventType: `${instance.definition.id}_completed`,
+            key: instance.definition.id,
+            value: `Completed ${instance.scheduleEntry.name}`,
+            location: (instance.targetLocation || this.activityManager.getCurrentLocation()) as any,
+            outcome: 'completed',
+            tags: ['activity', instance.definition.id, 'completed'],
+            timestamp,
+            simulatedMinutes: this.clock.getState().currentMinutes,
+            dayNumber,
+          });
+        },
+        onActivityInterrupted: (instance, timestamp, dayNumber) => {
+          this.cognitiveEngine.recordConfirmedOutcome({
+            eventType: `${instance.definition.id}_interrupted`,
+            key: instance.definition.id,
+            value: `Interrupted ${instance.scheduleEntry.name}`,
+            location: (instance.targetLocation || this.activityManager.getCurrentLocation()) as any,
+            outcome: 'interrupted',
+            tags: ['activity', instance.definition.id, 'interrupted'],
+            timestamp,
+            simulatedMinutes: this.clock.getState().currentMinutes,
+            dayNumber,
+          });
+        },
+      }
     );
     this.needsSystem = new NeedsSystem(this.eventLogger);
     this.cognitiveEngine = new CognitiveEngine(
@@ -144,6 +173,7 @@ export class SimulationEngine {
       this.morningRoutineSystem.reset();
       this.laundrySystem.reset();
       this.foodOrderSystem.reset();
+      this.recordedSubsystemCompletions.clear();
     }
 
     // 2. Schedule Planner & Activity Sync
@@ -174,10 +204,46 @@ export class SimulationEngine {
       // Activity switched - conclude previous activity systems if needed
       if (this.lastHandledActivityId === 'project_work') {
         this.projectSystem.endSession(timestamp, clockState.dayNumber);
+        this.cognitiveEngine.recordConfirmedOutcome({
+          eventType: 'project_work_completed',
+          key: 'work_project',
+          value: 'Completed VishalFly project sprint',
+          location: 'bedroom',
+          outcome: 'completed',
+          tags: ['project', 'work', 'focus'],
+          sourceBehaviorId: 'work_project',
+          timestamp,
+          simulatedMinutes: clockState.currentMinutes,
+          dayNumber: clockState.dayNumber,
+        });
       } else if (this.lastHandledActivityId === 'college_assignments') {
         this.assignmentSystem.endSession(timestamp, clockState.dayNumber);
+        this.cognitiveEngine.recordConfirmedOutcome({
+          eventType: 'assignment_completed',
+          key: 'work_assignment',
+          value: 'Completed college assignment sprint',
+          location: 'bedroom',
+          outcome: 'completed',
+          tags: ['assignment', 'study', 'academic'],
+          sourceBehaviorId: 'work_assignment',
+          timestamp,
+          simulatedMinutes: clockState.currentMinutes,
+          dayNumber: clockState.dayNumber,
+        });
       } else if (this.lastHandledActivityId === 'family_call_walk') {
         this.familyCallSystem.endCall(timestamp, clockState.dayNumber);
+        this.cognitiveEngine.recordConfirmedOutcome({
+          eventType: 'family_call_finished',
+          key: 'family_call_walk',
+          value: 'Completed evening family call walk',
+          location: 'grounds',
+          outcome: 'completed',
+          tags: ['family_call', 'social', 'walk'],
+          sourceBehaviorId: 'family_call_walk',
+          timestamp,
+          simulatedMinutes: clockState.currentMinutes,
+          dayNumber: clockState.dayNumber,
+        });
       }
       this.lastHandledActivityId = actId || null;
     }
@@ -201,6 +267,25 @@ export class SimulationEngine {
           defaultPose = mr.flyActivity as FlyActivity;
           progressVal = mr.state.progressPercent;
           activeActionLabel = `Morning Routine (${mr.state.stage.replace(/_/g, ' ')})`;
+
+          if (mr.state.isCompleted) {
+            const mrKey = `morning_${clockState.dayNumber}`;
+            if (!this.recordedSubsystemCompletions.has(mrKey)) {
+              this.recordedSubsystemCompletions.add(mrKey);
+              this.cognitiveEngine.recordConfirmedOutcome({
+                eventType: 'morning_routine_completed',
+                key: 'wake_up_morning_routine',
+                value: 'Completed morning routine and preparation',
+                location: 'bedroom',
+                outcome: 'completed',
+                tags: ['morning_routine', 'routine'],
+                sourceBehaviorId: 'wake_up_morning_routine',
+                timestamp,
+                simulatedMinutes: clockState.currentMinutes,
+                dayNumber: clockState.dayNumber,
+              });
+            }
+          }
           break;
         }
 
@@ -317,6 +402,25 @@ export class SimulationEngine {
             defaultPose = this.workoutSystem.getCurrentFlyActivity();
             progressVal = updatedSession.progressPercent;
             activeActionLabel = this.workoutSystem.getCurrentActionLabel();
+
+            if (updatedSession.isCompleted || updatedSession.state === 'COMPLETE') {
+              const wsKey = `workout_${clockState.dayNumber}_${updatedSession.plan.id}`;
+              if (!this.recordedSubsystemCompletions.has(wsKey)) {
+                this.recordedSubsystemCompletions.add(wsKey);
+                this.cognitiveEngine.recordConfirmedOutcome({
+                  eventType: 'workout_finished',
+                  key: 'perform_workout',
+                  value: `Finished ${updatedSession.plan.name} (${updatedSession.currentSet} sets)`,
+                  location: 'gym',
+                  outcome: 'completed',
+                  tags: ['workout', 'gym', 'health'],
+                  sourceBehaviorId: 'perform_workout',
+                  timestamp,
+                  simulatedMinutes: clockState.currentMinutes,
+                  dayNumber: clockState.dayNumber,
+                });
+              }
+            }
           }
           break;
         }
@@ -344,6 +448,25 @@ export class SimulationEngine {
                 hunger: Math.max(0, currentNeeds.hunger + mealRes.hungerDelta),
                 energy: Math.min(100, currentNeeds.energy + mealRes.energyDelta),
               });
+            }
+
+            if (mealRes.session.isCompleted) {
+              const mealKey = `meal_${clockState.dayNumber}_${mealType}`;
+              if (!this.recordedSubsystemCompletions.has(mealKey)) {
+                this.recordedSubsystemCompletions.add(mealKey);
+                this.cognitiveEngine.recordConfirmedOutcome({
+                  eventType: 'meal_completed',
+                  key: 'eat_meal',
+                  value: `Finished ${mealRes.session.meal.name}`,
+                  location: 'dining',
+                  outcome: 'completed',
+                  tags: ['meal', 'sustenance', mealType],
+                  sourceBehaviorId: 'eat_meal',
+                  timestamp,
+                  simulatedMinutes: clockState.currentMinutes,
+                  dayNumber: clockState.dayNumber,
+                });
+              }
             }
           }
           break;
@@ -406,6 +529,25 @@ export class SimulationEngine {
           this.currentWaypoint = 'wardrobe';
           progressVal = ls.progressPercent;
           activeActionLabel = `Washing Laundry (${ls.progressPercent}%)`;
+
+          if (ls.isCompleted) {
+            const laundryKey = `laundry_${clockState.dayNumber}_wash`;
+            if (!this.recordedSubsystemCompletions.has(laundryKey)) {
+              this.recordedSubsystemCompletions.add(laundryKey);
+              this.cognitiveEngine.recordConfirmedOutcome({
+                eventType: 'laundry_completed',
+                key: 'perform_laundry',
+                value: 'Completed washing laundry clothes',
+                location: 'bedroom',
+                outcome: 'completed',
+                tags: ['laundry', 'routine'],
+                sourceBehaviorId: 'perform_laundry',
+                timestamp,
+                simulatedMinutes: clockState.currentMinutes,
+                dayNumber: clockState.dayNumber,
+              });
+            }
+          }
           break;
         }
 
@@ -419,6 +561,25 @@ export class SimulationEngine {
           this.currentWaypoint = 'clothesline';
           progressVal = ls.progressPercent;
           activeActionLabel = `Balcony Drying (${ls.progressPercent}%)`;
+
+          if (ls.isCompleted) {
+            const laundryKey = `laundry_${clockState.dayNumber}_drying`;
+            if (!this.recordedSubsystemCompletions.has(laundryKey)) {
+              this.recordedSubsystemCompletions.add(laundryKey);
+              this.cognitiveEngine.recordConfirmedOutcome({
+                eventType: 'laundry_completed',
+                key: 'perform_laundry',
+                value: 'Completed balcony clothes drying',
+                location: 'balcony',
+                outcome: 'completed',
+                tags: ['laundry', 'routine'],
+                sourceBehaviorId: 'perform_laundry',
+                timestamp,
+                simulatedMinutes: clockState.currentMinutes,
+                dayNumber: clockState.dayNumber,
+              });
+            }
+          }
           break;
         }
 
@@ -442,6 +603,25 @@ export class SimulationEngine {
               ...currentNeeds,
               hunger: Math.max(0, currentNeeds.hunger + foRes.hungerDelta),
             });
+          }
+
+          if (foRes.state.stage === 'eating' || foRes.state.stage === 'completed' || foRes.state.isCompleted) {
+            const foodKey = `food_order_${clockState.dayNumber}`;
+            if (!this.recordedSubsystemCompletions.has(foodKey)) {
+              this.recordedSubsystemCompletions.add(foodKey);
+              this.cognitiveEngine.recordConfirmedOutcome({
+                eventType: 'food_collected',
+                key: 'midnight_food_order',
+                value: 'Collected midnight food delivery order',
+                location: 'bedroom',
+                outcome: 'completed',
+                tags: ['food_order', 'meal', 'midnight_snack'],
+                sourceBehaviorId: 'midnight_food_order',
+                timestamp,
+                simulatedMinutes: clockState.currentMinutes,
+                dayNumber: clockState.dayNumber,
+              });
+            }
           }
           break;
         }
@@ -630,6 +810,7 @@ export class SimulationEngine {
     this.foodOrderSystem.reset();
     this.familyCallSystem.reset();
     this.morningRoutineSystem.reset();
+    this.recordedSubsystemCompletions.clear();
     this.cognitiveEngine.internalStateManager.reset(this.needsSystem.getState());
     this.cognitiveEngine.memory.clear();
     this.evaluateSchedule();
@@ -816,6 +997,26 @@ export class SimulationEngine {
 
   public setCognitionEnabled(enabled: boolean): void {
     this.cognitiveEngine.setCognitionEnabled(enabled);
+    this.step(0);
+  }
+
+  public setMemoryInfluenceEnabled(enabled: boolean): void {
+    this.cognitiveEngine.setMemoryInfluenceEnabled(enabled);
+    this.step(0);
+  }
+
+  public setAdaptationEnabled(enabled: boolean): void {
+    this.cognitiveEngine.setAdaptationEnabled(enabled);
+    this.step(0);
+  }
+
+  public clearCognitiveMemory(): void {
+    this.cognitiveEngine.clearMemory();
+    this.step(0);
+  }
+
+  public resetAdaptationDefaults(): void {
+    this.cognitiveEngine.resetAdaptationDefaults();
     this.step(0);
   }
 

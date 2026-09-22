@@ -8,6 +8,7 @@ import {
 } from '../types/cognition';
 import { CognitiveConfig } from '../config/CognitiveConfig';
 import { CognitiveMemory } from '../memory/CognitiveMemory';
+import { AdaptiveBehaviorSystem } from '../adaptation/AdaptiveBehaviorSystem';
 
 export interface IntegrationResult {
   winningCandidate: BehaviorCandidate | null;
@@ -21,25 +22,29 @@ export class BehaviorIntegrator {
   private registry: BehaviorRegistry;
   private config: CognitiveConfig;
   private memory: CognitiveMemory;
+  private adaptiveSystem: AdaptiveBehaviorSystem;
 
   constructor(
     registry: BehaviorRegistry,
     config: CognitiveConfig,
-    memory: CognitiveMemory
+    memory: CognitiveMemory,
+    adaptiveSystem?: AdaptiveBehaviorSystem
   ) {
     this.registry = registry;
     this.config = config;
     this.memory = memory;
+    this.adaptiveSystem = adaptiveSystem || new AdaptiveBehaviorSystem(config, memory);
   }
 
   public updateConfig(config: Partial<CognitiveConfig>): void {
     this.config = { ...this.config, ...config };
+    this.adaptiveSystem.updateConfig(this.config);
   }
 
   /**
    * Evaluates all candidates deterministically against current context,
    * applying utility weights, continuity bonuses (hysteresis), repetition penalties,
-   * and strict deterministic tie-breaking.
+   * bounded adaptive behavior experiments, and strict deterministic tie-breaking.
    */
   public integrate(context: CognitiveContext): IntegrationResult {
     const candidates = this.registry.getAll();
@@ -67,6 +72,8 @@ export class BehaviorIntegrator {
           needUrgencyBonus: 0,
           continuityBonus: 0,
           repetitionPenalty: 0,
+          memoryScoreContribution: 0,
+          adaptationScoreContribution: 0,
           finalScore: 0,
           explanation: `Ineligible: ${applicability.reason}`,
         });
@@ -99,9 +106,31 @@ export class BehaviorIntegrator {
         repetitionPenalty = recentCount * this.config.repetitionPenaltyPerOccurrence;
       }
 
-      // 6. Compute Final Clamped Score [0, 100]
-      const totalScore = weightedBase + weightedUrgency + continuityBonus - repetitionPenalty;
+      // 6. Milestone 7 Bounded Adaptive Behavior Experiment Evaluation
+      let adaptationScoreContribution = 0;
+      let adaptationDetails: BehaviorEvaluation['adaptationDetails'] = undefined;
+
+      if (this.config.isAdaptationEnabled && this.config.isMemoryInfluenceEnabled) {
+        const adaptRes = this.adaptiveSystem.evaluateCandidateAdaptation(
+          candidate,
+          context,
+          weightedBase
+        );
+        adaptationScoreContribution = adaptRes.scoreDelta;
+        adaptationDetails = {
+          rulesApplied: adaptRes.rulesApplied,
+          memoryIds: adaptRes.memoryIds,
+          scoreDelta: adaptRes.scoreDelta,
+        };
+      }
+
+      // 7. Compute Final Clamped Score [0, 100]
+      const totalScore = weightedBase + weightedUrgency + continuityBonus - repetitionPenalty + adaptationScoreContribution;
       const finalScore = Math.max(0, Math.min(100, Math.round(totalScore)));
+
+      const adaptExpl = adaptationScoreContribution !== 0
+        ? `, Adaptation: ${adaptationScoreContribution >= 0 ? '+' : ''}${adaptationScoreContribution} (${adaptationDetails?.rulesApplied.join(', ') || ''})`
+        : '';
 
       evaluations.push({
         candidateId: candidate.id,
@@ -112,12 +141,15 @@ export class BehaviorIntegrator {
         needUrgencyBonus: Math.round(weightedUrgency),
         continuityBonus,
         repetitionPenalty,
+        memoryScoreContribution: adaptationScoreContribution,
+        adaptationScoreContribution,
+        adaptationDetails,
         finalScore,
-        explanation: `${rawEval.explanation} [Score: ${finalScore}] (Base: ${Math.round(weightedBase)}, Urgency: +${Math.round(weightedUrgency)}, Continuity: +${continuityBonus}, RepPenalty: -${repetitionPenalty})`,
+        explanation: `${rawEval.explanation} [Score: ${finalScore}] (Base: ${Math.round(weightedBase)}, Urgency: +${Math.round(weightedUrgency)}, Continuity: +${continuityBonus}, RepPenalty: -${repetitionPenalty}${adaptExpl})`,
       });
     }
 
-    // 7. Sort evaluations by eligibility, final score descending, and deterministic candidateId tie-breaking
+    // 8. Sort evaluations by eligibility, final score descending, and deterministic candidateId tie-breaking
     evaluations.sort((a, b) => {
       if (a.isEligible !== b.isEligible) {
         return a.isEligible ? -1 : 1;

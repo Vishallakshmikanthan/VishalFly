@@ -74,11 +74,15 @@ interface GameState {
   familyCallState: FamilyCallState;
   morningRoutineState: MorningRoutineState;
   
-  // Milestone 6 Cognitive Architecture State
+  // Milestone 6 & 7 Cognitive Architecture State
   isCognitionEnabled: boolean;
   cognitiveInspectorData: CognitiveInspectorData | null;
   toggleCognition: () => void;
   setCognitionEnabled: (enabled: boolean) => void;
+  setMemoryInfluenceEnabled: (enabled: boolean) => void;
+  setAdaptationEnabled: (enabled: boolean) => void;
+  clearCognitiveMemory: () => void;
+  resetAdaptationDefaults: () => void;
   
   // Camera & view controls
   resetCameraTrigger: number;
@@ -333,6 +337,34 @@ export const useGameStore = create<GameState>((set, get) => {
       simulationEngine.setCognitionEnabled(enabled);
       set({ 
         isCognitionEnabled: enabled,
+        cognitiveInspectorData: simulationEngine.getCognitiveInspectorState(),
+      });
+    },
+
+    setMemoryInfluenceEnabled: (enabled: boolean) => {
+      simulationEngine.setMemoryInfluenceEnabled(enabled);
+      set({ 
+        cognitiveInspectorData: simulationEngine.getCognitiveInspectorState(),
+      });
+    },
+
+    setAdaptationEnabled: (enabled: boolean) => {
+      simulationEngine.setAdaptationEnabled(enabled);
+      set({ 
+        cognitiveInspectorData: simulationEngine.getCognitiveInspectorState(),
+      });
+    },
+
+    clearCognitiveMemory: () => {
+      simulationEngine.clearCognitiveMemory();
+      set({ 
+        cognitiveInspectorData: simulationEngine.getCognitiveInspectorState(),
+      });
+    },
+
+    resetAdaptationDefaults: () => {
+      simulationEngine.resetAdaptationDefaults();
+      set({ 
         cognitiveInspectorData: simulationEngine.getCognitiveInspectorState(),
       });
     },

@@ -21,6 +21,13 @@ export class ActionSelector {
    * Applies safety guards and schedule authority to the winning behavior candidate,
    * returning the final ActionDecision.
    */
+  public select(
+    integration: IntegrationResult,
+    context: CognitiveContext
+  ): ActionDecision {
+    return this.selectAction(integration, context);
+  }
+
   public selectAction(
     integration: IntegrationResult,
     context: CognitiveContext

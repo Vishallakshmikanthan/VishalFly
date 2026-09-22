@@ -3,6 +3,7 @@ import {
 } from '../types/cognition';
 import { ActivityManager } from '../../simulation/activities/ActivityManager';
 import { EventLogger } from '../../simulation/events/EventLogger';
+import { CognitiveMemory } from '../memory/CognitiveMemory';
 import { FlyActivity, LocationId } from '../../types';
 
 export interface ActionAdapterResult {
@@ -18,10 +19,16 @@ export interface ActionAdapterResult {
 export class ActionAdapters {
   private activityManager: ActivityManager;
   private eventLogger: EventLogger;
+  private memory?: CognitiveMemory;
 
-  constructor(activityManager: ActivityManager, eventLogger: EventLogger) {
+  constructor(activityManager: ActivityManager, eventLogger: EventLogger, memory?: CognitiveMemory) {
     this.activityManager = activityManager;
     this.eventLogger = eventLogger;
+    this.memory = memory;
+  }
+
+  public setMemory(memory: CognitiveMemory): void {
+    this.memory = memory;
   }
 
   /**
@@ -172,5 +179,23 @@ export class ActionAdapters {
       category: 'behavior',
       message: `Cognitive action rejected: ${reason} (Behavior: ${decision.selectedCandidateName})`,
     });
+
+    if (this.memory) {
+      this.memory.record({
+        timestamp: decision.timestamp,
+        simulatedMinutes: 0,
+        dayNumber: 1,
+        category: 'outcome',
+        eventType: 'action_rejected',
+        key: decision.selectedCandidateId,
+        value: `Action rejected: ${reason}`,
+        location: (this.activityManager.getCurrentLocation() as LocationId) || 'bedroom',
+        outcome: 'rejected',
+        context: { reason, request: decision.actionRequest },
+        tags: ['rejected', decision.actionRequest.type.toLowerCase()],
+        sourceBehaviorId: decision.selectedCandidateId,
+        salience: 0.85,
+      });
+    }
   }
 }
