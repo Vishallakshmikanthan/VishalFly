@@ -1,99 +1,81 @@
 import React from 'react';
 import { LOCATIONS } from '../../../navigation/locationGraph';
+import { TimeOfDayLighting } from '../common/TimeOfDayLighting';
 
 interface PlaceholderEnvironmentProps {
   locationId: 'gym' | 'grounds' | 'balcony' | 'travel';
 }
 
+/**
+ * Transit Corridor Environment (for active travel commutes):
+ * - Asphalt road highway with yellow and white road markings
+ * - Roadside safety curbs and reflective streetlamp posts
+ * - Distant urban transit skyline
+ * - Dynamic Time-of-Day lighting
+ */
 export const PlaceholderEnvironment: React.FC<PlaceholderEnvironmentProps> = ({ locationId }) => {
-  const config = LOCATIONS[locationId] || LOCATIONS.bedroom;
+  const config = LOCATIONS[locationId] || LOCATIONS.travel;
   const { minX, maxX, minY, maxY, minZ, maxZ } = config.bounds;
 
   const width = maxX - minX;
   const depth = maxZ - minZ;
-  const height = maxY - minY;
   const centerX = (minX + maxX) / 2;
-  const centerY = (minY + maxY) / 2;
   const centerZ = (minZ + maxZ) / 2;
 
-  // Theme colors per placeholder
-  const themeColors: Record<string, { floor: string; accent: string; grid: string }> = {
-    gym: { floor: '#1e1b2e', accent: '#f59e0b', grid: '#4338ca' },
-    grounds: { floor: '#0d2818', accent: '#10b981', grid: '#059669' },
-    balcony: { floor: '#1f2937', accent: '#38bdf8', grid: '#0284c7' },
-    travel: { floor: '#18181b', accent: '#eab308', grid: '#71717a' },
-  };
-
-  const currentTheme = themeColors[locationId] || themeColors.travel;
-
   return (
-    <group name={`Placeholder_${locationId}`}>
-      {/* Ambient and directional lighting */}
-      <ambientLight intensity={0.6} color="#e2e8f0" />
-      <directionalLight
-        position={[5, 10, 5]}
-        intensity={1.2}
-        color="#ffffff"
-        castShadow
-        shadow-mapSize={[1024, 1024]}
-      />
-      <pointLight position={[centerX, maxY - 0.5, centerZ]} intensity={2.0} color={currentTheme.accent} distance={12} />
+    <group name={`Environment_${locationId}`}>
+      <TimeOfDayLighting isInterior={false} accentColor="#eab308" />
+      <pointLight position={[centerX, maxY - 0.5, centerZ]} intensity={1.5} color="#fbbf24" distance={10} />
 
-      {/* Styled Floor */}
+      {/* Asphalt Road Surface */}
       <mesh position={[centerX, minY, centerZ]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[width, depth]} />
-        <meshStandardMaterial
-          color={currentTheme.floor}
-          roughness={0.7}
-          metalness={0.2}
-        />
+        <meshStandardMaterial color="#1e293b" roughness={0.88} metalness={0.15} />
       </mesh>
 
-      {/* Grid Overlay */}
-      <gridHelper
-        position={[centerX, minY + 0.01, centerZ]}
-        args={[Math.max(width, depth), 12, currentTheme.accent, currentTheme.grid]}
-      />
-
-      {/* Boundary perimeter wireframe */}
-      <mesh position={[centerX, centerY, centerZ]}>
-        <boxGeometry args={[width, height, depth]} />
-        <meshBasicMaterial color={currentTheme.accent} wireframe transparent opacity={0.12} />
-      </mesh>
-
-      {/* Corner boundary posts */}
-      {[
-        [minX, minZ],
-        [minX, maxZ],
-        [maxX, minZ],
-        [maxX, maxZ],
-      ].map(([x, z], i) => (
-        <mesh key={i} position={[x, centerY, z]}>
-          <cylinderGeometry args={[0.06, 0.06, height, 8]} />
-          <meshStandardMaterial color={currentTheme.accent} emissive={currentTheme.accent} emissiveIntensity={0.3} />
+      {/* Road Lane Center Dashed Lines */}
+      {[-3, -1.8, -0.6, 0.6, 1.8, 3].map((z, idx) => (
+        <mesh key={`lane-dash-${idx}`} position={[centerX, minY + 0.005, z]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[0.15, 0.6]} />
+          <meshBasicMaterial color="#facc15" />
         </mesh>
       ))}
 
-      {/* Landmark Pedestals */}
-      {config.landmarks.map((lm, idx) => {
-        const lmX = (lm.minX + lm.maxX) / 2;
-        const lmZ = (lm.minZ + lm.maxZ) / 2;
-        const lmY = minY + 0.05;
+      {/* Roadside Concrete Curbs */}
+      {[-2.5, 2.5].map((cx, idx) => (
+        <group key={`curb-${idx}`} position={[cx, minY + 0.1, centerZ]}>
+          <mesh castShadow receiveShadow>
+            <boxGeometry args={[0.3, 0.2, depth]} />
+            <meshStandardMaterial color="#64748b" roughness={0.7} />
+          </mesh>
+        </group>
+      ))}
 
-        return (
-          <group key={idx} position={[lmX, lmY, lmZ]}>
-            {/* Base glowing circle */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]}>
-              <ringGeometry args={[0.4, 0.6, 24]} />
-              <meshBasicMaterial color={currentTheme.accent} transparent opacity={0.6} />
-            </mesh>
-            <mesh position={[0, 0.15, 0]}>
-              <cylinderGeometry args={[0.12, 0.15, 0.3, 12]} />
-              <meshStandardMaterial color="#334155" metalness={0.5} roughness={0.4} />
-            </mesh>
-          </group>
-        );
-      })}
+      {/* Highway Streetlamp Posts */}
+      {[
+        [-2.7, -2.5],
+        [-2.7, 2.5],
+        [2.7, -2.5],
+        [2.7, 2.5],
+      ].map(([sx, sz], i) => (
+        <group key={`lamp-${i}`} position={[sx, minY, sz]}>
+          {/* Post */}
+          <mesh position={[0, 1.8, 0]} castShadow>
+            <cylinderGeometry args={[0.04, 0.06, 3.6, 8]} />
+            <meshStandardMaterial color="#334155" metalness={0.8} />
+          </mesh>
+          {/* Overhanging Arm */}
+          <mesh position={[sx < 0 ? 0.3 : -0.3, 3.6, 0]} rotation={[0, 0, sx < 0 ? -0.4 : 0.4]}>
+            <cylinderGeometry args={[0.03, 0.03, 0.8, 8]} />
+            <meshStandardMaterial color="#334155" metalness={0.8} />
+          </mesh>
+          {/* Glowing Lamp Head */}
+          <mesh position={[sx < 0 ? 0.6 : -0.6, 3.75, 0]}>
+            <sphereGeometry args={[0.12, 12, 12]} />
+            <meshStandardMaterial color="#fef08a" emissive="#fbbf24" emissiveIntensity={1.2} />
+          </mesh>
+        </group>
+      ))}
     </group>
   );
 };

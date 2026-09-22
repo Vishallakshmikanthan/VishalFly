@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Home, GraduationCap, UtensilsCrossed, LucideIcon } from 'lucide-react';
+import { Home, GraduationCap, UtensilsCrossed, Dumbbell, Trees, Sun, LucideIcon } from 'lucide-react';
 import { useGameStore } from '../../store/useGameStore';
 import { LocationId } from '../../types';
 
@@ -33,6 +33,27 @@ const buttons: LocationButton[] = [
     icon: UtensilsCrossed,
     keyNum: '3',
   },
+  {
+    id: 'gym',
+    label: 'Gym',
+    sublabel: 'Fitness',
+    icon: Dumbbell,
+    keyNum: '4',
+  },
+  {
+    id: 'grounds',
+    label: 'Grounds',
+    sublabel: 'Gate & Loop',
+    icon: Trees,
+    keyNum: '5',
+  },
+  {
+    id: 'balcony',
+    label: 'Balcony',
+    sublabel: 'Terrace',
+    icon: Sun,
+    keyNum: '6',
+  },
 ];
 
 export const LocationSelector: React.FC = () => {
@@ -40,7 +61,7 @@ export const LocationSelector: React.FC = () => {
   const switchLocation = useGameStore((state) => state.switchLocation);
   const isTransitioning = useGameStore((state) => state.transitionState.isTransitioning);
 
-  // Keyboard hotkeys for fast location switching (1, 2, 3)
+  // Keyboard hotkeys for fast location switching (1 - 6)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't trigger if user is typing in an input
@@ -51,6 +72,9 @@ export const LocationSelector: React.FC = () => {
       if (e.key === '1') switchLocation('bedroom');
       if (e.key === '2') switchLocation('classroom');
       if (e.key === '3') switchLocation('dining');
+      if (e.key === '4') switchLocation('gym');
+      if (e.key === '5') switchLocation('grounds');
+      if (e.key === '6') switchLocation('balcony');
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -68,18 +92,18 @@ export const LocationSelector: React.FC = () => {
             key={btn.id}
             onClick={() => switchLocation(btn.id)}
             disabled={isTransitioning}
-            className={`group relative px-3 py-2 rounded-xl flex items-center gap-2.5 text-xs font-semibold transition-all duration-200 ${
+            className={`group relative px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl flex items-center gap-2 text-xs font-semibold transition-all duration-200 ${
               isActive
                 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 amber-glow-sm shadow-md'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800/50 border border-transparent'
             }`}
             title={`Navigate to ${btn.label} (Press ${btn.keyNum})`}
           >
-            <Icon className={`w-4 h-4 transition-transform duration-200 group-hover:scale-110 ${
+            <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-200 group-hover:scale-110 ${
               isActive ? 'text-amber-400' : 'text-slate-400'
             }`} />
 
-            <div className="text-left hidden sm:block">
+            <div className="text-left hidden md:block">
               <span className="block leading-tight">{btn.label}</span>
               <span className={`text-[10px] font-normal leading-none ${
                 isActive ? 'text-amber-300/70' : 'text-slate-500'
@@ -89,7 +113,7 @@ export const LocationSelector: React.FC = () => {
             </div>
 
             {/* Numeric hotkey badge */}
-            <span className={`font-mono text-[9px] px-1 py-0.2 rounded border hidden md:inline-block ${
+            <span className={`font-mono text-[9px] px-1 py-0.2 rounded border hidden lg:inline-block ${
               isActive
                 ? 'bg-amber-500/30 text-amber-200 border-amber-500/40'
                 : 'bg-slate-800 text-slate-500 border-slate-700'

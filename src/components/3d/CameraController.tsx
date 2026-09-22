@@ -41,6 +41,19 @@ export const CameraController: React.FC = () => {
     }
   }, [resetCameraTrigger]);
 
+  // Global 'R' key for quick camera reset
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
+      if (e.code === 'KeyR') {
+        isResetting.current = true;
+        resetProgress.current = 0;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   useFrame((_, delta) => {
     const controls = controlsRef.current;
     if (!controls) return;

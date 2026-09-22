@@ -5,9 +5,12 @@ import { DiningTables } from './DiningTables';
 import { KitchenPrepArea } from './KitchenPrepArea';
 import { WaterStationAndDecor } from './WaterStationAndDecor';
 import { DiningLighting } from './DiningLighting';
+import { TimeOfDayLighting } from '../../common/TimeOfDayLighting';
+import { InteractionHighlight } from '../../common/InteractionHighlight';
 
 /**
  * DiningEnvironment assembles the entire 3D PG Dining Hall:
+ * - Dynamic Time-of-Day lighting & contextual dining table interaction highlight
  * - Dining Architecture (checkered tile floor, kitchen pass-through, entrance)
  * - Food Serving Counter (chafing dishes, thali plates, sneeze guard)
  * - Dining Tables (communal tables, chairs, water carafes, napkin holders)
@@ -18,7 +21,9 @@ import { DiningLighting } from './DiningLighting';
 export const DiningEnvironment: React.FC = () => {
   return (
     <group name="DiningScene">
+      <TimeOfDayLighting isInterior={true} accentColor="#fbbf24" />
       <DiningLighting />
+      <InteractionHighlight color="#10b981" />
       <DiningArchitecture />
       <FoodServingCounter />
       <DiningTables />

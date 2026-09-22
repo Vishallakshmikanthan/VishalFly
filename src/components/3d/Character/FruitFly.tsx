@@ -325,6 +325,12 @@ export const FruitFly: React.FC<FruitFlyProps> = ({
           </mesh>
         </group>
       ))}
+
+      {/* 6. Contact Depth Shadow Disk */}
+      <mesh position={[0, -0.16, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.18, 16]} />
+        <meshBasicMaterial color="#000000" transparent opacity={0.25} />
+      </mesh>
     </group>
   );
 };

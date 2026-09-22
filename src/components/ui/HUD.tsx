@@ -61,7 +61,7 @@ export const HUD: React.FC = () => {
                     Vishal<span className="text-amber-400">Fly</span>
                   </h1>
                   <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 font-semibold border border-amber-500/20">
-                    Milestone 4
+                    Milestone 5
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 flex items-center gap-1 font-sans">

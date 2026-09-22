@@ -188,6 +188,39 @@ export const PlantsAndDecor: React.FC = () => {
           <meshStandardMaterial color="#1e293b" roughness={0.8} />
         </mesh>
       </group>
+
+      {/* 6. Phone Charging Cable & Smartphone on Bedside Nightstand (X: -3.5, Z: -3.4) */}
+      <group position={[-3.35, 0.72, -3.3]}>
+        {/* Smartphone */}
+        <mesh position={[0, 0.008, 0]} rotation={[0, 0.2, 0]} castShadow>
+          <boxGeometry args={[0.12, 0.012, 0.24]} />
+          <meshStandardMaterial color="#0f172a" metalness={0.85} roughness={0.2} />
+        </mesh>
+        {/* Screen */}
+        <mesh position={[0, 0.015, 0]} rotation={[-Math.PI / 2, 0, 0.2]}>
+          <planeGeometry args={[0.1, 0.21]} />
+          <meshBasicMaterial color="#0284c7" />
+        </mesh>
+        {/* White braided charging cable */}
+        <mesh position={[0.06, 0.006, 0.14]} rotation={[0, 0.4, 0]}>
+          <cylinderGeometry args={[0.004, 0.004, 0.22, 6]} />
+          <meshStandardMaterial color="#f8fafc" roughness={0.4} />
+        </mesh>
+      </group>
+
+      {/* 7. Insulated Stainless Water Bottle on Desk (X: 1.2, Z: -2.2) */}
+      <group position={[1.25, 0.98, -2.1]}>
+        {/* Bottle Body */}
+        <mesh position={[0, 0.13, 0]} castShadow>
+          <cylinderGeometry args={[0.05, 0.05, 0.26, 16]} />
+          <meshStandardMaterial color="#0284c7" metalness={0.7} roughness={0.25} />
+        </mesh>
+        {/* Bottle Cap with silver loop */}
+        <mesh position={[0, 0.28, 0]} castShadow>
+          <cylinderGeometry args={[0.03, 0.03, 0.04, 12]} />
+          <meshStandardMaterial color="#d4d4d8" metalness={0.9} />
+        </mesh>
+      </group>
     </group>
   );
 };

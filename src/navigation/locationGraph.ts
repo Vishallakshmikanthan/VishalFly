@@ -14,7 +14,7 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
       maxX: 3.6,
       minY: 0.35,
       maxY: 4.2,
-      minZ: -3.6,
+      minZ: -3.8,
       maxZ: 3.6,
     },
     camera: {
