@@ -30,6 +30,7 @@ import {
 import { LOCATIONS } from '../navigation/locationGraph';
 import { SimulationEngine } from '../simulation/engine/SimulationEngine';
 import { INITIAL_NEEDS_STATE } from '../simulation/config/defaults';
+import { CognitiveInspectorData } from '../cognition/debug/CognitiveInspectorState';
 
 interface GameState {
   // Active Location
@@ -72,6 +73,12 @@ interface GameState {
   foodOrderState: FoodOrderState;
   familyCallState: FamilyCallState;
   morningRoutineState: MorningRoutineState;
+  
+  // Milestone 6 Cognitive Architecture State
+  isCognitionEnabled: boolean;
+  cognitiveInspectorData: CognitiveInspectorData | null;
+  toggleCognition: () => void;
+  setCognitionEnabled: (enabled: boolean) => void;
   
   // Camera & view controls
   resetCameraTrigger: number;
@@ -159,6 +166,10 @@ export const useGameStore = create<GameState>((set, get) => {
     foodOrderState: simulationEngine.foodOrderSystem.getState(),
     familyCallState: simulationEngine.familyCallSystem.getState(),
     morningRoutineState: simulationEngine.morningRoutineSystem.getState(),
+
+    // Milestone 6 Cognitive State
+    isCognitionEnabled: simulationEngine.cognitiveEngine.getIsCognitionEnabled(),
+    cognitiveInspectorData: simulationEngine.getCognitiveInspectorState(),
     
     resetCameraTrigger: 0,
     followFly: false,
@@ -304,6 +315,25 @@ export const useGameStore = create<GameState>((set, get) => {
         foodOrderState: simState.foodOrderState,
         familyCallState: simState.familyCallState,
         morningRoutineState: simState.morningRoutineState,
+        cognitiveInspectorData: simState.cognitive || simulationEngine.getCognitiveInspectorState(),
+        isCognitionEnabled: simulationEngine.cognitiveEngine.getIsCognitionEnabled(),
+      });
+    },
+
+    toggleCognition: () => {
+      const next = !get().isCognitionEnabled;
+      simulationEngine.setCognitionEnabled(next);
+      set({ 
+        isCognitionEnabled: next,
+        cognitiveInspectorData: simulationEngine.getCognitiveInspectorState(),
+      });
+    },
+
+    setCognitionEnabled: (enabled: boolean) => {
+      simulationEngine.setCognitionEnabled(enabled);
+      set({ 
+        isCognitionEnabled: enabled,
+        cognitiveInspectorData: simulationEngine.getCognitiveInspectorState(),
       });
     },
 

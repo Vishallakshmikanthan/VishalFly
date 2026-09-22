@@ -25,6 +25,8 @@ import { FoodOrderSystem } from '../systems/FoodOrderSystem';
 import { FamilyCallSystem } from '../systems/FamilyCallSystem';
 import { MorningRoutineSystem } from '../systems/MorningRoutineSystem';
 import { SimulationPersistence } from '../persistence/SimulationPersistence';
+import { CognitiveEngine } from '../../cognition/CognitiveEngine';
+import { CognitiveInspectorData } from '../../cognition/debug/CognitiveInspectorState';
 
 export type SimulationStateListener = (state: SimulationState) => void;
 
@@ -45,6 +47,7 @@ export class SimulationEngine {
   public foodOrderSystem: FoodOrderSystem;
   public familyCallSystem: FamilyCallSystem;
   public morningRoutineSystem: MorningRoutineSystem;
+  public cognitiveEngine: CognitiveEngine;
 
   private isAutonomous: boolean = true;
   private currentSpot: string = 'Center Room Airspace';
@@ -76,6 +79,12 @@ export class SimulationEngine {
       settings.travelDurationSeconds
     );
     this.needsSystem = new NeedsSystem(this.eventLogger);
+    this.cognitiveEngine = new CognitiveEngine(
+      this.activityManager,
+      this.eventLogger,
+      undefined,
+      this.needsSystem.getState()
+    );
 
     // Initialize daily life sub-systems
     this.workoutSystem = new WorkoutSystem(this.eventLogger);
@@ -197,31 +206,75 @@ export class SimulationEngine {
 
         // College Activities & Variations
         case 'college_activities': {
+          let behaviorKey: CollegeSubBehavior = 'lecture';
+          let behaviorName = 'Listening to Lecture';
+          let landmark = 'Front Row Student Desks';
+          let waypoint = 'student_desk_front';
+          let pose: FlyActivity = 'sitting';
+
+          if (this.cognitiveEngine.getIsCognitionEnabled()) {
+            const cogResult = this.cognitiveEngine.step({
+              clock: clockState,
+              character: {
+                locationId: this.activityManager.getCurrentLocation(),
+                currentSpot: this.currentSpot,
+                flyActivity: this.currentFlyActivity,
+                position: [0, 1.8, 0],
+                isAutonomous: this.isAutonomous,
+                isTravelling: this.activityManager.isTravelling(),
+              },
+              currentActivity: currentInstance,
+              activeScheduleEntry: activeEntry,
+              needs: this.needsSystem.getState(),
+              workoutSession: this.workoutSystem.getCurrentSession(),
+              mealSession: this.mealSystem.getCurrentSession(),
+              projectState: this.projectSystem.getState(),
+              assignmentState: this.assignmentSystem.getState(),
+              familyCallState: this.familyCallSystem.getState(),
+              laundryState: this.laundrySystem.getState(),
+              currentWaypoint: this.currentWaypoint,
+              deltaSimSeconds: deltaSimSec,
+            });
+
+            if (cogResult.decision?.actionRequest.collegeSubBehavior) {
+              behaviorKey = cogResult.decision.actionRequest.collegeSubBehavior;
+              behaviorName = cogResult.decision.actionRequest.actionLabel || cogResult.decision.selectedCandidateName;
+              if (cogResult.appliedWaypoint) waypoint = cogResult.appliedWaypoint;
+              if (cogResult.appliedFlyActivity) pose = cogResult.appliedFlyActivity;
+            }
+          } else {
+            const behaviorDetails = this.behaviorSelector.evaluateCollegeBehavior(
+              clockState.currentMinutes
+            );
+            behaviorKey = behaviorDetails.behavior;
+            behaviorName = behaviorDetails.name;
+            landmark = behaviorDetails.targetLandmark;
+            waypoint = behaviorDetails.targetWaypoint;
+            pose = behaviorDetails.flyActivity;
+          }
+
           const prevBehavior = this.selectedCollegeBehavior;
-          const behaviorDetails = this.behaviorSelector.evaluateCollegeBehavior(
-            clockState.currentMinutes
-          );
-          this.selectedCollegeBehavior = behaviorDetails.behavior;
+          this.selectedCollegeBehavior = behaviorKey;
 
           if (prevBehavior !== this.selectedCollegeBehavior) {
             this.eventLogger.log({
               timestamp,
               dayNumber: clockState.dayNumber,
               category: 'behavior',
-              message: `College variation: ${behaviorDetails.name}`,
+              message: `College variation: ${behaviorName}`,
               activityId: currentInstance.definition.id,
               locationId: currentInstance.targetLocation,
             });
           }
 
           currentInstance.selectedSubBehavior = this.selectedCollegeBehavior;
-          this.currentSpot = behaviorDetails.targetLandmark;
-          this.currentWaypoint = behaviorDetails.targetWaypoint;
-          defaultPose = behaviorDetails.flyActivity;
-          activeActionLabel = behaviorDetails.name;
+          this.currentSpot = landmark;
+          this.currentWaypoint = waypoint;
+          defaultPose = pose;
+          activeActionLabel = behaviorName;
 
           // Needs side-effects of college behavior variation
-          if (behaviorDetails.behavior === 'dozing') {
+          if (behaviorKey === 'dozing') {
             this.needsSystem.update(deltaSimSec, {
               energyPerHour: 2,
               hungerPerHour: 0,
@@ -230,7 +283,7 @@ export class SimulationEngine {
               focusPerHour: -8,
               socialNeedPerHour: 0,
             }, timestamp, clockState.dayNumber);
-          } else if (behaviorDetails.behavior === 'laptop') {
+          } else if (behaviorKey === 'laptop') {
             this.needsSystem.update(deltaSimSec, {
               energyPerHour: -2,
               hungerPerHour: 0,
@@ -239,7 +292,7 @@ export class SimulationEngine {
               focusPerHour: 12,
               socialNeedPerHour: 0,
             }, timestamp, clockState.dayNumber);
-          } else if (behaviorDetails.behavior === 'reels') {
+          } else if (behaviorKey === 'reels') {
             this.needsSystem.update(deltaSimSec, {
               energyPerHour: 1,
               hungerPerHour: 0,
@@ -420,13 +473,39 @@ export class SimulationEngine {
       );
     }
 
-    // 6. Next Activity Info
+    // 6. Step Cognitive Engine (for non-college activities or general memory/state tracking)
+    if (actId !== 'college_activities') {
+      this.cognitiveEngine.step({
+        clock: clockState,
+        character: {
+          locationId: this.activityManager.getCurrentLocation(),
+          currentSpot: this.currentSpot,
+          flyActivity: this.currentFlyActivity,
+          position: [0, 1.8, 0],
+          isAutonomous: this.isAutonomous,
+          isTravelling: this.activityManager.isTravelling(),
+        },
+        currentActivity: currentInstance,
+        activeScheduleEntry: activeEntry,
+        needs: this.needsSystem.getState(),
+        workoutSession: this.workoutSystem.getCurrentSession(),
+        mealSession: this.mealSystem.getCurrentSession(),
+        projectState: this.projectSystem.getState(),
+        assignmentState: this.assignmentSystem.getState(),
+        familyCallState: this.familyCallSystem.getState(),
+        laundryState: this.laundrySystem.getState(),
+        currentWaypoint: this.currentWaypoint,
+        deltaSimSeconds: deltaSimSec,
+      });
+    }
+
+    // 7. Next Activity Info
     const nextActivityInfo = this.planner.getNextActivityStart(
       clockState.currentMinutes,
       clockState.dayType
     );
 
-    // 7. Compose State Snapshot
+    // 8. Compose State Snapshot
     const state: SimulationState = {
       clock: clockState,
       currentActivity: currentInstance,
@@ -454,6 +533,7 @@ export class SimulationEngine {
       foodOrderState: this.foodOrderSystem.getState(),
       familyCallState: this.familyCallSystem.getState(),
       morningRoutineState: this.morningRoutineSystem.getState(),
+      cognitive: this.cognitiveEngine.getInspectorData(currentInstance?.scheduleEntry.name || 'Idle'),
     };
 
     // Emit to listeners
@@ -550,6 +630,8 @@ export class SimulationEngine {
     this.foodOrderSystem.reset();
     this.familyCallSystem.reset();
     this.morningRoutineSystem.reset();
+    this.cognitiveEngine.internalStateManager.reset(this.needsSystem.getState());
+    this.cognitiveEngine.memory.clear();
     this.evaluateSchedule();
 
     this.eventLogger.log({
@@ -669,6 +751,7 @@ export class SimulationEngine {
     const assignment = this.assignmentSystem.getState();
     const workout = this.workoutSystem.getCurrentSession();
     const events = this.eventLogger.getAll();
+    const cognitive = this.cognitiveEngine.serialize();
 
     const ok = SimulationPersistence.saveSimulation({
       clock,
@@ -677,6 +760,7 @@ export class SimulationEngine {
       assignment,
       workout,
       events,
+      cognitive,
     });
 
     if (ok) {
@@ -703,6 +787,10 @@ export class SimulationEngine {
     this.assignmentSystem.setState(saved.assignment);
     this.workoutSystem.setSession(saved.workout);
 
+    if (saved.cognitive) {
+      this.cognitiveEngine.deserialize(saved.cognitive);
+    }
+
     this.evaluateSchedule();
     this.step(0);
 
@@ -720,6 +808,21 @@ export class SimulationEngine {
     SimulationPersistence.resetSimulation();
     this.restartDay();
     return true;
+  }
+
+  public getCognitiveEngine(): CognitiveEngine {
+    return this.cognitiveEngine;
+  }
+
+  public setCognitionEnabled(enabled: boolean): void {
+    this.cognitiveEngine.setCognitionEnabled(enabled);
+    this.step(0);
+  }
+
+  public getCognitiveInspectorState(): CognitiveInspectorData {
+    return this.cognitiveEngine.getInspectorData(
+      this.activityManager.getCurrentInstance()?.scheduleEntry.name || 'Idle'
+    );
   }
 
   public getState(): SimulationState {

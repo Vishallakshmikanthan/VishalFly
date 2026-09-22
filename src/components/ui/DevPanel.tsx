@@ -12,7 +12,10 @@ import {
   Utensils, 
   PhoneCall, 
   PackageCheck,
-  Zap
+  Zap,
+  BrainCircuit,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-react';
 import { useGameStore } from '../../store/useGameStore';
 import { LocationId, NeedType } from '../../types';
@@ -34,6 +37,9 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
   const triggerFoodOrder = useGameStore((state) => state.triggerFoodOrder);
   const triggerActivity = useGameStore((state) => state.triggerActivity);
   const setNeedValue = useGameStore((state) => state.setNeedValue);
+  const isCognitionEnabled = useGameStore((state) => state.isCognitionEnabled);
+  const toggleCognition = useGameStore((state) => state.toggleCognition);
+  const cognitiveData = useGameStore((state) => state.cognitiveInspectorData);
   const saveSimulation = useGameStore((state) => state.saveSimulation);
   const loadSimulation = useGameStore((state) => state.loadSimulation);
   const resetSimulation = useGameStore((state) => state.resetSimulation);
@@ -269,6 +275,53 @@ export const DevPanel: React.FC<DevPanelProps> = ({ isOpen, onClose }) => {
                   />
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Section: Connectome Cognitive Architecture */}
+          <div className="flex flex-col gap-2.5 pt-2 border-t border-slate-700/50">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-slate-200 uppercase tracking-wider text-[11px] font-mono flex items-center gap-1.5">
+                <BrainCircuit className="w-3.5 h-3.5 text-cyan-400" />
+                Connectome Cognitive Architecture (Milestone 6)
+              </h3>
+              <button
+                onClick={toggleCognition}
+                className={`px-2.5 py-1 rounded-lg flex items-center gap-1.5 text-xs font-semibold transition-all border ${
+                  isCognitionEnabled 
+                    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 hover:bg-cyan-500/30' 
+                    : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700'
+                }`}
+              >
+                {isCognitionEnabled ? (
+                  <>
+                    <ToggleRight className="w-4 h-4 text-cyan-400" />
+                    <span>Active</span>
+                  </>
+                ) : (
+                  <>
+                    <ToggleLeft className="w-4 h-4 text-slate-400" />
+                    <span>Bypassed</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="p-3 rounded-lg bg-slate-800/40 border border-slate-700/60 flex flex-col gap-1.5 text-xs">
+              <div className="flex justify-between items-center text-[11px]">
+                <span className="text-slate-400">Current Goal:</span>
+                <span className="text-white font-medium">{cognitiveData?.currentGoal || 'Autonomous'}</span>
+              </div>
+              <div className="flex justify-between items-center text-[11px]">
+                <span className="text-slate-400">Selected Action:</span>
+                <span className="text-cyan-300 font-mono font-bold">
+                  {cognitiveData?.lastDecision?.selectedCandidateName || 'None'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-[11px]">
+                <span className="text-slate-400">Memory Records:</span>
+                <span className="text-slate-300 font-mono">{cognitiveData?.recentMemory?.length ?? 0}</span>
+              </div>
             </div>
           </div>
 

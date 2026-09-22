@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Compass, Clock, MapPin, Calendar, ScrollText, Sparkles, Wrench } from 'lucide-react';
+import { Compass, Clock, MapPin, Calendar, ScrollText, Sparkles, Wrench, BrainCircuit } from 'lucide-react';
 import { useGameStore } from '../../store/useGameStore';
 import { LocationSelector } from './LocationSelector';
 import { SimulationControls } from './SimulationControls';
@@ -7,6 +7,7 @@ import { NeedsMeters } from './NeedsMeters';
 import { EventLogPanel } from './EventLogPanel';
 import { ActivityInspector } from './ActivityInspector';
 import { DevPanel } from './DevPanel';
+import { CognitiveInspector } from './CognitiveInspector';
 import { LOCATIONS } from '../../navigation/locationGraph';
 
 export const HUD: React.FC = () => {
@@ -21,13 +22,17 @@ export const HUD: React.FC = () => {
 
   const [isLogOpen, setIsLogOpen] = useState(false);
   const [isDevOpen, setIsDevOpen] = useState(false);
+  const [isCognitiveOpen, setIsCognitiveOpen] = useState(false);
 
-  // Global F3 shortcut listener for Developer Panel
+  // Global F3/F4 shortcut listener for Developer Panel and Cognitive Inspector
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'F3') {
         e.preventDefault();
         setIsDevOpen((prev) => !prev);
+      } else if (e.code === 'F4') {
+        e.preventDefault();
+        setIsCognitiveOpen((prev) => !prev);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -60,8 +65,8 @@ export const HUD: React.FC = () => {
                   <h1 className="font-extrabold text-base md:text-lg tracking-tight text-white font-sans">
                     Vishal<span className="text-amber-400">Fly</span>
                   </h1>
-                  <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 font-semibold border border-amber-500/20">
-                    Milestone 5
+                  <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 font-semibold border border-cyan-500/20">
+                    Milestone 6
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 flex items-center gap-1 font-sans">
@@ -127,6 +132,16 @@ export const HUD: React.FC = () => {
                 </div>
               </div>
 
+              {/* Cognitive Inspector Button (F4) */}
+              <button
+                onClick={() => setIsCognitiveOpen(true)}
+                className="relative p-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all border border-slate-700/50"
+                title="Open Cognitive Inspector (F4)"
+              >
+                <BrainCircuit className="w-4 h-4 text-cyan-400" />
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-cyan-400" />
+              </button>
+
               {/* Developer Panel Button (F3) */}
               <button
                 onClick={() => setIsDevOpen(true)}
@@ -167,6 +182,9 @@ export const HUD: React.FC = () => {
 
       {/* Developer Testing Control Panel (F3) */}
       <DevPanel isOpen={isDevOpen} onClose={() => setIsDevOpen(false)} />
+
+      {/* Cognitive Architecture Inspector Panel (F4) */}
+      <CognitiveInspector isOpen={isCognitiveOpen} onClose={() => setIsCognitiveOpen(false)} />
     </>
   );
 };

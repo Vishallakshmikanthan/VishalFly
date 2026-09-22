@@ -1,4 +1,5 @@
 import { FlyActivity, Vector3Tuple, RoomBounds, CameraPreset, Landmark } from '../../types';
+import type { CognitiveInspectorData } from '../../cognition/debug/CognitiveInspectorState';
 
 export type DayOfWeek = 
   | 'Monday' 
@@ -322,4 +323,5 @@ export interface SimulationState {
   foodOrderState: FoodOrderState;
   familyCallState: FamilyCallState;
   morningRoutineState: MorningRoutineState;
+  cognitive?: CognitiveInspectorData;
 }

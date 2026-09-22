@@ -3,9 +3,10 @@ import {
   NeedState, 
   ProjectState, 
   AssignmentState, 
-  WorkoutSession,
+  WorkoutSession, 
   SimulationEvent 
 } from '../types/simulation';
+import { SerializedCognitiveData } from '../../cognition/types/cognition';
 
 export interface SerializedSimulationData {
   version: number;
@@ -24,18 +25,30 @@ export interface SerializedSimulationData {
   assignment: AssignmentState;
   workout: WorkoutSession | null;
   events: SimulationEvent[];
+  cognitive?: SerializedCognitiveData;
 }
 
 export const STORAGE_KEY = 'vishalfly_simulation_save_v1';
 
-function getStorage(): Storage | null {
+let inMemoryStorage: Record<string, string> = {};
+
+const fallbackStorage: Storage = {
+  getItem: (key: string) => inMemoryStorage[key] || null,
+  setItem: (key: string, val: string) => { inMemoryStorage[key] = val; },
+  removeItem: (key: string) => { delete inMemoryStorage[key]; },
+  clear: () => { inMemoryStorage = {}; },
+  key: (idx: number) => Object.keys(inMemoryStorage)[idx] || null,
+  length: 0,
+};
+
+function getStorage(): Storage {
   if (typeof window !== 'undefined' && window.localStorage) {
     return window.localStorage;
   }
   if (typeof globalThis !== 'undefined' && (globalThis as any).localStorage) {
     return (globalThis as any).localStorage;
   }
-  return null;
+  return fallbackStorage;
 }
 
 export class SimulationPersistence {
@@ -46,6 +59,7 @@ export class SimulationPersistence {
     assignment: AssignmentState;
     workout: WorkoutSession | null;
     events: SimulationEvent[];
+    cognitive?: SerializedCognitiveData;
   }): boolean {
     try {
       const storage = getStorage();
@@ -70,6 +84,7 @@ export class SimulationPersistence {
         assignment: data.assignment,
         workout: data.workout,
         events: data.events.slice(-30), // save last 30 events
+        cognitive: data.cognitive,
       };
 
       storage.setItem(STORAGE_KEY, JSON.stringify(payload));
