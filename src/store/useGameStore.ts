@@ -222,7 +222,19 @@ export const useGameStore = create<GameState>((set, get) => {
     // Milestone Connectome Neural Brain State
     controllerMode: 'connectome',
     connectomeSnapshot: null,
-    setControllerMode: (controllerMode) => set({ controllerMode, isAutonomous: controllerMode !== 'manual' }),
+    setControllerMode: (controllerMode) => {
+      if (controllerMode === 'cognitive') {
+        simulationEngine.setCognitionEnabled(true);
+      } else if (controllerMode === 'schedule') {
+        simulationEngine.setCognitionEnabled(false);
+      }
+      set({
+        controllerMode,
+        isAutonomous: controllerMode !== 'manual',
+        isCognitionEnabled: simulationEngine.cognitiveEngine.getIsCognitionEnabled(),
+        cognitiveInspectorData: simulationEngine.getCognitiveInspectorState(),
+      });
+    },
     setConnectomeSnapshot: (connectomeSnapshot) => set({ connectomeSnapshot }),
     triggerConnectomeThreat: () => connectomeFlyController.triggerThreatStimulus(),
 
