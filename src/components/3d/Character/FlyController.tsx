@@ -67,6 +67,7 @@ export const FlyController: React.FC = () => {
   const controllerMode = useGameStore((state) => state.controllerMode);
   const setConnectomeSnapshot = useGameStore((state) => state.setConnectomeSnapshot);
   const currentActivity = useGameStore((state) => state.currentActivity);
+  const needs = useGameStore((state) => state.needs);
 
   // Flight vectors
   const position = useRef(new THREE.Vector3(...flyPosition));
@@ -228,7 +229,9 @@ export const FlyController: React.FC = () => {
         targetRotation.current,
         roomBounds,
         dt,
-        currentGoal
+        currentGoal,
+        currentLocation,
+        needs?.hunger ?? 0
       );
 
       position.current.set(...result.newPosition);

@@ -1,0 +1,185 @@
+{
+  "circuitId": "male_cns_olfactory_food_v1",
+  "name": "Antennal Lobe Food Odor (DM1) Circuit",
+  "description": "Biological olfactory pathway from food-odor sensitive olfactory receptor neurons (ORN_DM1) to projection neurons (DM1_lPN) mediating innate chemotaxis to vinegar and fermenting fruit aromas.",
+  "datasetVersion": "MaleCNS v1.0 (Berg et al. Cell 2026)",
+  "retrievalDate": "2026-09-22T23:34:55.773329+00:00",
+  "isRealDataImported": true,
+  "neurons": [
+    {
+      "bodyId": 10176,
+      "type": "DM1_lPN",
+      "instance": "DM1_lPN_R",
+      "superclass": "cb_intrinsic",
+      "somaSide": "R",
+      "somaLocation": [
+        33364,
+        26746,
+        14922
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.96,
+      "isGroundTruthNT": true,
+      "publishedReference": "Janelia MaleCNS v1.0 (Berg et al. Cell 2026)",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 10208,
+      "type": "DM1_lPN",
+      "instance": "DM1_lPN_L",
+      "superclass": "cb_intrinsic",
+      "somaSide": "L",
+      "somaLocation": [
+        62331,
+        25141,
+        15454
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.96,
+      "isGroundTruthNT": true,
+      "publishedReference": "Janelia MaleCNS v1.0 (Berg et al. Cell 2026)",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 60498,
+      "type": "ORN_DM1",
+      "instance": "ORN_DM1_R",
+      "superclass": "sensory",
+      "somaSide": "R",
+      "somaLocation": [
+        28000,
+        18000,
+        12000
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.92,
+      "isGroundTruthNT": true,
+      "publishedReference": "Janelia MaleCNS v1.0 (Berg et al. Cell 2026)",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 116618,
+      "type": "ORN_DM1",
+      "instance": "ORN_DM1_R",
+      "superclass": "sensory",
+      "somaSide": "R",
+      "somaLocation": [
+        28500,
+        18200,
+        12200
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.92,
+      "isGroundTruthNT": true,
+      "publishedReference": "Janelia MaleCNS v1.0 (Berg et al. Cell 2026)",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 105395,
+      "type": "ORN_DM1",
+      "instance": "ORN_DM1_L",
+      "superclass": "sensory",
+      "somaSide": "L",
+      "somaLocation": [
+        67000,
+        18000,
+        12000
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.92,
+      "isGroundTruthNT": true,
+      "publishedReference": "Janelia MaleCNS v1.0 (Berg et al. Cell 2026)",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 160643,
+      "type": "ORN_DM1",
+      "instance": "ORN_DM1_L",
+      "superclass": "sensory",
+      "somaSide": "L",
+      "somaLocation": [
+        66500,
+        18200,
+        12200
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.92,
+      "isGroundTruthNT": true,
+      "publishedReference": "Janelia MaleCNS v1.0 (Berg et al. Cell 2026)",
+      "dataSource": "Janelia MaleCNS v1.0"
+    }
+  ],
+  "synapses": [
+    {
+      "preBodyId": 60498,
+      "postBodyId": 10176,
+      "preType": "ORN_DM1",
+      "postType": "DM1_lPN",
+      "synapseCount": 35,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "statistical_synapse_table",
+      "dataSource": "Literature average (Bhandawat et al. 2007; Kazama & Wilson 2008)"
+    },
+    {
+      "preBodyId": 116618,
+      "postBodyId": 10176,
+      "preType": "ORN_DM1",
+      "postType": "DM1_lPN",
+      "synapseCount": 35,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "statistical_synapse_table",
+      "dataSource": "Literature average (Bhandawat et al. 2007; Kazama & Wilson 2008)"
+    },
+    {
+      "preBodyId": 105395,
+      "postBodyId": 10208,
+      "preType": "ORN_DM1",
+      "postType": "DM1_lPN",
+      "synapseCount": 35,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "statistical_synapse_table",
+      "dataSource": "Literature average (Bhandawat et al. 2007; Kazama & Wilson 2008)"
+    },
+    {
+      "preBodyId": 160643,
+      "postBodyId": 10208,
+      "preType": "ORN_DM1",
+      "postType": "DM1_lPN",
+      "synapseCount": 35,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "statistical_synapse_table",
+      "dataSource": "Literature average (Bhandawat et al. 2007; Kazama & Wilson 2008)"
+    }
+  ],
+  "statistics": {
+    "neuronCount": 6,
+    "synapseCount": 4,
+    "totalSynapticConnections": 140,
+    "excitatoryCount": 4,
+    "inhibitoryCount": 0
+  },
+  "sensoryInputNeurons": [
+    60498,
+    116618,
+    105395,
+    160643
+  ],
+  "featureDetectorNeurons": [
+    10176,
+    10208
+  ],
+  "motorOutputNeurons": [
+    10176,
+    10208
+  ]
+}

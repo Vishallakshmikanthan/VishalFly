@@ -32,6 +32,7 @@ import { LIFDynamicsEngine } from '../dynamics/LIFDynamicsEngine';
 import { BiologicalCircuitData, NeuralStateSnapshot } from '../types';
 import { NavigationGoal, wrapAngle } from '../navigation/NavigationGoalTypes';
 import defaultCompassCircuit from '../data/compass_steering_circuit.json';
+import { ExperimentalDelta7Inhibition, Delta7Telemetry } from './Delta7Inhibition';
 
 export interface CentralComplexTelemetry {
   /** Raw decoded neural steering signal from DNg02 bilateral firing rate asymmetry [-1, +1] */
@@ -58,11 +59,14 @@ export interface CentralComplexTelemetry {
   goalDistance: number;
   /** Underlying LIF dynamics snapshot */
   snapshot: NeuralStateSnapshot;
+  /** Delta7 Protocerebral Bridge surround inhibition telemetry */
+  delta7?: Delta7Telemetry;
 }
 
 export class CentralComplexSteering {
   private graph: ConnectomeGraph;
   private dynamicsEngine: LIFDynamicsEngine;
+  private delta7Inhibition: ExperimentalDelta7Inhibition;
 
   // Neuron Body IDs
   public readonly EPG_IDS = {
@@ -91,9 +95,10 @@ export class CentralComplexSteering {
 
   private lastTelemetry: CentralComplexTelemetry | null = null;
 
-  constructor(customGraph?: ConnectomeGraph) {
+  constructor(customGraph?: ConnectomeGraph, customDelta7Params?: Partial<import('./Delta7Inhibition').Delta7Parameters>) {
     this.graph = customGraph || new ConnectomeGraph(defaultCompassCircuit as unknown as BiologicalCircuitData);
     this.dynamicsEngine = new LIFDynamicsEngine(this.graph);
+    this.delta7Inhibition = new ExperimentalDelta7Inhibition(customDelta7Params);
   }
 
   public getGraph(): ConnectomeGraph {
@@ -104,11 +109,15 @@ export class CentralComplexSteering {
     return this.dynamicsEngine;
   }
 
+  public getDelta7(): ExperimentalDelta7Inhibition {
+    return this.delta7Inhibition;
+  }
+
   /**
    * Main central-complex update step.
    * Injects heading and goal bearing drive into E-PG compass neurons,
    * steps the biophysical LIF neural dynamics through P-EN to DNg02,
-   * and decodes descending steering torque.
+   * applies Delta7 cross-column surround inhibition, and decodes descending steering torque.
    */
   public update(
     flyHeading: number,
@@ -123,7 +132,19 @@ export class CentralComplexSteering {
     const goalBearing = hasGoal ? goal.goalBearing : safeHeading;
     const goalDist = hasGoal ? goal.distance3D : 0;
 
-    // 1. Calculate Injected Currents for E-PG Compass Neurons
+    // 1. Evaluate Delta7 Protocerebral Bridge Surround Inhibition
+    const prevEpgRates = {
+      r1: this.lastTelemetry?.epgFiringRates[this.EPG_IDS.r1] ?? 0,
+      r2: this.lastTelemetry?.epgFiringRates[this.EPG_IDS.r2] ?? 0,
+      l1: this.lastTelemetry?.epgFiringRates[this.EPG_IDS.l1] ?? 0,
+      l2: this.lastTelemetry?.epgFiringRates[this.EPG_IDS.l2] ?? 0,
+    };
+    const delta7Result = this.delta7Inhibition.evaluateInhibition(
+      prevEpgRates,
+      this.lastTelemetry?.snapshot.potentials
+    );
+
+    // 2. Calculate Injected Currents for E-PG Compass Neurons
     // Drosophila central complex E-PG neurons exhibit cosine-like azimuthal tuning curves (Green et al. 2017)
     // plus asymmetric goal-offset excitation from P-EN/fan-shaped body guidance (Stone et al. 2017).
     const tonicHeadingDrive = 0.6; // baseline tonic drive in nA
@@ -138,10 +159,11 @@ export class CentralComplexSteering {
       // If goal is to the left (angError > 0), drive left E-PG neurons (20003, 20004).
       // If goal is to the right (angError < 0), drive right E-PG neurons (20001, 20002).
       let goalDrive = 0;
+      const isLeftNeuron = bid === this.EPG_IDS.l1 || bid === this.EPG_IDS.l2;
+      const isRightNeuron = bid === this.EPG_IDS.r1 || bid === this.EPG_IDS.r2;
+
       if (hasGoal) {
         const errorMagnitude = Math.min(1.0, Math.abs(angError) / (Math.PI / 2));
-        const isLeftNeuron = bid === this.EPG_IDS.l1 || bid === this.EPG_IDS.l2;
-        const isRightNeuron = bid === this.EPG_IDS.r1 || bid === this.EPG_IDS.r2;
 
         if (angError > 0 && isLeftNeuron) {
           // Goal to the left -> excite left hemisphere steering circuit
@@ -152,14 +174,18 @@ export class CentralComplexSteering {
         }
       }
 
-      const totalCurrent = Math.max(0, Math.min(4.0, headingActivation + goalDrive));
+      // Apply Delta7 surround inhibition:
+      // Left channel receives inhibitory suppression from right channel activity, and vice versa
+      const inhCurrent = isLeftNeuron ? delta7Result.leftInhCurrent : delta7Result.rightInhCurrent;
+
+      const totalCurrent = Math.max(0, Math.min(4.0, headingActivation + goalDrive - inhCurrent));
       this.dynamicsEngine.setInjectedCurrent(bid, totalCurrent);
     }
 
-    // 2. Step Biophysical LIF Neural Dynamics forward
+    // 3. Step Biophysical LIF Neural Dynamics forward
     const snapshot = this.dynamicsEngine.step(dtMs);
 
-    // 3. Read Descending Premotor Firing Rates from DNg02
+    // 4. Read Descending Premotor Firing Rates from DNg02
     const dng02LeftRate = snapshot.firingRates[this.DNG02_IDS.l] ?? 0;
     const dng02RightRate = snapshot.firingRates[this.DNG02_IDS.r] ?? 0;
 
@@ -169,7 +195,7 @@ export class CentralComplexSteering {
     const neuralRateDiff = dng02LeftRate - dng02RightRate;
     const neuralSteer = Math.max(-1.0, Math.min(1.0, neuralRateDiff / 25.0));
 
-    // 4. Fallback Assistance Check
+    // 5. Fallback Assistance Check
     // If the biophysical network is still in its initial refractory/depolarization latency
     // (< 20 ms) and hasn't emitted spikes yet, provide a bounded heuristic baseline
     // so flight is immediately responsive, explicitly tagged as fallback.
@@ -187,7 +213,7 @@ export class CentralComplexSteering {
       isUsingFallback = false;
     }
 
-    // 5. Compute Population Vector Heading Estimate from E-PG Rates
+    // 6. Compute Population Vector Heading Estimate from E-PG Rates
     let sinSum = 0;
     let cosSum = 0;
     let totalEpg = 0;
@@ -224,6 +250,7 @@ export class CentralComplexSteering {
       angularError: Math.round(angError * 1000) / 1000,
       goalDistance: Math.round(goalDist * 1000) / 1000,
       snapshot,
+      delta7: delta7Result.telemetry,
     };
 
     return this.lastTelemetry;
@@ -235,6 +262,7 @@ export class CentralComplexSteering {
 
   public reset(): void {
     this.dynamicsEngine.reset();
+    this.delta7Inhibition.reset();
     this.lastTelemetry = null;
   }
 }

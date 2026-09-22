@@ -39,6 +39,8 @@ export interface NavigationGoal {
   angularError: number;
   /** Whether the fly has arrived within the destination threshold */
   isArrived: boolean;
+  /** Category of navigation goal (schedule, food chemotaxis, or exploration) */
+  goalType?: 'schedule_waypoint' | 'food_chemotaxis' | 'exploration';
 }
 
 /**
@@ -78,7 +80,8 @@ export function createNavigationGoal(
   currentPos: [number, number, number],
   currentHeading: number,
   goalId = 'destination',
-  arrivalRadius = 0.4
+  arrivalRadius = 0.4,
+  goalType: 'schedule_waypoint' | 'food_chemotaxis' | 'exploration' = 'schedule_waypoint'
 ): NavigationGoal {
   // Validate current position and heading
   const validCurrent =
@@ -105,6 +108,7 @@ export function createNavigationGoal(
       currentHeading: safeHeading,
       isValid: false,
       goalId,
+      goalType,
       distance3D: 0,
       distanceHorizontal: 0,
       verticalDistance: 0,
@@ -132,6 +136,7 @@ export function createNavigationGoal(
     currentHeading: safeHeading,
     isValid: true,
     goalId,
+    goalType,
     distance3D: Math.round(dist3D * 1000) / 1000,
     distanceHorizontal: Math.round(distHoriz * 1000) / 1000,
     verticalDistance: Math.round(dy * 1000) / 1000,

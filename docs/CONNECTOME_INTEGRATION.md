@@ -236,8 +236,22 @@ npm test
    - Controller-mode compatibility: switching between `connectome`, `cognitive`, `schedule`, and `manual`.
    - Long-term simulation stability across 500+ update steps with dynamic orbital destinations.
 
-6. Regression Suites (103 tests):
-   - All prior cognition, navigation, schedule, and dashboard tests continue to pass 100%.
+6. `olfactory_chemotaxis_delta7.test.ts` (12 tests — Milestone 3):
+   - Olfactory stimulus validation: accepts and models valid 3D odor plumes with synthetic provenance.
+   - Missing or invalid odor inputs: handles null, undefined, NaN, and negative coordinates gracefully.
+   - Provenance labels and synthetic-data handling: strictly separates synthetic odor fields from biological neural data.
+   - Olfactory processing output bounds: foodAttractionSignal and membrane potentials remain strictly bounded.
+   - Food-directed goal selection under different need states: hunger sensitizes response and gates chemotaxis.
+   - No-odor fallback behavior: continues ordinary navigation when no odor stimulus exists.
+   - Integration with existing navigation goal interface: sets food_chemotaxis goalType and steers towards odor emitter.
+   - Obstacle avoidance coexisting with food-directed steering: threat response and wall boundaries take precedence.
+   - Δ7 inhibitory dynamics: cross-column protocerebral bridge surround inhibition sharpens bump contrast.
+   - Long-term simulation stability: 500+ update iterations without numerical divergence or drift.
+   - Controller mode compatibility: switching modes preserves state and autonomy flags.
+   - Physical motion integrity: strictly continuous movement without teleportation or waypoint snapping.
+
+7. Regression Suites (105 tests):
+   - All prior data validation, cognition, navigation, schedule, and dashboard tests continue to pass 100% (149 tests total).
 
 ---
 
@@ -272,27 +286,104 @@ In *Drosophila melanogaster*, goal-directed navigation and heading maintenance a
 > **Data Provenance Clarification**:
 > While synaptic connection weights ($45, 42, 28$) and cholinergic signs ($+1$) are derived from published electron microscopy datasets, the neuron identifiers `20001`–`20008` are canonicalized simulation identifiers assigned in the ingestion pipeline (`ingest_biological_connectome.py`) representing this 8-neuron minimal heading/steering subnetwork.
 
-### 9.3 Parameter Classification Breakdown
+---
 
-- **[MEASURED]**: Synaptic counts ($45, 42, 28$), neurotransmitter identities (acetylcholine), excitatory polarity ($+1$), and anatomical connectivity sequence ($E\text{-}PG \rightarrow P\text{-}EN \rightarrow DNg02$).
-- **[MODELED]**: Circular cosine azimuthal tuning for heading representation in $E\text{-}PG$, Leaky Integrate-and-Fire numerical integration parameters ($\tau_m = 15\,\text{ms}$, $V_{th} = -50\,\text{mV}$).
-- **[SYNTHETIC]**: Canonicalized neuron body IDs (`20001`–`20008`) and 4-quadrant wedge discretization.
-- **[HEURISTIC]**: Clearly labeled proportional fallback assistance ($s_{fallback} = \text{clamp}(\Delta\theta / (\pi/2), -1, 1)$) active only during initial subthreshold depolarization latency before action potentials emerge.
-- **[UNMODELED]**: Full 16-wedge toroid geometry, protocerebral bridge $\Delta 7$ global inhibitory GABAergic neurons, fan-shaped body vector arithmetic, and synaptic plasticity.
+## 10. Milestone 3: Olfactory Circuit Ingestion, Chemotaxis & Central-Complex Stability
 
-### 9.4 Scientific Disclaimer
+### 10.1 Anatomical Rationale & Circuit Architecture
 
-This is a simulation engineering layer designed to achieve goal-directed autonomous flight using biologically informed connectome topologies. **It does not claim to be a whole-brain simulation, biologically validated connectome proof, or measured physiological ground truth.**
+In *Drosophila melanogaster*, food localization, odor plume tracking, and heading stability are driven by specialized olfactory and central-complex microcircuits:
+
+1. **Antennal Lobe DM1 Glomerulus ($ORN\_DM1 \rightarrow DM1\_lPN$)**:
+   - The DM1 glomerulus in the antennal lobe is exquisitely tuned to food volatiles (acetic acid, vinegar, ethyl acetate, and fermenting fruit aromas; Semmelhack & Wang 2009).
+   - Primary olfactory receptor neurons ($ORN\_DM1$) project axons into DM1, synapsing with lateral projection neurons ($DM1\_lPN$).
+   - $DM1\_lPN$ projects directly to the mushroom body calyx (associative memory) and the lateral horn (innate valence and food-approach behavior).
+2. **Neuromodulatory Hunger Sensitization (Ethological Grounding)**:
+   - In hungry flies, short Neuropeptide F (sNPFR1) and dopamine (DopR) signaling upregulate presynaptic calcium influx at $ORN\_DM1$ axon terminals, facilitating synaptic transmission to $DM1\_lPN$ (Root et al., *Cell* 2011).
+   - This presynaptic facilitation increases projection neuron sensitivity up to $2.5\times$, lowering the sensory threshold required to activate innate food-seeking navigation.
+3. **Protocerebral Bridge $\Delta 7$ Interneurons & Ring Attractor Stability**:
+   - The Protocerebral Bridge (PB) contains $\Delta 7$ (Delta7) interneurons spanning across PB glomeruli.
+   - In MaleCNS v1.0, 42 biological $\Delta 7$ neurons are verified with consensus neurotransmitter **Glutamate**.
+   - In the insect central nervous system, glutamate is inhibitory via glutamate-gated chloride channels ($\text{GluCl}\alpha$, $E_{rev} = -70.0\,\text{mV}$; Liu & Wilson 2013; Franconville et al., *eLife* 2018).
+   - $\Delta 7$ neurons provide wide-field cross-column surround inhibition to $E\text{-}PG$ compass neurons, sharpening the single heading bump, preventing multi-bump ambiguity, and stabilizing orientation during flight maneuvers.
+
+### 10.2 Biological Provenance & Ingestion Evidence
+
+| Neuron / Edge | Body ID | Biological Type | Superclass | Neurotransmitter | Evidence Level | Ground Truth Source |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `DM1_lPN_R` | `10176` | `DM1_lPN` | `cb_intrinsic` | Acetylcholine | [MEASURED] | Janelia MaleCNS v1.0 (Berg et al. *Cell* 2026) |
+| `DM1_lPN_L` | `10208` | `DM1_lPN` | `cb_intrinsic` | Acetylcholine | [MEASURED] | Janelia MaleCNS v1.0 (Berg et al. *Cell* 2026) |
+| `ORN_DM1_R1`| `60498` | `ORN_DM1` | `sensory` | Acetylcholine | [MEASURED] | Janelia MaleCNS v1.0 (Berg et al. *Cell* 2026) |
+| `ORN_DM1_R2`| `116618`| `ORN_DM1` | `sensory` | Acetylcholine | [MEASURED] | Janelia MaleCNS v1.0 (Berg et al. *Cell* 2026) |
+| `ORN_DM1_L1`| `105395`| `ORN_DM1` | `sensory` | Acetylcholine | [MEASURED] | Janelia MaleCNS v1.0 (Berg et al. *Cell* 2026) |
+| `ORN_DM1_L2`| `160643`| `ORN_DM1` | `sensory` | Acetylcholine | [MEASURED] | Janelia MaleCNS v1.0 (Berg et al. *Cell* 2026) |
+| `ORN -> PN` | Multiple | Synapse | Excitatory | Acetylcholine ($N_{syn}=35$) | [MODELED] | Literature cell-type average (Bhandawat et al. 2007) |
+| `Delta7` (42) | 42 bodies | `Delta7` | `pb_intrinsic` | Glutamate (Inhibitory) | [MEASURED NT] | Janelia MaleCNS v1.0 (100% consensus glutamate) |
+| `Delta7 Cross-Inh` | — | Inhibition | Cross-column | Glutamatergic ($E_{rev}=-70\,\text{mV}$) | [MODELED ABSTRACTION] | Single-synapse EM tables unmeasured in local cache |
+
+> [!NOTE]
+> **Data Audit & Missing Evidence Disclosure**:
+> - The Janelia MaleCNS v1.0 flat connectome synapse-level edge tables (480 MB on GCS) are not included in the repository's local cache.
+> - While body IDs, soma 3D locations, and neurotransmitter identities for the 42 $\Delta 7$ neurons and 76 DM1 neurons were verified from local feather files, individual single-synapse electron microscopy weights connecting $\Delta 7$ to 4-quadrant $E\text{-}PG$ wedges are unmeasured in local cache.
+> - Consequently, $\Delta 7$ inhibition is implemented as an explicitly labeled, biophysically grounded **`ExperimentalDelta7Inhibition`** module, rather than claiming to be a fully reconstructed biological circuit.
+
+### 10.3 Synthetic Odor Plume vs Measured Neural Data
+
+To maintain strict scientific integrity, environmental odor dispersal is cleanly separated from neural receptor data:
+- **`OlfactoryEnvironment`**: Generates a synthetic turbulent diffusion field in 3D space:
+  $$C(d) = \frac{I_0}{1 + (d / d_{half})^2}$$
+  Mapped to physical room landmarks (e.g. Dining Buffet at `[-1.3, 1.2, -3.3]`, Dining Table at `[0, 1.1, 0]`, Study Desk Fruit Bowl at `[2.2, 1.1, -2.6]`).
+- **Provenance Tag**: All environmental odor stimuli are explicitly labeled `'synthetic_environmental_field'`.
+- **`OlfactoryProcessingLayer`**: Ingests the environmental stimulus and internal hunger level, injecting biophysical sensory current into biological $ORN\_DM1$ neurons:
+  $$I_{inj} = \text{intensity} \times \left(1.0 + 1.5 \times \frac{\text{hunger}}{100}\right) \times I_{max}$$
+- **Provenance Tag**: Neural output telemetry is explicitly labeled `'measured_neuron_modeled_synapse'`.
+
+### 10.4 Chemotaxis Goal Arbitration & Kinematics Integrity
+
+Odor information guides flight without overriding fly physics or scripting movement:
+1. **Decision Gate**: When hunger is low ($< 20$) or odor is absent, the fly continues scheduled contextual navigation or cruising.
+2. **Chemotaxis Activation**: When hunger $\ge 40$ and the fly perceives an odor plume above detection threshold, an autonomous navigation goal (`goalType: 'food_chemotaxis'`) is formulated targeting the odor emitter position.
+3. **Execution via Connectome**: The goal coordinates are routed directly to the Central Complex steering layer (`CentralComplexSteering`), driving $E\text{-}PG \rightarrow P\text{-}EN \rightarrow DNg02$ asymmetric motor commands.
+4. **No Teleportation**: Flight forces are applied smoothly through aerodynamic equations ($a = F/m$, $\Delta v = a \cdot \Delta t$, $\Delta p = v \cdot \Delta t$). Step displacement is bounded strictly by fly physics ($\Delta p \le v_{max} \cdot \Delta t \approx 0.07\,\text{m}$ per frame).
+5. **Obstacle Coexistence**: Visual looming threat responses ($LC4 \rightarrow DNp01/DNp11$) and room boundary repulsive biases take priority over odor tracking, ensuring the fly does not fly through walls or collide with obstacles while pursuing food.
+
+### 10.5 Protocerebral Bridge $\Delta 7$ Surround Inhibition
+
+The modular `ExperimentalDelta7Inhibition` layer implements cross-column suppression:
+- When the left heading channel fires, $\Delta 7$ interneurons suppress the opposing right channel, and vice-versa.
+- Uses biophysical reversal potential $E_{rev} = -70.0\,\text{mV}$ matching insect GluCl channels.
+- Calculates the real-time **Compass Bump Contrast Ratio**:
+  $$C_{bump} = \frac{|R - L|}{R + L + 10^{-4}}$$
+  Sharpens the heading representation during asymmetric turns and maintains numerical stability across long simulation runs ($> 500$ frames).
 
 ---
 
-## 10. Limitations & Next Steps
+## 11. Parameter Classification & Scientific Integrity
+
+| Parameter | Classification | Value / Source | Scientific Rationale |
+| :--- | :--- | :--- | :--- |
+| **Neuron IDs (`bodyId`)** | [MEASURED] | Exact 64-bit integer IDs (Visual $L1\text{-}L2, LC4, DNp$, Olfactory $ORN\_DM1, DM1\_lPN$, $\Delta 7$) | Grounded in Janelia MaleCNS v1.0 EM segmentation |
+| **Soma 3D Coordinates** | [MEASURED] | $(x, y, z)$ in nm | MaleCNS v1.0 annotations |
+| **Visual Synapse Counts ($N_{syn}$)** | [MEASURED] | Measured EM T-bars (14 to 1293) | Automated synaptic detection verified by human proofreading |
+| **Neurotransmitter Identity** | [MEASURED / DERIVED] | ACh, GABA, Glutamate | Reiser Lab RNASeq/FISH consensus + Janelia CNN predictions |
+| **Synaptic Reversal Potentials** | [MEASURED / GROUNDED] | $E_{rev}^{exc} = 0\,\text{mV}$, $E_{rev}^{inh} = -70\,\text{mV}$ | Established *Drosophila* physiology (ACh nicotinic vs GABA/GluCl) |
+| **Hunger Facilitation Gain** | [DERIVED] | $Gain = 1.0 + 1.5 \times (H / 100)$ | Presynaptic sNPF/dopamine facilitation (Root et al., *Cell* 2011) |
+| **Membrane Time Constant ($\tau_m$)** | [GROUNDED / DERIVED] | $15.0\,\text{ms}$ | Whole-brain *Drosophila* LIF model (Shiu et al., *Nature* 2024) |
+| **Resting / Threshold Potentials** | [GROUNDED / DERIVED] | $V_{rest} = -60\,\text{mV}$, $V_{th} = -50\,\text{mV}$, $V_{reset} = -65\,\text{mV}$ | In vivo patch-clamp recordings (Wilson et al., 2004) |
+| **Synthetic Odor Diffusion Field** | [COMPUTATIONAL ASSUMPTION] | $C(d) = I_0 / (1 + (d/d_0)^2)$ | Spatial atmospheric dispersion approximation; not biological receptor data |
+| **$\Delta 7$ Cross-Inhibition Coupling**| [COMPUTATIONAL ASSUMPTION] | Modeled bilateral surround inhibition | Single-synapse EM tables unmeasured in local cache |
+| **Complex Dendritic Cable Filtering** | [UNMODELED] | Single-compartment point neuron | Multi-compartmental biophysical cables omitted for real-time 60 FPS performance |
+
+---
+
+## 12. Limitations & Next Steps
 
 ### Known Limitations
-1. **Circuit Scope**: The model simulates two discrete microcircuits: the 16-neuron visual looming collision escape circuit and the 8-neuron central complex compass steering circuit. It does not simulate all 130,000+ neurons of the adult male Drosophila brain simultaneously.
-2. **Simplified Wedge Discretization**: The ellipsoid body ring attractor is discretized into 4 quadrants rather than the full 16 biological wedges.
-3. **No Olfactory Ingestion Yet**: Target waypoints are provided contextually by the schedule and activity engine rather than antennal lobe projection neuron odour plumes.
+1. **Circuit Scope**: The model simulates three modular microcircuits: (1) 16-neuron visual looming collision escape, (2) 8-neuron central complex compass steering, and (3) 6-neuron antennal lobe DM1 olfactory food circuit. It does not simulate all 130,000+ neurons of the adult male Drosophila brain.
+2. **Local Synapse Table Cache**: Single-synapse electron microscopy tables for $\Delta 7$ and olfactory connections require the 480 MB remote GCS dataset. Modeled literature averages are employed with explicit provenance tags.
+3. **Single Glomerulus Olfaction**: Only the DM1 (food odor) glomerulus is modeled; other glomeruli (e.g. pheromone DA1, CO2 sensing Gr21a/Gr63a, repulsive geosmin DA2) are unmodeled.
 
-### Recommended Next Milestone: Milestone 3
-1. **Olfactory Circuit Ingestion & Plume Navigation**: Ingest biological antennal lobe projection neurons ($PN$) and lateral horn / mushroom body circuits to drive biological chemotaxis towards meals and fruit odors.
-2. **Protocerebral Bridge Delta7 Global Inhibition**: Ingest inhibitory GABAergic $\Delta 7$ interneurons into the compass circuit for autonomous bump attractor stability without external normalization.
+### Recommended Next Milestone: Milestone 4
+1. **Gustatory & Feeding Circuit**: Ingest labellar and pharyngeal gustatory receptor neurons ($GRNs$) and motor neurons driving proboscis extension reflex (PER) upon landing on food.
+2. **Associative Odor Learning**: Connect mushroom body Kenyon cells ($KCs$) and Mushroom Body Output Neurons ($MBONs$) with dopaminergic reward signaling for learned odor preference.
+

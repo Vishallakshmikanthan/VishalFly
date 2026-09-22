@@ -13,8 +13,10 @@ import { LIFDynamicsEngine } from '../dynamics/LIFDynamicsEngine';
 import { ConnectomeSensoryAdapter, SensoryEnvironmentPercept } from '../adapters/ConnectomeSensoryAdapter';
 import { ConnectomeMotorAdapter, DecodedMotorCommand } from '../adapters/ConnectomeMotorAdapter';
 import { CentralComplexSteering } from '../central-complex/CentralComplexSteering';
-import { NavigationGoal } from '../navigation/NavigationGoalTypes';
+import { NavigationGoal, createNavigationGoal } from '../navigation/NavigationGoalTypes';
 import { NeuralStateSnapshot } from '../types';
+import { OlfactoryEnvironment } from '../olfactory/OlfactoryEnvironment';
+import { OlfactoryProcessingLayer } from '../olfactory/OlfactoryProcessingLayer';
 
 export interface ConnectomeFlightUpdate {
   newPosition: [number, number, number];
@@ -33,6 +35,8 @@ export class ConnectomeFlyController {
   private sensoryAdapter: ConnectomeSensoryAdapter;
   private centralComplex: CentralComplexSteering;
   private motorAdapter: ConnectomeMotorAdapter;
+  private olfactoryEnvironment: OlfactoryEnvironment;
+  private olfactoryProcessingLayer: OlfactoryProcessingLayer;
 
   private isManualThreatTriggered = false;
   private threatTimerSec = 0;
@@ -43,6 +47,8 @@ export class ConnectomeFlyController {
     this.sensoryAdapter = new ConnectomeSensoryAdapter();
     this.centralComplex = new CentralComplexSteering();
     this.motorAdapter = new ConnectomeMotorAdapter();
+    this.olfactoryEnvironment = new OlfactoryEnvironment();
+    this.olfactoryProcessingLayer = new OlfactoryProcessingLayer();
   }
 
   public getGraph(): ConnectomeGraph {
@@ -57,6 +63,14 @@ export class ConnectomeFlyController {
     return this.centralComplex;
   }
 
+  public getOlfactoryEnvironment(): OlfactoryEnvironment {
+    return this.olfactoryEnvironment;
+  }
+
+  public getOlfactoryProcessingLayer(): OlfactoryProcessingLayer {
+    return this.olfactoryProcessingLayer;
+  }
+
   public triggerThreatStimulus(): void {
     this.threatTimerSec = 0.3; // 300 ms threat burst
     this.isManualThreatTriggered = true;
@@ -64,8 +78,8 @@ export class ConnectomeFlyController {
 
   /**
    * Main closed-loop autonomous update step.
-   * Integrates both the Visual Looming & Collision Escape circuit
-   * and the Central Complex Compass & Steering circuit.
+   * Integrates Visual Looming, Central Complex Steering (with Delta7 inhibition),
+   * and Antennal Lobe Olfactory Chemotaxis.
    */
   public update(
     currentPos: [number, number, number],
@@ -73,7 +87,9 @@ export class ConnectomeFlyController {
     currentYaw: number,
     roomBounds: { minX: number; maxX: number; minY: number; maxY: number; minZ: number; maxZ: number },
     deltaSimSec: number,
-    goal?: NavigationGoal | null
+    goal?: NavigationGoal | null,
+    currentLocationId = 'bedroom',
+    hungerLevel = 0
   ): ConnectomeFlightUpdate {
     const dt = Math.max(0.001, Math.min(0.1, deltaSimSec));
     const dtMs = dt * 1000;
@@ -127,8 +143,32 @@ export class ConnectomeFlyController {
     // 3. Step Biophysical Neural Dynamics (Visual Looming Pathway)
     const snapshot = this.dynamicsEngine.step(dtMs);
 
-    // 4. Step Central Complex (CX) Heading & Steering Circuit
-    const ccTelemetry = this.centralComplex.update(currentYaw, goal, dt);
+    // 4. Sample Simulated Odor Field & Step Olfactory Neural Processing
+    const odorStimulus = this.olfactoryEnvironment.sampleOdor(currentPos, currentLocationId);
+    const olfactoryTelemetry = this.olfactoryProcessingLayer.update(odorStimulus, hungerLevel, dt);
+
+    // 5. Goal Arbitration (Chemotaxis vs Contextual Navigation)
+    // If the fly is hungry and perceives an active food odor plume, prioritize food chemotaxis
+    let effectiveGoal = goal;
+    if (olfactoryTelemetry.isFoodGoalActive && odorStimulus.isValid) {
+      const isCurrentGoalArrived = goal && goal.isArrived;
+      const isCurrentGoalNull = !goal || !goal.isValid;
+      const isHungerHigh = hungerLevel >= 40;
+
+      if (isCurrentGoalNull || isCurrentGoalArrived || isHungerHigh) {
+        effectiveGoal = createNavigationGoal(
+          odorStimulus.sourceLocation,
+          currentPos,
+          currentYaw,
+          odorStimulus.sourceName,
+          0.4,
+          'food_chemotaxis'
+        );
+      }
+    }
+
+    // 6. Step Central Complex (CX) Heading & Steering Circuit with Delta7 Inhibition
+    const ccTelemetry = this.centralComplex.update(currentYaw, effectiveGoal, dt);
 
     // Merge Central Complex neural states into snapshot for diagnostics & testing
     Object.assign(snapshot.potentials, ccTelemetry.snapshot.potentials);
@@ -140,11 +180,21 @@ export class ConnectomeFlyController {
       }
     }
 
+    // Merge Olfactory Neural Dynamics states into snapshot
+    Object.assign(snapshot.potentials, olfactoryTelemetry.snapshot.potentials);
+    Object.assign(snapshot.firingRates, olfactoryTelemetry.snapshot.firingRates);
+    Object.assign(snapshot.sensoryInputs, olfactoryTelemetry.snapshot.sensoryInputs);
+    for (const spk of olfactoryTelemetry.snapshot.recentSpikes) {
+      if (!snapshot.recentSpikes.includes(spk)) {
+        snapshot.recentSpikes.push(spk);
+      }
+    }
+
     // Attach Central Complex steering command to motor outputs
     snapshot.motorOutputs.dng02SteerYaw = ccTelemetry.steeringCommand;
-    snapshot.motorOutputs.ccActive = goal !== undefined && goal !== null && goal.isValid;
-    snapshot.motorOutputs.goalDistance = goal?.distance3D;
-    snapshot.motorOutputs.goalAngularError = goal?.angularError;
+    snapshot.motorOutputs.ccActive = effectiveGoal !== undefined && effectiveGoal !== null && effectiveGoal.isValid;
+    snapshot.motorOutputs.goalDistance = effectiveGoal?.distance3D;
+    snapshot.motorOutputs.goalAngularError = effectiveGoal?.angularError;
     snapshot.centralComplex = {
       steeringCommand: ccTelemetry.steeringCommand,
       isUsingFallback: ccTelemetry.isUsingFallback,
@@ -154,12 +204,27 @@ export class ConnectomeFlyController {
       angularError: ccTelemetry.angularError,
       goalDistance: ccTelemetry.goalDistance,
       dng02FiringRates: ccTelemetry.dng02FiringRates,
+      delta7: ccTelemetry.delta7,
     };
 
-    // 5. Decode Descending Motor Commands
+    // Attach Olfactory Telemetry to snapshot
+    snapshot.olfactory = {
+      intensity: odorStimulus.intensity,
+      stimulusCategory: odorStimulus.stimulusCategory,
+      sourceName: odorStimulus.sourceName,
+      hungerGain: olfactoryTelemetry.hungerGain,
+      foodAttractionSignal: olfactoryTelemetry.foodAttractionSignal,
+      isFoodGoalActive: olfactoryTelemetry.isFoodGoalActive,
+      ornFiringRates: olfactoryTelemetry.ornFiringRates,
+      pnFiringRates: olfactoryTelemetry.pnFiringRates,
+      distance: odorStimulus.distance,
+      provenance: olfactoryTelemetry.provenance,
+    };
+
+    // 7. Decode Descending Motor Commands
     const motorCommand: DecodedMotorCommand = this.motorAdapter.decode(snapshot.motorOutputs, dt);
 
-    // 6. Apply Decoded Flight Forces to Physics
+    // 8. Apply Decoded Flight Forces to Physics
     let targetYaw = currentYaw + motorCommand.yawTurnRate * dt;
 
     // Wall repulsion bias to keep autonomous flight organically inside room
@@ -179,8 +244,8 @@ export class ConnectomeFlyController {
 
     // Vertical altitude guidance when active goal is present
     let verticalLift = motorCommand.liftAccel;
-    if (goal && goal.isValid && !goal.isArrived) {
-      const altitudeDelta = goal.targetPosition[1] - pos.y;
+    if (effectiveGoal && effectiveGoal.isValid && !effectiveGoal.isArrived) {
+      const altitudeDelta = effectiveGoal.targetPosition[1] - pos.y;
       const altitudeTrim = Math.max(-2.5, Math.min(3.5, altitudeDelta * 3.0));
       verticalLift += altitudeTrim;
     }
@@ -226,5 +291,6 @@ export class ConnectomeFlyController {
     this.dynamicsEngine.reset();
     this.centralComplex.reset();
     this.motorAdapter.reset();
+    this.olfactoryProcessingLayer.reset();
   }
 }

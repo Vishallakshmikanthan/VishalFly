@@ -16,11 +16,13 @@ import {
   Layers,
   Compass,
   Navigation,
+  Wind,
 } from 'lucide-react';
 import { useGameStore } from '../../store/useGameStore';
 import { ControllerMode } from '../../cognition/connectome/types';
 import loomingCircuitData from '../../cognition/connectome/data/looming_escape_circuit.json';
 import compassCircuitData from '../../cognition/connectome/data/compass_steering_circuit.json';
+import olfactoryCircuitData from '../../cognition/connectome/data/olfactory_food_circuit.json';
 import manifestData from '../../cognition/connectome/data/male_cns_manifest.json';
 
 export const BiologicalConnectomeInspector: React.FC = () => {
@@ -29,13 +31,16 @@ export const BiologicalConnectomeInspector: React.FC = () => {
   const connectomeSnapshot = useGameStore((state) => state.connectomeSnapshot);
   const triggerConnectomeThreat = useGameStore((state) => state.triggerConnectomeThreat);
 
-  const [selectedSubTab, setSelectedSubTab] = useState<'activity' | 'navigation' | 'circuit' | 'provenance' | 'parameters'>('activity');
+  const [selectedSubTab, setSelectedSubTab] = useState<'activity' | 'navigation' | 'olfactory' | 'circuit' | 'provenance' | 'parameters'>('activity');
 
   const neurons = loomingCircuitData.neurons;
   const synapses = loomingCircuitData.synapses;
   const stats = loomingCircuitData.statistics;
   const compassNeurons = compassCircuitData.neurons;
+  const olfactoryNeurons = olfactoryCircuitData.neurons;
   const ccTelemetry = connectomeSnapshot?.centralComplex;
+  const delta7Telemetry = ccTelemetry?.delta7;
+  const olfactoryTelemetry = connectomeSnapshot?.olfactory;
 
   const motorOutputs = connectomeSnapshot?.motorOutputs;
   const isEscapeActive = motorOutputs?.dnEscapeSpike || (motorOutputs?.dnEscapeRate ?? 0) > 18.0;
@@ -162,6 +167,7 @@ export const BiologicalConnectomeInspector: React.FC = () => {
         {[
           { id: 'activity', label: `Looming Escape (${neurons.length} Neurons)`, icon: Activity },
           { id: 'navigation', label: `Central Complex Steering (${compassNeurons.length} Neurons)`, icon: Compass },
+          { id: 'olfactory', label: `Olfactory Chemotaxis (${olfactoryNeurons.length} Neurons)`, icon: Wind },
           { id: 'circuit', label: `Circuit Wiring (${synapses.length} Synapses)`, icon: Layers },
           { id: 'parameters', label: 'Model Parameters', icon: Cpu },
           { id: 'provenance', label: 'Biological Provenance', icon: ShieldCheck },
@@ -333,6 +339,45 @@ export const BiologicalConnectomeInspector: React.FC = () => {
             </div>
           </div>
 
+          {/* Delta7 Protocerebral Bridge Surround Inhibition Status */}
+          <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 font-mono text-xs">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-white text-xs">Protocerebral Bridge Δ7 Surround Inhibition</span>
+                <span className="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                  {delta7Telemetry?.isEnabled ? 'Glutamatergic Active' : 'Disabled'}
+                </span>
+                <span className="text-[9px] font-semibold text-slate-400 border border-slate-700 px-1 rounded">
+                  [MODELED SURROUND INHIBITION]
+                </span>
+              </div>
+              <span className="text-[11px] text-slate-400 block mt-0.5 font-sans">
+                Models 42 biological MaleCNS v1.0 Delta7 interneurons mediating cross-column inhibition (E_rev = -70 mV) to sharpen the compass heading bump.
+              </span>
+            </div>
+
+            <div className="flex items-center gap-4 shrink-0">
+              <div className="text-right">
+                <span className="text-[10px] text-slate-400 block uppercase">Bump Contrast</span>
+                <strong className="text-emerald-400 font-bold text-sm">
+                  {delta7Telemetry ? `${Math.round(delta7Telemetry.bumpContrastRatio * 100)}%` : '100%'}
+                </strong>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] text-slate-400 block uppercase">Cross-Inhibition</span>
+                <span className="text-slate-300 text-xs">
+                  L: <strong className="text-rose-400">{delta7Telemetry ? delta7Telemetry.leftInhibition.toFixed(2) : '0.00'}</strong> | R: <strong className="text-rose-400">{delta7Telemetry ? delta7Telemetry.rightInhibition.toFixed(2) : '0.00'}</strong> nA
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] text-slate-400 block uppercase">Stability</span>
+                <span className={`text-[10px] font-bold ${delta7Telemetry?.isStable ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {delta7Telemetry?.isStable ? 'Bounded' : 'Divergent'}
+                </span>
+              </div>
+            </div>
+          </div>
+
           {/* Central Complex 8-Neuron Activity Cards */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
@@ -417,7 +462,183 @@ export const BiologicalConnectomeInspector: React.FC = () => {
         </div>
       )}
 
-      {/* SUBTAB 3: CIRCUIT WIRING DIAGRAM & SYNAPSE TABLE */}
+      {/* SUBTAB 3: OLFACTORY FOOD CIRCUIT & CHEMOTAXIS */}
+      {selectedSubTab === 'olfactory' && (
+        <div className="flex flex-col gap-4 font-sans text-xs">
+          {/* Active Environmental Odor Plume & Hunger Card */}
+          <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono">
+            <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/60 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-slate-400 uppercase">Simulated Odor Plume</span>
+                  <span className="text-[9px] font-semibold text-amber-300 border border-amber-500/40 bg-amber-500/10 px-1 rounded">
+                    [SYNTHETIC FIELD]
+                  </span>
+                </div>
+                <strong className="text-white text-xs block mt-1 truncate">
+                  {olfactoryTelemetry?.sourceName || 'No Active Odor'}
+                </strong>
+                <span className="text-[10px] text-cyan-300 block">
+                  {olfactoryTelemetry && olfactoryTelemetry.intensity > 0
+                    ? `Distance: ${olfactoryTelemetry.distance.toFixed(2)} m`
+                    : 'Out of sensory range'}
+                </span>
+              </div>
+              <div className="mt-2">
+                <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                  <span>Plume Concentration:</span>
+                  <span className="text-cyan-400">{Math.round((olfactoryTelemetry?.intensity ?? 0) * 100)}%</span>
+                </div>
+                <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 transition-all"
+                    style={{ width: `${Math.round((olfactoryTelemetry?.intensity ?? 0) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/60 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-slate-400 uppercase">Hunger Neuromodulation</span>
+                  <span className="text-[9px] font-semibold text-emerald-300 border border-emerald-500/40 bg-emerald-500/10 px-1 rounded">
+                    [DERIVED GAIN]
+                  </span>
+                </div>
+                <strong className="text-emerald-300 text-sm block mt-1">
+                  {olfactoryTelemetry ? `${olfactoryTelemetry.hungerGain.toFixed(2)}x Facilitation` : '1.00x'}
+                </strong>
+                <span className="text-[10px] text-slate-400 font-sans block">
+                  Presynaptic facilitation of ORN_DM1 terminals via sNPF / dopamine signalling in food-seeking state.
+                </span>
+              </div>
+              <div className="mt-2">
+                <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border inline-block ${
+                  olfactoryTelemetry?.isFoodGoalActive
+                    ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+                    : 'bg-slate-700/40 border-slate-600 text-slate-400'
+                }`}>
+                  {olfactoryTelemetry?.isFoodGoalActive ? 'Chemotaxis Goal Active' : 'Subthreshold / Satiated'}
+                </span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/60 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-slate-400 uppercase">Food Attraction Signal</span>
+                  <span className="text-[9px] font-semibold text-cyan-300 border border-cyan-500/40 bg-cyan-500/10 px-1 rounded">
+                    [BOUNDED OUTPUT]
+                  </span>
+                </div>
+                <strong className="text-amber-400 text-sm block mt-1">
+                  {olfactoryTelemetry ? (olfactoryTelemetry.foodAttractionSignal * 100).toFixed(0) : '0'}%
+                </strong>
+                <span className="text-[10px] text-slate-400 font-sans block">
+                  Derived from DM1_lPN projection neuron firing asymmetry and rate integration.
+                </span>
+              </div>
+              <div className="mt-2">
+                <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-amber-500 to-rose-400 transition-all"
+                    style={{ width: `${Math.round((olfactoryTelemetry?.foodAttractionSignal ?? 0) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Biological Olfactory DM1 Neurons Grid */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-white text-xs uppercase tracking-wider font-mono flex items-center gap-1.5">
+                <Wind className="w-4 h-4 text-emerald-400" />
+                Antennal Lobe DM1 Glomerulus Circuit (MaleCNS v1.0 Biological Grounding)
+              </span>
+              <span className="text-[11px] text-slate-400 font-mono">
+                ORN_DM1 (4) → DM1_lPN (2)
+              </span>
+            </div>
+
+            <div className="overflow-x-auto rounded-xl border border-slate-800">
+              <table className="w-full text-left text-xs font-mono">
+                <thead className="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-800">
+                  <tr>
+                    <th className="p-2.5">Neuron ID</th>
+                    <th className="p-2.5">Type &amp; Side</th>
+                    <th className="p-2.5">Superclass</th>
+                    <th className="p-2.5">Neurotransmitter</th>
+                    <th className="p-2.5">Membrane Potential (mV)</th>
+                    <th className="p-2.5">Firing Rate</th>
+                    <th className="p-2.5 text-right">Spike</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {olfactoryNeurons.map((neuron) => {
+                    const vm = connectomeSnapshot?.potentials?.[neuron.bodyId] ?? -60.0;
+                    const rate = connectomeSnapshot?.firingRates?.[neuron.bodyId] ?? 0.0;
+                    const hasSpiked = connectomeSnapshot?.recentSpikes?.includes(neuron.bodyId) ?? false;
+                    const ntStyle = getNTColor(neuron.neurotransmitter);
+                    const vmPercent = Math.min(100, Math.max(0, ((vm + 75) / 30) * 100));
+
+                    return (
+                      <tr
+                        key={neuron.bodyId}
+                        className={`hover:bg-slate-800/40 transition-colors ${
+                          hasSpiked ? 'bg-emerald-500/20 font-bold text-white' : 'text-slate-300'
+                        }`}
+                      >
+                        <td className="p-2.5 text-slate-400">{neuron.bodyId}</td>
+                        <td className="p-2.5 font-bold text-white">
+                          <span>{neuron.type}</span>
+                          <span className="text-[10px] text-slate-400 font-normal ml-1">({neuron.instance})</span>
+                        </td>
+                        <td className="p-2.5 text-slate-400 font-sans text-[11px] capitalize">
+                          {neuron.superclass.replace(/_/g, ' ')}
+                        </td>
+                        <td className="p-2.5">
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] border ${ntStyle.bg} ${ntStyle.text} ${ntStyle.border}`}>
+                            {ntStyle.name}
+                          </span>
+                        </td>
+                        <td className="p-2.5 w-44">
+                          <div className="flex items-center gap-2">
+                            <span className="w-12 text-right">{vm.toFixed(1)}</span>
+                            <div className="flex-1 bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all duration-150"
+                                style={{ width: `${vmPercent}%` }}
+                              />
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-2.5">
+                          <span className={rate > 5 ? 'text-amber-400 font-bold' : 'text-slate-400'}>
+                            {rate.toFixed(1)} Hz
+                          </span>
+                        </td>
+                        <td className="p-2.5 text-right">
+                          <span
+                            className={`inline-block w-2.5 h-2.5 rounded-full transition-transform ${
+                              hasSpiked
+                                ? 'bg-emerald-400 scale-125 shadow-sm shadow-emerald-400 animate-ping'
+                                : 'bg-slate-700'
+                            }`}
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SUBTAB 4: CIRCUIT WIRING DIAGRAM & SYNAPSE TABLE */}
       {selectedSubTab === 'circuit' && (
         <div className="flex flex-col gap-4">
           {/* Pathway Flow Diagram */}

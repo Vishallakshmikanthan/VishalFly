@@ -3,7 +3,7 @@
   "name": "Central Complex Compass & Steering Circuit",
   "description": "Biological compass ring attractor (E-PG in ellipsoid body) and steering neurons (P-EN, DNg02 descending neurons) maintaining azimuthal orientation and angular velocity guidance.",
   "datasetVersion": "MaleCNS v1.0",
-  "retrievalDate": "2026-09-22T21:53:05.538475+00:00",
+  "retrievalDate": "2026-09-22T23:34:55.773329+00:00",
   "isRealDataImported": true,
   "neurons": [
     {

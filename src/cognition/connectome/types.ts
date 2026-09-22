@@ -140,6 +140,25 @@ export interface NeuralStateSnapshot {
     angularError: number;
     goalDistance: number;
     dng02FiringRates: { left: number; right: number };
+    delta7?: {
+      isEnabled: boolean;
+      leftInhibition: number;
+      rightInhibition: number;
+      bumpContrastRatio: number;
+      isStable: boolean;
+    };
+  };
+  olfactory?: {
+    intensity: number;
+    stimulusCategory: string;
+    sourceName: string;
+    hungerGain: number;
+    foodAttractionSignal: number;
+    isFoodGoalActive: boolean;
+    ornFiringRates: { left: number; right: number };
+    pnFiringRates: { left: number; right: number };
+    distance: number;
+    provenance: string;
   };
 }
 

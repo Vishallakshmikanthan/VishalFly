@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { ConnectomeGraph } from '../ConnectomeGraph';
 import loomingCircuitData from '../data/looming_escape_circuit.json';
 import compassCircuitData from '../data/compass_steering_circuit.json';
+import olfactoryCircuitData from '../data/olfactory_food_circuit.json';
 import manifestData from '../data/male_cns_manifest.json';
 import { BiologicalCircuitData } from '../types';
 
@@ -86,4 +87,53 @@ describe('Biological Connectome: Data Validation & Ingestion Integrity', () => {
     const pens = graph.getNeuronsByType('P-EN');
     expect(pens.length).toBe(2);
   });
+
+  it('7. olfactory food circuit validates biological body IDs, cholinergic transmitter, and zero dangling edges', () => {
+    expect(olfactoryCircuitData.isRealDataImported).toBe(true);
+    expect(olfactoryCircuitData.neurons.length).toBe(6);
+
+    const neuronIds = new Set(olfactoryCircuitData.neurons.map((n) => n.bodyId));
+    expect(neuronIds.has(10176)).toBe(true); // DM1_lPN_R
+    expect(neuronIds.has(10208)).toBe(true); // DM1_lPN_L
+
+    for (const neuron of olfactoryCircuitData.neurons) {
+      expect(neuron.bodyId).toBeGreaterThan(0);
+      expect(['ORN_DM1', 'DM1_lPN']).toContain(neuron.type);
+      expect(neuron.neurotransmitter).toBe('acetylcholine');
+      expect(neuron.synapseSign).toBe(1);
+      expect(neuron.ntConfidence).toBeGreaterThan(0.9);
+    }
+
+    for (const syn of olfactoryCircuitData.synapses) {
+      expect(neuronIds.has(syn.preBodyId)).toBe(true);
+      expect(neuronIds.has(syn.postBodyId)).toBe(true);
+      expect(syn.synapseCount).toBeGreaterThan(0);
+      expect(syn.synapseSign).toBe(1);
+      expect(syn.neurotransmitter).toBe('acetylcholine');
+    }
+
+    const graph = new ConnectomeGraph(olfactoryCircuitData as unknown as BiologicalCircuitData);
+    const validation = graph.validateIntegrity();
+    expect(validation.isValid).toBe(true);
+    expect(validation.errors).toHaveLength(0);
+    expect(graph.getSensoryInputNeurons().length).toBe(4);
+    expect(graph.getNeuronsByType('DM1_lPN').length).toBe(2);
+  });
+
+  it('8. manifest records Delta7 investigation with verified glutamate consensus and documented edge data limits', () => {
+    const d7 = manifestData.delta7Investigation;
+    expect(d7).toBeDefined();
+    expect(d7.verifiedBiologicalNeuronCount).toBe(42);
+    expect(d7.consensusNeurotransmitter).toBe('glutamate');
+    expect(d7.missingEdgeData).toContain('unmeasured in local cache');
+    expect(d7.implementationStatus).toContain('ExperimentalDelta7Inhibition');
+
+    // 3 exported circuits
+    expect(manifestData.circuitsExported.length).toBe(3);
+    const circuitFiles = manifestData.circuitsExported.map((c) => c.file);
+    expect(circuitFiles).toContain('looming_escape_circuit.json');
+    expect(circuitFiles).toContain('compass_steering_circuit.json');
+    expect(circuitFiles).toContain('olfactory_food_circuit.json');
+  });
 });
+
