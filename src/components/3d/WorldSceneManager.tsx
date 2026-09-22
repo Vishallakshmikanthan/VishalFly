@@ -3,6 +3,7 @@ import { useGameStore } from '../../store/useGameStore';
 import { BedroomEnvironment } from './Bedroom/BedroomEnvironment';
 import { ClassroomEnvironment } from './environments/Classroom/ClassroomEnvironment';
 import { DiningEnvironment } from './environments/DiningArea/DiningEnvironment';
+import { PlaceholderEnvironment } from './environments/PlaceholderEnvironment';
 
 /**
  * WorldSceneManager:
@@ -18,6 +19,12 @@ export const WorldSceneManager: React.FC = () => {
       {currentLocation === 'bedroom' && <BedroomEnvironment />}
       {currentLocation === 'classroom' && <ClassroomEnvironment />}
       {currentLocation === 'dining' && <DiningEnvironment />}
+      {(currentLocation === 'gym' ||
+        currentLocation === 'grounds' ||
+        currentLocation === 'balcony' ||
+        currentLocation === 'travel') && (
+        <PlaceholderEnvironment locationId={currentLocation} />
+      )}
     </group>
   );
 };

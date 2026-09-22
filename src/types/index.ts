@@ -21,7 +21,16 @@ export interface RoomBounds {
 
 export type LightingPreset = 'dawn' | 'afternoon' | 'warm_night';
 
-export type LocationId = 'bedroom' | 'classroom' | 'dining';
+export type LocationId = 
+  | 'bedroom' 
+  | 'classroom' 
+  | 'dining' 
+  | 'gym' 
+  | 'grounds' 
+  | 'balcony' 
+  | 'travel';
+
+export * from '../simulation/types/simulation';
 
 export interface Landmark {
   name: string;

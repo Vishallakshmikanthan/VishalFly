@@ -1,6 +1,23 @@
 import { create } from 'zustand';
-import { Vector3Tuple, FlyActivity, RoomBounds, LightingPreset, LocationId, TransitionState } from '../types';
+import { 
+  Vector3Tuple, 
+  FlyActivity, 
+  RoomBounds, 
+  LightingPreset, 
+  LocationId, 
+  TransitionState,
+  SimulationClockState,
+  ActivityInstance,
+  ScheduleEntry,
+  NeedState,
+  SimulationEvent,
+  SimulationSpeed,
+  CollegeSubBehavior,
+  SimulationState
+} from '../types';
 import { LOCATIONS } from '../navigation/locationGraph';
+import { SimulationEngine } from '../simulation/engine/SimulationEngine';
+import { INITIAL_NEEDS_STATE } from '../simulation/config/defaults';
 
 interface GameState {
   // Active Location
@@ -12,14 +29,27 @@ interface GameState {
   flyRotation: [number, number, number];
   flyActivity: FlyActivity;
   currentSpot: string;
+  isAutonomous: boolean;
   
   // Room dimensions & bounds
   roomBounds: RoomBounds;
   
-  // Simulation metadata
+  // Simulation metadata & Clock
   simulatedTime: string;
   locationName: string;
   roomSubLocation: string;
+  simulationClock: SimulationClockState;
+  
+  // Activity & Needs
+  currentActivity: ActivityInstance | null;
+  nextActivity: {
+    entry: ScheduleEntry;
+    startTime: string;
+    startMinutes: number;
+  } | null;
+  needs: NeedState;
+  recentEvents: SimulationEvent[];
+  selectedCollegeBehavior: CollegeSubBehavior | null;
   
   // Camera & view controls
   resetCameraTrigger: number;
@@ -39,105 +69,198 @@ interface GameState {
   setLightingPreset: (preset: LightingPreset) => void;
   cycleLightingPreset: () => void;
   resetFlyToCenter: () => void;
-  switchLocation: (targetId: LocationId) => void;
+  switchLocation: (targetId: LocationId, travelMessage?: string) => void;
+  
+  // Autonomous Simulation Actions
+  toggleAutonomousMode: () => void;
+  pauseSimulation: () => void;
+  resumeSimulation: () => void;
+  togglePauseSimulation: () => void;
+  setSimulationSpeed: (speed: SimulationSpeed) => void;
+  restartSimulationDay: () => void;
+  syncFromSimulation: (state: SimulationState) => void;
 }
 
 const initialLoc = LOCATIONS.bedroom;
 
-export const useGameStore = create<GameState>((set, get) => ({
-  currentLocation: 'bedroom',
-  transitionState: {
-    isTransitioning: false,
-    targetLocation: null,
-    message: '',
-  },
+// Create singleton simulation engine
+export const simulationEngine = new SimulationEngine();
 
-  flyPosition: [...initialLoc.spawnPosition] as Vector3Tuple,
-  flyRotation: [0, 0, 0],
-  flyActivity: 'hovering',
-  currentSpot: 'Center Room Airspace',
-  
-  roomBounds: { ...initialLoc.bounds },
-  
-  simulatedTime: initialLoc.initialTime,
-  locationName: initialLoc.name,
-  roomSubLocation: initialLoc.subLocation,
-  
-  resetCameraTrigger: 0,
-  followFly: false,
-  
-  lightingPreset: 'dawn',
-  
-  setFlyPosition: (flyPosition) => set({ flyPosition }),
-  setFlyRotation: (flyRotation) => set({ flyRotation }),
-  setFlyActivity: (flyActivity) => set({ flyActivity }),
-  setCurrentSpot: (currentSpot) => set({ currentSpot }),
-  
-  triggerResetCamera: () => set((state) => ({ resetCameraTrigger: state.resetCameraTrigger + 1 })),
-  
-  setFollowFly: (followFly) => set({ followFly }),
-  toggleFollowFly: () => set((state) => ({ followFly: !state.followFly })),
-  
-  setLightingPreset: (lightingPreset) => set({ lightingPreset }),
-  cycleLightingPreset: () => {
-    const current = get().lightingPreset;
-    const next: LightingPreset = 
-      current === 'dawn' ? 'afternoon' : current === 'afternoon' ? 'warm_night' : 'dawn';
-    set({ lightingPreset: next });
-  },
-  
-  resetFlyToCenter: () => {
-    const currentLoc = LOCATIONS[get().currentLocation];
-    set({
-      flyPosition: [...currentLoc.spawnPosition] as Vector3Tuple,
-      flyRotation: [0, 0, 0],
-      flyActivity: 'hovering',
-      currentSpot: 'Spawning at ' + currentLoc.name,
-    });
-  },
+export const useGameStore = create<GameState>((set, get) => {
+  const initialClock = simulationEngine.clock.getState();
 
-  switchLocation: (targetId: LocationId) => {
-    const state = get();
-    if (state.currentLocation === targetId || state.transitionState.isTransitioning) {
-      return;
-    }
+  return {
+    currentLocation: 'bedroom',
+    transitionState: {
+      isTransitioning: false,
+      targetLocation: null,
+      message: '',
+    },
 
-    const targetConfig = LOCATIONS[targetId];
+    flyPosition: [...initialLoc.spawnPosition] as Vector3Tuple,
+    flyRotation: [0, 0, 0],
+    flyActivity: 'hovering',
+    currentSpot: 'Center Room Airspace',
+    isAutonomous: true,
+    
+    roomBounds: { ...initialLoc.bounds },
+    
+    simulatedTime: initialClock.simulatedTime,
+    locationName: initialLoc.name,
+    roomSubLocation: initialLoc.subLocation,
+    simulationClock: initialClock,
 
-    // 1. Begin transition overlay
-    set({
-      transitionState: {
-        isTransitioning: true,
-        targetLocation: targetId,
-        message: `Traveling to ${targetConfig.name}...`,
-      },
-    });
-
-    // 2. Midpoint of transition: swap environment, bounds, spawn position, metadata
-    setTimeout(() => {
-      set((prev) => ({
-        currentLocation: targetId,
-        roomBounds: { ...targetConfig.bounds },
-        flyPosition: [...targetConfig.spawnPosition] as Vector3Tuple,
+    currentActivity: null,
+    nextActivity: null,
+    needs: { ...INITIAL_NEEDS_STATE },
+    recentEvents: simulationEngine.eventLogger.getRecent(20),
+    selectedCollegeBehavior: null,
+    
+    resetCameraTrigger: 0,
+    followFly: false,
+    
+    lightingPreset: 'dawn',
+    
+    setFlyPosition: (flyPosition) => set({ flyPosition }),
+    setFlyRotation: (flyRotation) => set({ flyRotation }),
+    setFlyActivity: (flyActivity) => set({ flyActivity }),
+    setCurrentSpot: (currentSpot) => set({ currentSpot }),
+    
+    triggerResetCamera: () => set((state) => ({ resetCameraTrigger: state.resetCameraTrigger + 1 })),
+    
+    setFollowFly: (followFly) => set({ followFly }),
+    toggleFollowFly: () => set((state) => ({ followFly: !state.followFly })),
+    
+    setLightingPreset: (lightingPreset) => set({ lightingPreset }),
+    cycleLightingPreset: () => {
+      const current = get().lightingPreset;
+      const next: LightingPreset = 
+        current === 'dawn' ? 'afternoon' : current === 'afternoon' ? 'warm_night' : 'dawn';
+      set({ lightingPreset: next });
+    },
+    
+    resetFlyToCenter: () => {
+      const currentLoc = LOCATIONS[get().currentLocation] || LOCATIONS.bedroom;
+      set({
+        flyPosition: [...currentLoc.spawnPosition] as Vector3Tuple,
         flyRotation: [0, 0, 0],
         flyActivity: 'hovering',
-        locationName: targetConfig.name,
-        roomSubLocation: targetConfig.subLocation,
-        simulatedTime: targetConfig.initialTime,
-        currentSpot: `Arrived at ${targetConfig.name}`,
-        resetCameraTrigger: prev.resetCameraTrigger + 1, // trigger smooth camera re-orientation
-      }));
-    }, 380);
+        currentSpot: 'Spawning at ' + currentLoc.name,
+      });
+    },
 
-    // 3. Complete transition: remove overlay
-    setTimeout(() => {
+    switchLocation: (targetId: LocationId, travelMessage?: string) => {
+      const state = get();
+      if (state.currentLocation === targetId || state.transitionState.isTransitioning) {
+        return;
+      }
+
+      const targetConfig = LOCATIONS[targetId] || LOCATIONS.bedroom;
+
+      // 1. Begin transition overlay
       set({
         transitionState: {
-          isTransitioning: false,
-          targetLocation: null,
-          message: '',
+          isTransitioning: true,
+          targetLocation: targetId,
+          message: travelMessage || `Traveling to ${targetConfig.name}...`,
         },
       });
-    }, 850);
-  },
-}));
+
+      // 2. Midpoint of transition: swap environment, bounds, spawn position, metadata
+      setTimeout(() => {
+        set((prev) => ({
+          currentLocation: targetId,
+          roomBounds: { ...targetConfig.bounds },
+          flyPosition: [...targetConfig.spawnPosition] as Vector3Tuple,
+          flyRotation: [0, 0, 0],
+          flyActivity: 'hovering',
+          locationName: targetConfig.name,
+          roomSubLocation: targetConfig.subLocation,
+          currentSpot: `Arrived at ${targetConfig.name}`,
+          resetCameraTrigger: prev.resetCameraTrigger + 1,
+        }));
+
+        // Inform simulation activity manager of location sync
+        simulationEngine.activityManager.setCurrentLocation(targetId);
+      }, 380);
+
+      // 3. Complete transition: remove overlay
+      setTimeout(() => {
+        set({
+          transitionState: {
+            isTransitioning: false,
+            targetLocation: null,
+            message: '',
+          },
+        });
+      }, 850);
+    },
+
+    toggleAutonomousMode: () => {
+      const nextAuto = !get().isAutonomous;
+      simulationEngine.setIsAutonomous(nextAuto);
+      set({ isAutonomous: nextAuto });
+    },
+
+    pauseSimulation: () => {
+      simulationEngine.pause();
+      set({ simulationClock: simulationEngine.clock.getState() });
+    },
+
+    resumeSimulation: () => {
+      simulationEngine.resume();
+      set({ simulationClock: simulationEngine.clock.getState() });
+    },
+
+    togglePauseSimulation: () => {
+      const isPaused = simulationEngine.togglePause();
+      set({ simulationClock: simulationEngine.clock.getState() });
+      return isPaused;
+    },
+
+    setSimulationSpeed: (speed: SimulationSpeed) => {
+      simulationEngine.setSpeed(speed);
+      set({ simulationClock: simulationEngine.clock.getState() });
+    },
+
+    restartSimulationDay: () => {
+      simulationEngine.restartDay();
+      const state = simulationEngine.step(0);
+      get().syncFromSimulation(state);
+    },
+
+    syncFromSimulation: (simState: SimulationState) => {
+      const current = get();
+
+      // Check if simulation triggered location change in autonomous mode
+      const targetLoc = simState.character.locationId as LocationId;
+      if (
+        current.isAutonomous &&
+        targetLoc &&
+        targetLoc !== current.currentLocation &&
+        !current.transitionState.isTransitioning &&
+        LOCATIONS[targetLoc]
+      ) {
+        current.switchLocation(targetLoc, `Autonomous Travel to ${LOCATIONS[targetLoc].name}`);
+      }
+
+      set({
+        simulationClock: simState.clock,
+        simulatedTime: simState.clock.simulatedTime,
+        currentActivity: simState.currentActivity,
+        nextActivity: simState.nextActivity,
+        needs: simState.needs,
+        recentEvents: simState.recentEvents,
+        selectedCollegeBehavior: simState.currentActivity?.selectedSubBehavior || null,
+      });
+    },
+  };
+});
+
+// Subscribe simulation engine to push state changes to store
+simulationEngine.subscribe((state) => {
+  useGameStore.getState().syncFromSimulation(state);
+});
+
+// Start simulation engine loop automatically
+simulationEngine.start(15);

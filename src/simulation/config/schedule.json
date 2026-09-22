@@ -1,0 +1,271 @@
+{
+  "weekday": [
+    {
+      "id": "wd_wake_up",
+      "activityId": "wake_up_morning_routine",
+      "name": "Wake up and morning routine",
+      "startTime": "06:00",
+      "endTime": "06:30",
+      "startMinutes": 360,
+      "endMinutes": 390,
+      "locationId": "bedroom",
+      "description": "Gradual awakening, light stretching, and morning hygiene."
+    },
+    {
+      "id": "wd_morning_prep",
+      "activityId": "morning_preparation",
+      "name": "Morning preparation",
+      "startTime": "06:30",
+      "endTime": "07:15",
+      "startMinutes": 390,
+      "endMinutes": 435,
+      "locationId": "bedroom",
+      "description": "Dressing up, packing laptop backpack, and planning daily goals."
+    },
+    {
+      "id": "wd_travel_college",
+      "activityId": "travel_to_college",
+      "name": "Travel to college",
+      "startTime": "07:15",
+      "endTime": "08:00",
+      "startMinutes": 435,
+      "endMinutes": 480,
+      "locationId": "travel",
+      "description": "Commute from PG to Sairam College Campus."
+    },
+    {
+      "id": "wd_college",
+      "activityId": "college_activities",
+      "name": "College activities",
+      "startTime": "08:00",
+      "endTime": "16:00",
+      "startMinutes": 480,
+      "endMinutes": 960,
+      "locationId": "classroom",
+      "behaviorTag": "college_sub_behavior",
+      "description": "Attending lectures, labs, and interactive classes."
+    },
+    {
+      "id": "wd_travel_pg",
+      "activityId": "return_to_pg",
+      "name": "Return to PG",
+      "startTime": "16:00",
+      "endTime": "16:30",
+      "startMinutes": 960,
+      "endMinutes": 990,
+      "locationId": "travel",
+      "description": "Commute back from college to PG room."
+    },
+    {
+      "id": "wd_freshen_up",
+      "activityId": "freshen_up",
+      "name": "Freshen up",
+      "startTime": "16:30",
+      "endTime": "17:00",
+      "startMinutes": 990,
+      "endMinutes": 1020,
+      "locationId": "bedroom",
+      "description": "Drop off college bags, wash up, and change into gym gear."
+    },
+    {
+      "id": "wd_gym",
+      "activityId": "gym_workout",
+      "name": "Gym",
+      "startTime": "17:00",
+      "endTime": "18:45",
+      "startMinutes": 1020,
+      "endMinutes": 1125,
+      "locationId": "gym",
+      "description": "Strength conditioning workout and physical exercises."
+    },
+    {
+      "id": "wd_dinner",
+      "activityId": "dinner",
+      "name": "Dinner",
+      "startTime": "18:45",
+      "endTime": "19:15",
+      "startMinutes": 1125,
+      "endMinutes": 1155,
+      "locationId": "dining",
+      "description": "Evening nutritious meal at the PG dining mess."
+    },
+    {
+      "id": "wd_walk",
+      "activityId": "family_call_walk",
+      "name": "Family call and apartment walk",
+      "startTime": "19:15",
+      "endTime": "20:00",
+      "startMinutes": 1155,
+      "endMinutes": 1200,
+      "locationId": "grounds",
+      "description": "Calling family while having a refreshing walk around apartment grounds."
+    },
+    {
+      "id": "wd_project",
+      "activityId": "project_work",
+      "name": "Project work and upskilling",
+      "startTime": "20:00",
+      "endTime": "22:45",
+      "startMinutes": 1200,
+      "endMinutes": 1365,
+      "locationId": "bedroom",
+      "description": "Deep-focus coding, agentic AI development, and skill expansion."
+    },
+    {
+      "id": "wd_assignments",
+      "activityId": "college_assignments",
+      "name": "College assignments",
+      "startTime": "22:45",
+      "endTime": "23:15",
+      "startMinutes": 1365,
+      "endMinutes": 1395,
+      "locationId": "bedroom",
+      "description": "Reviewing notes and submitting daily academic assignments."
+    },
+    {
+      "id": "wd_sleep",
+      "activityId": "sleep",
+      "name": "Sleep",
+      "startTime": "23:15",
+      "endTime": "06:00",
+      "startMinutes": 1395,
+      "endMinutes": 360,
+      "locationId": "bedroom",
+      "description": "Restorative sleep over midnight until morning."
+    }
+  ],
+  "weekend": [
+    {
+      "id": "we_wake_up",
+      "activityId": "wake_up_morning_routine",
+      "name": "Wake up and morning routine",
+      "startTime": "08:30",
+      "endTime": "09:00",
+      "startMinutes": 510,
+      "endMinutes": 540,
+      "locationId": "bedroom",
+      "description": "Relaxed weekend morning wakeup and fresh start."
+    },
+    {
+      "id": "we_project_morning",
+      "activityId": "project_work",
+      "name": "Project work",
+      "startTime": "09:00",
+      "endTime": "10:00",
+      "startMinutes": 540,
+      "endMinutes": 600,
+      "locationId": "bedroom",
+      "description": "Morning software engineering sprint."
+    },
+    {
+      "id": "we_laundry",
+      "activityId": "laundry",
+      "name": "Laundry",
+      "startTime": "10:00",
+      "endTime": "11:00",
+      "startMinutes": 600,
+      "endMinutes": 660,
+      "locationId": "bedroom",
+      "description": "Washing weekend clothes and tidying up."
+    },
+    {
+      "id": "we_dry_clothes",
+      "activityId": "dry_clothes",
+      "name": "Dry clothes",
+      "startTime": "11:00",
+      "endTime": "12:00",
+      "startMinutes": 660,
+      "endMinutes": 720,
+      "locationId": "balcony",
+      "description": "Hanging clothes out in the sunlight on the balcony."
+    },
+    {
+      "id": "we_lunch",
+      "activityId": "lunch",
+      "name": "Lunch",
+      "startTime": "12:00",
+      "endTime": "13:00",
+      "startMinutes": 720,
+      "endMinutes": 780,
+      "locationId": "dining",
+      "description": "Weekend lunch in the PG mess."
+    },
+    {
+      "id": "we_project_afternoon",
+      "activityId": "project_work",
+      "name": "Project work",
+      "startTime": "13:00",
+      "endTime": "16:00",
+      "startMinutes": 780,
+      "endMinutes": 960,
+      "locationId": "bedroom",
+      "description": "Afternoon project development and technical deep-dives."
+    },
+    {
+      "id": "we_free_time",
+      "activityId": "weekend_free_time",
+      "name": "Free time",
+      "startTime": "16:00",
+      "endTime": "17:00",
+      "startMinutes": 960,
+      "endMinutes": 1020,
+      "locationId": "grounds",
+      "description": "Casual outdoor stroll and leisure time."
+    },
+    {
+      "id": "we_gym",
+      "activityId": "gym_workout",
+      "name": "Gym",
+      "startTime": "17:00",
+      "endTime": "18:30",
+      "startMinutes": 1020,
+      "endMinutes": 1110,
+      "locationId": "gym",
+      "description": "Weekend fitness training session."
+    },
+    {
+      "id": "we_dinner",
+      "activityId": "dinner",
+      "name": "Dinner",
+      "startTime": "18:30",
+      "endTime": "19:00",
+      "startMinutes": 1110,
+      "endMinutes": 1140,
+      "locationId": "dining",
+      "description": "Evening meal at the PG dining mess."
+    },
+    {
+      "id": "we_walk",
+      "activityId": "family_call_walk",
+      "name": "Family call and walking",
+      "startTime": "19:00",
+      "endTime": "20:00",
+      "startMinutes": 1140,
+      "endMinutes": 1200,
+      "locationId": "grounds",
+      "description": "Catching up with family and walking around."
+    },
+    {
+      "id": "we_project_night",
+      "activityId": "project_work",
+      "name": "Project work",
+      "startTime": "20:00",
+      "endTime": "23:30",
+      "startMinutes": 1200,
+      "endMinutes": 1410,
+      "locationId": "bedroom",
+      "description": "Night project hacking and hobby programming."
+    },
+    {
+      "id": "we_sleep",
+      "activityId": "sleep",
+      "name": "Sleep",
+      "startTime": "23:30",
+      "endTime": "08:30",
+      "startMinutes": 1410,
+      "endMinutes": 510,
+      "locationId": "bedroom",
+      "description": "Deep weekend restorative sleep spanning midnight."
+    }
+  ]
+}

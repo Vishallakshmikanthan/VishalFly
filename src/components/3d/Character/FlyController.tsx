@@ -23,6 +23,8 @@ export const FlyController: React.FC = () => {
   const roomBounds = useGameStore((state) => state.roomBounds);
   const currentLocation = useGameStore((state) => state.currentLocation);
   const flyPosition = useGameStore((state) => state.flyPosition);
+  const isAutonomous = useGameStore((state) => state.isAutonomous);
+  const currentActivity = useGameStore((state) => state.currentActivity);
 
   // Flight vectors
   const position = useRef(new THREE.Vector3(...flyPosition));
@@ -147,12 +149,12 @@ export const FlyController: React.FC = () => {
     if (keys.current.down) moveDir.y -= 1;
 
     const moving = moveDir.lengthSq() > 0;
-    if (moving !== isMoving) {
-      setIsMoving(moving);
-      setFlyActivity(moving ? 'flying' : 'hovering');
-    }
 
     if (moving) {
+      if (!isMoving) {
+        setIsMoving(true);
+        setFlyActivity('flying');
+      }
       moveDir.normalize();
       velocity.current.x += moveDir.x * accel * dt;
       velocity.current.y += moveDir.y * accel * dt;
@@ -166,7 +168,63 @@ export const FlyController: React.FC = () => {
       // Calculate banking angles
       pitch.current = THREE.MathUtils.lerp(pitch.current, moveDir.y * -0.35, dt * 10);
       roll.current = THREE.MathUtils.lerp(roll.current, -moveDir.x * 0.4, dt * 10);
+    } else if (isAutonomous) {
+      // Autonomous steering towards current activity landmark
+      const currentLocConfig = LOCATIONS[currentLocation];
+      const targetLandmarkName = currentActivity?.definition.targetLandmarkName;
+      const targetLm = currentLocConfig?.landmarks.find((lm) => lm.name === targetLandmarkName) ||
+        currentLocConfig?.landmarks[0];
+
+      let targetX = 0;
+      let targetY = 1.6;
+      let targetZ = 0;
+
+      if (targetLm) {
+        targetX = (targetLm.minX + targetLm.maxX) / 2;
+        targetZ = (targetLm.minZ + targetLm.maxZ) / 2;
+        targetY = targetLm.minY !== undefined ? (targetLm.minY + (targetLm.maxY || targetLm.minY + 1.2)) / 2 : 1.6;
+      }
+
+      // Organic hover wander
+      const timeSec = performance.now() / 1000;
+      const wanderX = targetX + Math.sin(timeSec * 1.4) * 0.25;
+      const wanderY = targetY + Math.sin(timeSec * 2.1) * 0.12;
+      const wanderZ = targetZ + Math.cos(timeSec * 1.1) * 0.25;
+
+      const autoDir = new THREE.Vector3(
+        wanderX - position.current.x,
+        wanderY - position.current.y,
+        wanderZ - position.current.z
+      );
+      const dist = autoDir.length();
+
+      if (dist > 0.45) {
+        autoDir.normalize();
+        velocity.current.x += autoDir.x * 4.5 * dt;
+        velocity.current.y += autoDir.y * 3.5 * dt;
+        velocity.current.z += autoDir.z * 4.5 * dt;
+
+        targetRotation.current = Math.atan2(autoDir.x, autoDir.z) + Math.PI;
+        if (!isMoving) {
+          setIsMoving(true);
+          setFlyActivity('flying');
+        }
+      } else {
+        // Arrived at spot, adopt activity pose
+        if (isMoving) {
+          setIsMoving(false);
+          const activityPose = currentActivity?.definition.defaultFlyActivity || 'hovering';
+          setFlyActivity(activityPose);
+        }
+      }
+
+      pitch.current = THREE.MathUtils.lerp(pitch.current, 0, dt * 6);
+      roll.current = THREE.MathUtils.lerp(roll.current, 0, dt * 6);
     } else {
+      if (isMoving) {
+        setIsMoving(false);
+        setFlyActivity('hovering');
+      }
       pitch.current = THREE.MathUtils.lerp(pitch.current, 0, dt * 6);
       roll.current = THREE.MathUtils.lerp(roll.current, 0, dt * 6);
     }
