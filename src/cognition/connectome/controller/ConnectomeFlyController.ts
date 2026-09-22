@@ -12,6 +12,8 @@ import { ConnectomeGraph } from '../ConnectomeGraph';
 import { LIFDynamicsEngine } from '../dynamics/LIFDynamicsEngine';
 import { ConnectomeSensoryAdapter, SensoryEnvironmentPercept } from '../adapters/ConnectomeSensoryAdapter';
 import { ConnectomeMotorAdapter, DecodedMotorCommand } from '../adapters/ConnectomeMotorAdapter';
+import { CentralComplexSteering } from '../central-complex/CentralComplexSteering';
+import { NavigationGoal } from '../navigation/NavigationGoalTypes';
 import { NeuralStateSnapshot } from '../types';
 
 export interface ConnectomeFlightUpdate {
@@ -29,6 +31,7 @@ export class ConnectomeFlyController {
   private graph: ConnectomeGraph;
   private dynamicsEngine: LIFDynamicsEngine;
   private sensoryAdapter: ConnectomeSensoryAdapter;
+  private centralComplex: CentralComplexSteering;
   private motorAdapter: ConnectomeMotorAdapter;
 
   private isManualThreatTriggered = false;
@@ -38,6 +41,7 @@ export class ConnectomeFlyController {
     this.graph = graph || new ConnectomeGraph();
     this.dynamicsEngine = new LIFDynamicsEngine(this.graph);
     this.sensoryAdapter = new ConnectomeSensoryAdapter();
+    this.centralComplex = new CentralComplexSteering();
     this.motorAdapter = new ConnectomeMotorAdapter();
   }
 
@@ -49,6 +53,10 @@ export class ConnectomeFlyController {
     return this.dynamicsEngine;
   }
 
+  public getCentralComplex(): CentralComplexSteering {
+    return this.centralComplex;
+  }
+
   public triggerThreatStimulus(): void {
     this.threatTimerSec = 0.3; // 300 ms threat burst
     this.isManualThreatTriggered = true;
@@ -56,13 +64,16 @@ export class ConnectomeFlyController {
 
   /**
    * Main closed-loop autonomous update step.
+   * Integrates both the Visual Looming & Collision Escape circuit
+   * and the Central Complex Compass & Steering circuit.
    */
   public update(
     currentPos: [number, number, number],
     currentVel: [number, number, number],
     currentYaw: number,
     roomBounds: { minX: number; maxX: number; minY: number; maxY: number; minZ: number; maxZ: number },
-    deltaSimSec: number
+    deltaSimSec: number,
+    goal?: NavigationGoal | null
   ): ConnectomeFlightUpdate {
     const dt = Math.max(0.001, Math.min(0.1, deltaSimSec));
     const dtMs = dt * 1000;
@@ -99,7 +110,7 @@ export class ConnectomeFlyController {
     }
     this.isManualThreatTriggered = false; // reset one-shot trigger
 
-    // 2. Sensory Perception & Neural Current Injection
+    // 2. Sensory Perception & Neural Current Injection (Visual Looming Pathway)
     const percept: SensoryEnvironmentPercept = {
       flyPosition: currentPos,
       flyVelocity: currentVel,
@@ -113,13 +124,42 @@ export class ConnectomeFlyController {
 
     this.sensoryAdapter.update(this.dynamicsEngine, percept);
 
-    // 3. Step Biophysical Neural Dynamics
+    // 3. Step Biophysical Neural Dynamics (Visual Looming Pathway)
     const snapshot = this.dynamicsEngine.step(dtMs);
 
-    // 4. Decode Descending Motor Commands
+    // 4. Step Central Complex (CX) Heading & Steering Circuit
+    const ccTelemetry = this.centralComplex.update(currentYaw, goal, dt);
+
+    // Merge Central Complex neural states into snapshot for diagnostics & testing
+    Object.assign(snapshot.potentials, ccTelemetry.snapshot.potentials);
+    Object.assign(snapshot.firingRates, ccTelemetry.snapshot.firingRates);
+    Object.assign(snapshot.sensoryInputs, ccTelemetry.snapshot.sensoryInputs);
+    for (const spk of ccTelemetry.snapshot.recentSpikes) {
+      if (!snapshot.recentSpikes.includes(spk)) {
+        snapshot.recentSpikes.push(spk);
+      }
+    }
+
+    // Attach Central Complex steering command to motor outputs
+    snapshot.motorOutputs.dng02SteerYaw = ccTelemetry.steeringCommand;
+    snapshot.motorOutputs.ccActive = goal !== undefined && goal !== null && goal.isValid;
+    snapshot.motorOutputs.goalDistance = goal?.distance3D;
+    snapshot.motorOutputs.goalAngularError = goal?.angularError;
+    snapshot.centralComplex = {
+      steeringCommand: ccTelemetry.steeringCommand,
+      isUsingFallback: ccTelemetry.isUsingFallback,
+      headingEstimate: ccTelemetry.headingEstimate,
+      flyHeading: ccTelemetry.flyHeading,
+      goalBearing: ccTelemetry.goalBearing,
+      angularError: ccTelemetry.angularError,
+      goalDistance: ccTelemetry.goalDistance,
+      dng02FiringRates: ccTelemetry.dng02FiringRates,
+    };
+
+    // 5. Decode Descending Motor Commands
     const motorCommand: DecodedMotorCommand = this.motorAdapter.decode(snapshot.motorOutputs, dt);
 
-    // 5. Apply Decoded Flight Forces to Physics
+    // 6. Apply Decoded Flight Forces to Physics
     let targetYaw = currentYaw + motorCommand.yawTurnRate * dt;
 
     // Wall repulsion bias to keep autonomous flight organically inside room
@@ -136,7 +176,15 @@ export class ConnectomeFlyController {
 
     vel.x += forwardX * motorCommand.thrustAccel * dt;
     vel.z += forwardZ * motorCommand.thrustAccel * dt;
-    vel.y += motorCommand.liftAccel * dt;
+
+    // Vertical altitude guidance when active goal is present
+    let verticalLift = motorCommand.liftAccel;
+    if (goal && goal.isValid && !goal.isArrived) {
+      const altitudeDelta = goal.targetPosition[1] - pos.y;
+      const altitudeTrim = Math.max(-2.5, Math.min(3.5, altitudeDelta * 3.0));
+      verticalLift += altitudeTrim;
+    }
+    vel.y += verticalLift * dt;
 
     // Aerodynamic damping & friction
     const damping = motorCommand.isEscapeTriggered ? 2.5 : 4.0;
@@ -176,6 +224,7 @@ export class ConnectomeFlyController {
 
   public reset(): void {
     this.dynamicsEngine.reset();
+    this.centralComplex.reset();
     this.motorAdapter.reset();
   }
 }

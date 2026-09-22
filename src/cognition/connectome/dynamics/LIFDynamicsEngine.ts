@@ -234,11 +234,14 @@ export class LIFDynamicsEngine {
 
     // Decode Motor Outputs from verified Descending Neurons
     // DNp01 (Giant Fiber: 10001 / 10010): Escape takeoff reflex
-    // DNp11 (Flight steering: 10106 [R] / 10259 [L]): Yaw & pitch bias
+    // DNp11 (Visual flight steering: 10106 [R] / 10259 [L]): Yaw & pitch bias
+    // DNg02 (Central complex flight steering: 20007 [R] / 20008 [L]): Azimuthal steering
     const gfRightIdx = this.bodyIdToIndex.get(10001);
     const gfLeftIdx = this.bodyIdToIndex.get(10010);
     const dnp11RightIdx = this.bodyIdToIndex.get(10106);
     const dnp11LeftIdx = this.bodyIdToIndex.get(10259);
+    const dng02RightIdx = this.bodyIdToIndex.get(20007);
+    const dng02LeftIdx = this.bodyIdToIndex.get(20008);
 
     const gfSpike = this.recentSpikes.includes(10001) || this.recentSpikes.includes(10010);
     const gfRate = Math.max(
@@ -248,10 +251,22 @@ export class LIFDynamicsEngine {
 
     const rRate = dnp11RightIdx !== undefined ? this.firingRates[dnp11RightIdx] : 0;
     const lRate = dnp11LeftIdx !== undefined ? this.firingRates[dnp11LeftIdx] : 0;
-    const dnSteerYaw = Math.max(-1.0, Math.min(1.0, (lRate - rRate) / 25.0));
-    const dnSteerPitch = Math.max(-1.0, Math.min(1.0, (rRate + lRate) / 50.0));
+    const dng02R = dng02RightIdx !== undefined ? this.firingRates[dng02RightIdx] : 0;
+    const dng02L = dng02LeftIdx !== undefined ? this.firingRates[dng02LeftIdx] : 0;
 
-    const totalMotorActivity = gfRate + rRate + lRate;
+    let dnSteerYaw = Math.max(-1.0, Math.min(1.0, (lRate - rRate) / 25.0));
+    // If DNg02 descending neurons are in this circuit, decode their rate difference
+    let dng02SteerYaw: number | undefined = undefined;
+    if (dng02RightIdx !== undefined || dng02LeftIdx !== undefined) {
+      dng02SteerYaw = Math.max(-1.0, Math.min(1.0, (dng02L - dng02R) / 25.0));
+      // If DNp11 is absent (e.g. in pure compass circuit), use DNg02 as dnSteerYaw
+      if (dnp11RightIdx === undefined && dnp11LeftIdx === undefined) {
+        dnSteerYaw = dng02SteerYaw;
+      }
+    }
+
+    const dnSteerPitch = Math.max(-1.0, Math.min(1.0, (rRate + lRate) / 50.0));
+    const totalMotorActivity = gfRate + rRate + lRate + dng02R + dng02L;
 
     const motorOutputs: NeuralMotorOutputs = {
       dnEscapeSpike: gfSpike,
@@ -259,6 +274,7 @@ export class LIFDynamicsEngine {
       dnSteerYaw: Math.round(dnSteerYaw * 100) / 100,
       dnSteerPitch: Math.round(dnSteerPitch * 100) / 100,
       totalMotorActivity: Math.round(totalMotorActivity * 10) / 10,
+      ...(dng02SteerYaw !== undefined ? { dng02SteerYaw: Math.round(dng02SteerYaw * 100) / 100 } : {}),
     };
 
     return {

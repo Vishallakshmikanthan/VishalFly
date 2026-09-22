@@ -60,12 +60,41 @@ export class ConnectomeMotorAdapter {
       };
     }
 
-    // 2. Normal Autonomous Flight Cruise & Steering (DNp11 driven)
-    // Moderate forward cruise drive modulated by descending motor tone
-    const baselineThrust = 8.0;
+    // 2. Normal Autonomous Flight Cruise & Steering
+    // Integrated Descending Pathways:
+    // - DNp11: Visual looming and boundary avoidance steering
+    // - DNg02: Central Complex azimuthal goal navigation steering
+    let effectiveSteer = motorOutputs.dnSteerYaw;
+
+    if (motorOutputs.dng02SteerYaw !== undefined) {
+      if (Math.abs(motorOutputs.dnSteerYaw) > 0.4) {
+        // High obstacle avoidance urgency: prioritize visual evasion
+        effectiveSteer = motorOutputs.dnSteerYaw * 0.7 + motorOutputs.dng02SteerYaw * 0.3;
+      } else {
+        // Open airspace or mild visual bias: prioritize goal-directed steering
+        effectiveSteer = motorOutputs.dng02SteerYaw + motorOutputs.dnSteerYaw * 0.3;
+      }
+      effectiveSteer = Math.max(-1.0, Math.min(1.0, effectiveSteer));
+    }
+
+    // Moderate forward cruise drive modulated by descending motor tone and goal proximity
+    let baselineThrust = 8.0;
+    let activityPose: 'flying' | 'sitting' = 'flying';
+
+    if (motorOutputs.goalDistance !== undefined) {
+      if (motorOutputs.goalDistance < 0.25) {
+        // Destination arrival zone: settle thrust for hover/landing
+        baselineThrust = 1.5;
+        activityPose = 'sitting';
+      } else if (motorOutputs.goalDistance < 0.7) {
+        // Approach deceleration
+        baselineThrust = 3.5 + 4.5 * ((motorOutputs.goalDistance - 0.25) / 0.45);
+      }
+    }
+
     const liftHolding = 0.5; // slight buoyant lift to counteract gravity
-    const yawSteer = motorOutputs.dnSteerYaw * 2.2;
-    const bankingRoll = -motorOutputs.dnSteerYaw * 0.35;
+    const yawSteer = effectiveSteer * 2.2;
+    const bankingRoll = -effectiveSteer * 0.35;
 
     return {
       thrustAccel: baselineThrust,
@@ -74,7 +103,7 @@ export class ConnectomeMotorAdapter {
       targetRoll: bankingRoll,
       isEscapeTriggered: false,
       flightSpeedLimit: 4.2,
-      activityPose: 'flying',
+      activityPose,
     };
   }
 

@@ -115,6 +115,10 @@ export interface NeuralMotorOutputs {
   dnSteerYaw: number;       // Bilateral yaw steering command from DNp11/DNg02 (-1.0 to +1.0)
   dnSteerPitch: number;     // Vertical pitch trim from descending drive
   totalMotorActivity: number;
+  dng02SteerYaw?: number;   // Steering command specifically from Central Complex DNg02 (-1.0 to +1.0)
+  ccActive?: boolean;       // True if central complex goal steering is active
+  goalDistance?: number;    // Distance to active navigation destination (meters)
+  goalAngularError?: number;// Wrapped angular error to active goal (radians)
 }
 
 export interface NeuralStateSnapshot {
@@ -127,6 +131,16 @@ export interface NeuralStateSnapshot {
   motorOutputs: NeuralMotorOutputs;
   circuitId: string;
   computeLatencyMs: number;
+  centralComplex?: {
+    steeringCommand: number;
+    isUsingFallback: boolean;
+    headingEstimate: number;
+    flyHeading: number;
+    goalBearing: number;
+    angularError: number;
+    goalDistance: number;
+    dng02FiringRates: { left: number; right: number };
+  };
 }
 
 export type ControllerMode = 'schedule' | 'cognitive' | 'connectome' | 'manual';

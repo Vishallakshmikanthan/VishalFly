@@ -14,10 +14,13 @@ import {
   Flame,
   Cpu,
   Layers,
+  Compass,
+  Navigation,
 } from 'lucide-react';
 import { useGameStore } from '../../store/useGameStore';
 import { ControllerMode } from '../../cognition/connectome/types';
 import loomingCircuitData from '../../cognition/connectome/data/looming_escape_circuit.json';
+import compassCircuitData from '../../cognition/connectome/data/compass_steering_circuit.json';
 import manifestData from '../../cognition/connectome/data/male_cns_manifest.json';
 
 export const BiologicalConnectomeInspector: React.FC = () => {
@@ -26,11 +29,13 @@ export const BiologicalConnectomeInspector: React.FC = () => {
   const connectomeSnapshot = useGameStore((state) => state.connectomeSnapshot);
   const triggerConnectomeThreat = useGameStore((state) => state.triggerConnectomeThreat);
 
-  const [selectedSubTab, setSelectedSubTab] = useState<'activity' | 'circuit' | 'provenance' | 'parameters'>('activity');
+  const [selectedSubTab, setSelectedSubTab] = useState<'activity' | 'navigation' | 'circuit' | 'provenance' | 'parameters'>('activity');
 
   const neurons = loomingCircuitData.neurons;
   const synapses = loomingCircuitData.synapses;
   const stats = loomingCircuitData.statistics;
+  const compassNeurons = compassCircuitData.neurons;
+  const ccTelemetry = connectomeSnapshot?.centralComplex;
 
   const motorOutputs = connectomeSnapshot?.motorOutputs;
   const isEscapeActive = motorOutputs?.dnEscapeSpike || (motorOutputs?.dnEscapeRate ?? 0) > 18.0;
@@ -153,9 +158,10 @@ export const BiologicalConnectomeInspector: React.FC = () => {
       </div>
 
       {/* 3. Sub-tabs Navigation */}
-      <div className="flex border-b border-slate-800 gap-2 pb-1 text-xs">
+      <div className="flex border-b border-slate-800 gap-2 pb-1 text-xs overflow-x-auto">
         {[
-          { id: 'activity', label: `Neural Activity (${neurons.length} Neurons)`, icon: Activity },
+          { id: 'activity', label: `Looming Escape (${neurons.length} Neurons)`, icon: Activity },
+          { id: 'navigation', label: `Central Complex Steering (${compassNeurons.length} Neurons)`, icon: Compass },
           { id: 'circuit', label: `Circuit Wiring (${synapses.length} Synapses)`, icon: Layers },
           { id: 'parameters', label: 'Model Parameters', icon: Cpu },
           { id: 'provenance', label: 'Biological Provenance', icon: ShieldCheck },
@@ -166,7 +172,7 @@ export const BiologicalConnectomeInspector: React.FC = () => {
             <button
               key={tab.id}
               onClick={() => setSelectedSubTab(tab.id as any)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors shrink-0 ${
                 isActive
                   ? 'bg-cyan-500/20 text-cyan-300 font-semibold'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
@@ -271,7 +277,147 @@ export const BiologicalConnectomeInspector: React.FC = () => {
         </div>
       )}
 
-      {/* SUBTAB 2: CIRCUIT WIRING DIAGRAM & SYNAPSE TABLE */}
+      {/* SUBTAB 2: CENTRAL COMPLEX & GOAL NAVIGATION */}
+      {selectedSubTab === 'navigation' && (
+        <div className="flex flex-col gap-4">
+          {/* Spatial Heading & Goal Telemetry Card */}
+          <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-xs">
+            <div className="p-2.5 rounded-lg bg-slate-800/60 border border-slate-700/60">
+              <span className="text-[10px] text-slate-400 block uppercase">Destination Goal</span>
+              <strong className="text-white text-sm block truncate">
+                {motorOutputs?.goalDistance !== undefined ? 'Active Waypoint' : 'Free Exploration'}
+              </strong>
+              <span className="text-[10px] text-cyan-300">
+                {motorOutputs?.goalDistance !== undefined ? `${motorOutputs.goalDistance.toFixed(2)} m away` : 'No active target'}
+              </span>
+            </div>
+
+            <div className="p-2.5 rounded-lg bg-slate-800/60 border border-slate-700/60">
+              <span className="text-[10px] text-slate-400 block uppercase">Fly Heading (Yaw)</span>
+              <strong className="text-emerald-300 text-sm block">
+                {ccTelemetry ? `${(ccTelemetry.flyHeading * (180 / Math.PI)).toFixed(1)}°` : '0.0°'}
+              </strong>
+              <span className="text-[10px] text-slate-400">
+                Est: {ccTelemetry ? `${(ccTelemetry.headingEstimate * (180 / Math.PI)).toFixed(1)}°` : '0.0°'}
+              </span>
+            </div>
+
+            <div className="p-2.5 rounded-lg bg-slate-800/60 border border-slate-700/60">
+              <span className="text-[10px] text-slate-400 block uppercase">Goal Bearing & Error</span>
+              <strong className="text-amber-300 text-sm block">
+                Δθ: {ccTelemetry ? `${(ccTelemetry.angularError * (180 / Math.PI)).toFixed(1)}°` : '0.0°'}
+              </strong>
+              <span className="text-[10px] text-slate-400">
+                Bearing: {ccTelemetry ? `${(ccTelemetry.goalBearing * (180 / Math.PI)).toFixed(1)}°` : '0.0°'}
+              </span>
+            </div>
+
+            <div className="p-2.5 rounded-lg bg-slate-800/60 border border-slate-700/60">
+              <span className="text-[10px] text-slate-400 block uppercase">DNg02 Steering Torque</span>
+              <strong className={`text-sm block ${
+                (ccTelemetry?.steeringCommand ?? 0) > 0.05
+                  ? 'text-cyan-300'
+                  : (ccTelemetry?.steeringCommand ?? 0) < -0.05
+                  ? 'text-amber-300'
+                  : 'text-slate-300'
+              }`}>
+                {ccTelemetry ? `${ccTelemetry.steeringCommand > 0 ? '+' : ''}${ccTelemetry.steeringCommand.toFixed(2)}` : '0.00'}
+              </strong>
+              <span className={`text-[9px] uppercase font-bold px-1.5 py-0.5 rounded ${
+                ccTelemetry?.isUsingFallback
+                  ? 'bg-amber-500/20 text-amber-300'
+                  : 'bg-emerald-500/20 text-emerald-300'
+              }`}>
+                {ccTelemetry?.isUsingFallback ? 'Heuristic Fallback' : 'Biophysical LIF Active'}
+              </span>
+            </div>
+          </div>
+
+          {/* Central Complex 8-Neuron Activity Cards */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-white text-xs uppercase tracking-wider font-mono flex items-center gap-1.5">
+                <Compass className="w-4 h-4 text-cyan-400" />
+                Central Complex Compass Circuit (MaleCNS v1.0 Model)
+              </span>
+              <span className="text-[11px] text-slate-400 font-mono">
+                E-PG (4) → P-EN (2) → DNg02 (2)
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
+              {compassNeurons.map((neuron) => {
+                const vm = connectomeSnapshot?.potentials?.[neuron.bodyId] ?? -60.0;
+                const rate = connectomeSnapshot?.firingRates?.[neuron.bodyId] ?? 0.0;
+                const hasSpiked = connectomeSnapshot?.recentSpikes?.includes(neuron.bodyId) ?? false;
+                const iInj = connectomeSnapshot?.sensoryInputs?.[neuron.bodyId] ?? 0.0;
+                const ntStyle = getNTColor(neuron.neurotransmitter);
+
+                // Voltage bar percent [-65mV to -45mV]
+                const vPercent = Math.min(100, Math.max(0, ((vm - (-65)) / ((-45) - (-65))) * 100));
+
+                return (
+                  <div
+                    key={neuron.bodyId}
+                    className={`p-3 rounded-xl bg-slate-900/90 border transition-all ${
+                      hasSpiked
+                        ? 'border-amber-400/80 shadow-md shadow-amber-500/10'
+                        : 'border-slate-800 hover:border-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono font-bold text-xs text-white">{neuron.instance}</span>
+                        <span className="text-[10px] text-slate-400 font-mono">({neuron.somaSide})</span>
+                      </div>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded border font-mono ${ntStyle.bg} ${ntStyle.text} ${ntStyle.border}`}>
+                        {neuron.type}
+                      </span>
+                    </div>
+
+                    <div className="mt-2 flex items-baseline justify-between font-mono">
+                      <span className="text-slate-400 text-[10px]">Vm:</span>
+                      <span className={`text-xs font-bold ${hasSpiked ? 'text-amber-300' : 'text-slate-200'}`}>
+                        {vm.toFixed(1)} mV
+                      </span>
+                    </div>
+
+                    {/* Vm bar */}
+                    <div className="w-full h-1.5 bg-slate-800 rounded-full mt-1 overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-75 rounded-full ${
+                          hasSpiked ? 'bg-amber-400' : vPercent > 60 ? 'bg-cyan-400' : 'bg-slate-600'
+                        }`}
+                        style={{ width: `${vPercent}%` }}
+                      />
+                    </div>
+
+                    <div className="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-400">
+                      <span>Rate: <strong className="text-white">{rate.toFixed(1)} Hz</strong></span>
+                      <span>I_inj: <strong className="text-cyan-300">{iInj.toFixed(2)} nA</strong></span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Model Specification & Scientific Integrity Card */}
+          <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-300 space-y-2">
+            <div className="flex items-center gap-2 font-bold text-slate-200">
+              <Navigation className="w-4 h-4 text-cyan-400" />
+              <span>Central Complex Steering Parameter Classification</span>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
+              <strong>Measured:</strong> Synaptic connection counts (45, 42, 28) and excitatory cholinergic signs derived from published electron microscopy datasets (Hulse et al. 2021, Rayshubskiy et al. 2020).<br />
+              <strong>Synthetic:</strong> Neuron body IDs (20001–20008) are canonicalized model identifiers representing the 8-neuron minimal heading/steering microcircuit.<br />
+              <strong>Modeled:</strong> Cosine azimuthal tuning and Leaky Integrate-and-Fire numerical dynamics. Clearly labeled fallback assistance is provided when biophysical rates are subthreshold.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* SUBTAB 3: CIRCUIT WIRING DIAGRAM & SYNAPSE TABLE */}
       {selectedSubTab === 'circuit' && (
         <div className="flex flex-col gap-4">
           {/* Pathway Flow Diagram */}

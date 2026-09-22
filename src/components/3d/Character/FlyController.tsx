@@ -4,6 +4,44 @@ import { useFrame } from '@react-three/fiber';
 import { useGameStore, simulationEngine, connectomeFlyController } from '../../../store/useGameStore';
 import { LOCATIONS } from '../../../navigation/locationGraph';
 import { FruitFly } from './FruitFly';
+import { createNavigationGoal, NavigationGoal } from '../../../cognition/connectome/navigation/NavigationGoalTypes';
+
+function resolveActiveNavigationTarget(
+  locationId: string,
+  activeWaypointKey: string,
+  currentActivity: any,
+  flyPos: [number, number, number],
+  flyYaw: number
+): NavigationGoal | null {
+  const currentLocConfig = LOCATIONS[locationId as keyof typeof LOCATIONS];
+  if (!currentLocConfig) return null;
+
+  const waypointCoords = currentLocConfig?.waypoints?.[activeWaypointKey];
+  let targetX = 0;
+  let targetY = 1.6;
+  let targetZ = 0;
+  let goalId = activeWaypointKey || 'destination';
+
+  if (waypointCoords) {
+    targetX = waypointCoords[0];
+    targetY = waypointCoords[1];
+    targetZ = waypointCoords[2];
+  } else {
+    const targetLandmarkName = currentActivity?.definition.targetLandmarkName;
+    const targetLm = currentLocConfig?.landmarks.find((lm) => lm.name === targetLandmarkName) ||
+      currentLocConfig?.landmarks[0];
+    if (targetLm) {
+      targetX = (targetLm.minX + targetLm.maxX) / 2;
+      targetZ = (targetLm.minZ + targetLm.maxZ) / 2;
+      targetY = targetLm.minY !== undefined ? (targetLm.minY + (targetLm.maxY || targetLm.minY + 1.2)) / 2 : 1.6;
+      goalId = targetLm.name;
+    } else {
+      return null;
+    }
+  }
+
+  return createNavigationGoal([targetX, targetY, targetZ], flyPos, flyYaw, goalId);
+}
 
 /**
  * FlyController:
@@ -174,12 +212,23 @@ export const FlyController: React.FC = () => {
       roll.current = THREE.MathUtils.lerp(roll.current, -moveDir.x * 0.4, dt * 10);
     } else if (controllerMode === 'connectome') {
       // 1. Biological Connectome Neural Dynamics Closed-Loop Autonomous Flight
+      // Resolve active contextual navigation goal from schedule/activity simulation
+      const activeWaypointKey = simulationEngine.getCurrentWaypoint();
+      const currentGoal = resolveActiveNavigationTarget(
+        currentLocation,
+        activeWaypointKey,
+        currentActivity,
+        [position.current.x, position.current.y, position.current.z],
+        targetRotation.current
+      );
+
       const result = connectomeFlyController.update(
         [position.current.x, position.current.y, position.current.z],
         [velocity.current.x, velocity.current.y, velocity.current.z],
         targetRotation.current,
         roomBounds,
-        dt
+        dt,
+        currentGoal
       );
 
       position.current.set(...result.newPosition);
@@ -189,7 +238,14 @@ export const FlyController: React.FC = () => {
       roll.current = THREE.MathUtils.lerp(roll.current, result.roll, dt * 8);
 
       const flightSpeed = velocity.current.length();
-      if (flightSpeed > 0.3) {
+      const currentSimPose = simulationEngine.getCurrentFlyActivity();
+
+      // Check arrival proximity to destination
+      if (currentGoal && currentGoal.isArrived) {
+        if (isMoving) setIsMoving(false);
+        // Settle into schedule/activity pose when arrived at destination
+        setFlyActivity(currentSimPose);
+      } else if (flightSpeed > 0.3) {
         if (!isMoving) setIsMoving(true);
         setFlyActivity('flying');
       } else {
