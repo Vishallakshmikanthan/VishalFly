@@ -26,6 +26,10 @@ export class SchedulePlanner {
     return dayType === 'weekend' ? [...this.weekendSchedule] : [...this.weekdaySchedule];
   }
 
+  public getScheduleForDay(dayType: DayType): ScheduleEntry[] {
+    return this.getCurrentSchedule(dayType);
+  }
+
   public setSchedule(dayType: DayType, entries: ScheduleEntry[]): void {
     if (dayType === 'weekend') {
       this.weekendSchedule = [...entries];

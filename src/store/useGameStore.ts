@@ -10,10 +10,22 @@ import {
   ActivityInstance,
   ScheduleEntry,
   NeedState,
+  NeedType,
   SimulationEvent,
   SimulationSpeed,
   CollegeSubBehavior,
-  SimulationState
+  SimulationState,
+  WorkoutSession,
+  ProjectState,
+  AssignmentState,
+  MealSession,
+  LaundryState,
+  FoodOrderState,
+  FamilyCallState,
+  MorningRoutineState,
+  WorkoutType,
+  MealType,
+  DayOfWeek
 } from '../types';
 import { LOCATIONS } from '../navigation/locationGraph';
 import { SimulationEngine } from '../simulation/engine/SimulationEngine';
@@ -50,6 +62,16 @@ interface GameState {
   needs: NeedState;
   recentEvents: SimulationEvent[];
   selectedCollegeBehavior: CollegeSubBehavior | null;
+
+  // Milestone 4 Daily Life Systems State
+  workoutSession: WorkoutSession | null;
+  projectState: ProjectState;
+  assignmentState: AssignmentState;
+  mealSession: MealSession | null;
+  laundryState: LaundryState;
+  foodOrderState: FoodOrderState;
+  familyCallState: FamilyCallState;
+  morningRoutineState: MorningRoutineState;
   
   // Camera & view controls
   resetCameraTrigger: number;
@@ -79,6 +101,19 @@ interface GameState {
   setSimulationSpeed: (speed: SimulationSpeed) => void;
   restartSimulationDay: () => void;
   syncFromSimulation: (state: SimulationState) => void;
+
+  // Developer Testing Controls
+  triggerWorkout: (type?: WorkoutType) => void;
+  triggerMeal: (type?: MealType) => void;
+  triggerFamilyCall: () => void;
+  triggerFoodOrder: () => void;
+  triggerActivity: (activityId: string, locationId?: LocationId) => void;
+  setTime: (time: string) => void;
+  setDay: (day: number, dayOfWeek?: DayOfWeek) => void;
+  setNeedValue: (need: NeedType, value: number) => void;
+  saveSimulation: () => boolean;
+  loadSimulation: () => boolean;
+  resetSimulation: () => void;
 }
 
 const initialLoc = LOCATIONS.bedroom;
@@ -115,6 +150,15 @@ export const useGameStore = create<GameState>((set, get) => {
     needs: { ...INITIAL_NEEDS_STATE },
     recentEvents: simulationEngine.eventLogger.getRecent(20),
     selectedCollegeBehavior: null,
+
+    workoutSession: null,
+    projectState: simulationEngine.projectSystem.getState(),
+    assignmentState: simulationEngine.assignmentSystem.getState(),
+    mealSession: null,
+    laundryState: simulationEngine.laundrySystem.getState(),
+    foodOrderState: simulationEngine.foodOrderSystem.getState(),
+    familyCallState: simulationEngine.familyCallSystem.getState(),
+    morningRoutineState: simulationEngine.morningRoutineSystem.getState(),
     
     resetCameraTrigger: 0,
     followFly: false,
@@ -252,7 +296,68 @@ export const useGameStore = create<GameState>((set, get) => {
         needs: simState.needs,
         recentEvents: simState.recentEvents,
         selectedCollegeBehavior: simState.currentActivity?.selectedSubBehavior || null,
+        workoutSession: simState.workoutSession,
+        projectState: simState.projectState,
+        assignmentState: simState.assignmentState,
+        mealSession: simState.mealSession,
+        laundryState: simState.laundryState,
+        foodOrderState: simState.foodOrderState,
+        familyCallState: simState.familyCallState,
+        morningRoutineState: simState.morningRoutineState,
       });
+    },
+
+    // Developer Testing Controls
+    triggerWorkout: (type) => {
+      simulationEngine.triggerWorkout(type);
+      get().switchLocation('gym', 'Teleporting to Gym for Workout');
+    },
+
+    triggerMeal: (type = 'dinner') => {
+      simulationEngine.triggerMeal(type);
+      get().switchLocation('dining', 'Heading to Dining Hall for Meal');
+    },
+
+    triggerFamilyCall: () => {
+      simulationEngine.triggerFamilyCall();
+      get().switchLocation('grounds', 'Going to Courtyard for Family Call');
+    },
+
+    triggerFoodOrder: () => {
+      simulationEngine.triggerFoodOrder();
+      get().switchLocation('bedroom', 'Ordering Late Night Food in Room');
+    },
+
+    triggerActivity: (activityId, locationId = 'bedroom') => {
+      simulationEngine.triggerActivity(activityId, locationId);
+      if (locationId !== get().currentLocation) {
+        get().switchLocation(locationId, `Triggering ${activityId}`);
+      }
+    },
+
+    setTime: (timeStr) => {
+      simulationEngine.setTime(timeStr);
+    },
+
+    setDay: (day, dayOfWeek) => {
+      simulationEngine.setDay(day, dayOfWeek);
+    },
+
+    setNeedValue: (need, value) => {
+      simulationEngine.setNeed(need, value);
+    },
+
+    saveSimulation: () => {
+      return simulationEngine.saveSimulation();
+    },
+
+    loadSimulation: () => {
+      return simulationEngine.loadSimulation();
+    },
+
+    resetSimulation: () => {
+      simulationEngine.resetSimulation();
+      get().switchLocation('bedroom', 'Resetting simulation');
     },
   };
 });

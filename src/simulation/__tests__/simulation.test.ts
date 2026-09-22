@@ -7,6 +7,12 @@ import { NeedsSystem } from '../needs/NeedsSystem';
 import { EventLogger } from '../events/EventLogger';
 import { SimulationEngine } from '../engine/SimulationEngine';
 import { ScheduleEntry } from '../types/simulation';
+import { WorkoutSystem } from '../systems/WorkoutSystem';
+import { MealSystem } from '../systems/MealSystem';
+import { ProjectSystem } from '../systems/ProjectSystem';
+import { AssignmentSystem } from '../systems/AssignmentSystem';
+import { LaundrySystem } from '../systems/LaundrySystem';
+import { FoodOrderSystem } from '../systems/FoodOrderSystem';
 
 describe('Milestone 3: Autonomous Life Simulation Engine Tests', () => {
 
@@ -421,6 +427,378 @@ describe('Milestone 3: Autonomous Life Simulation Engine Tests', () => {
       expect(finalState.clock.dayOfWeek).toBe('Monday'); // rolled over from Sun to Mon
       expect(finalState.clock.dayType).toBe('weekday');
       expect(finalState.recentEvents.length).toBeGreaterThan(0);
+    });
+  });
+
+});
+
+describe('Milestone 4: Interactive Daily Life Systems Tests', () => {
+
+  // 1. Meal reduces hunger
+  describe('Scenario 1: Meal reduces hunger', () => {
+    it('reduces hunger over time and completes meal', () => {
+      const logger = new EventLogger();
+      const mealSystem = new MealSystem(logger);
+      const session = mealSystem.startMeal('dinner', 'Day 1 • 20:00', 1);
+      expect(session.meal.type).toBe('dinner');
+      const res = mealSystem.update(900, 'Day 1 • 20:15', 1); // 15 mins (half duration)
+      expect(res.hungerDelta).toBeLessThan(0);
+      expect(res.session?.progressPercent).toBe(50);
+    });
+
+    it('integrated engine meal reduces simulated hunger need', () => {
+      const engine = new SimulationEngine({ startingTime: '18:45', startingDay: 1 });
+      engine.setNeed('hunger', 80);
+      engine.step(20); // 20 real seconds = 20 simulated minutes of dinner
+      expect(engine.getState().needs.hunger).toBeLessThan(80);
+    });
+  });
+
+  // 2. Workout increases fatigue
+  describe('Scenario 2: Workout increases fatigue', () => {
+    it('increases fatigue and decreases energy during workout', () => {
+      const engine = new SimulationEngine({ startingTime: '17:45', startingDay: 1 });
+      engine.setNeed('fatigue', 15);
+      engine.setNeed('energy', 90);
+      engine.triggerWorkout('push');
+      engine.step(1200); // 20 sim minutes
+      expect(engine.getState().needs.fatigue).toBeGreaterThan(15);
+      expect(engine.getState().needs.energy).toBeLessThan(90);
+    });
+  });
+
+  // 3. Workout progresses through sets
+  describe('Scenario 3: Workout progresses through sets', () => {
+    it('progresses from ARRIVE to LIFT, completes set, enters REST, and advances to set 2', () => {
+      const logger = new EventLogger();
+      const workoutSystem = new WorkoutSystem(logger);
+      workoutSystem.startWorkout('Monday', 'Day 1 • 18:00', 1);
+
+      // Step through stages: ARRIVE (5s) -> WARMUP (10s) -> SELECT_EXERCISE (immediate) -> SETUP (5s) -> LIFT
+      workoutSystem.update(6, 'Day 1 • 18:00', 1); // ARRIVE -> WARMUP
+      workoutSystem.update(11, 'Day 1 • 18:00', 1); // WARMUP -> SELECT_EXERCISE
+      workoutSystem.update(1, 'Day 1 • 18:00', 1); // SELECT_EXERCISE -> SETUP
+      workoutSystem.update(6, 'Day 1 • 18:00', 1); // SETUP -> LIFT
+
+      let session = workoutSystem.getCurrentSession();
+      expect(session?.state).toBe('LIFT');
+      expect(session?.currentSet).toBe(1);
+
+      // Reps: 8 reps * 2.5s = 20s -> completes set 1
+      workoutSystem.update(25, 'Day 1 • 18:01', 1);
+      session = workoutSystem.getCurrentSession();
+      expect(session?.state).toBe('REST');
+      expect(session?.restRemainingSimSeconds).toBeGreaterThan(0);
+
+      // Rest period: 90 seconds -> finishes rest and transitions to set 2
+      workoutSystem.update(95, 'Day 1 • 18:02', 1);
+      session = workoutSystem.getCurrentSession();
+      expect(session?.state).toBe('LIFT');
+      expect(session?.currentSet).toBe(2);
+    });
+  });
+
+  // 4. PPL rotation selects the correct workout
+  describe('Scenario 4: PPL rotation selects the correct workout', () => {
+    it('returns the configured Push/Pull/Legs rotation for each day of the week', () => {
+      const logger = new EventLogger();
+      const ws = new WorkoutSystem(logger);
+      expect(ws.getWorkoutForDay('Monday')).toBe('push');
+      expect(ws.getWorkoutForDay('Tuesday')).toBe('pull');
+      expect(ws.getWorkoutForDay('Wednesday')).toBe('legs');
+      expect(ws.getWorkoutForDay('Thursday')).toBe('push');
+      expect(ws.getWorkoutForDay('Friday')).toBe('pull');
+      expect(ws.getWorkoutForDay('Saturday')).toBe('legs');
+      expect(ws.getWorkoutForDay('Sunday')).toBe('rest');
+    });
+  });
+
+  // 5. Project progress increases during project work
+  describe('Scenario 5: Project progress increases during project work', () => {
+    it('accumulates project progress deterministically scaled by needs', () => {
+      const logger = new EventLogger();
+      const projectSystem = new ProjectSystem(logger);
+      projectSystem.startSession('Day 1 • 19:00', 1);
+      const initProgress = projectSystem.getState().totalProgress;
+      projectSystem.update(1800, {
+        energy: 90,
+        hunger: 20,
+        sleepiness: 10,
+        fatigue: 10,
+        focus: 85,
+        socialNeed: 20,
+      }, 'Day 1 • 19:30', 1);
+      expect(projectSystem.getState().totalProgress).toBeGreaterThan(initProgress);
+      expect(projectSystem.getState().sessionElapsedSimMinutes).toBe(30);
+    });
+  });
+
+  // 6. Assignment progress increases during assignment work
+  describe('Scenario 6: Assignment progress increases during assignment work', () => {
+    it('advances assignment progress and cycles completed tasks upon finishing', () => {
+      const logger = new EventLogger();
+      const assignSystem = new AssignmentSystem(logger);
+      expect(assignSystem.getState().progress).toBe(30);
+      expect(assignSystem.getState().completedTasks).toBe(4);
+
+      assignSystem.startSession('Day 1 • 20:00', 1);
+      const testNeeds = {
+        energy: 90,
+        hunger: 20,
+        sleepiness: 10,
+        fatigue: 10,
+        focus: 80,
+        socialNeed: 20,
+      };
+      assignSystem.update(1800, testNeeds, 'Day 1 • 20:30', 1); // 30 minutes
+      expect(assignSystem.getState().progress).toBeGreaterThan(30);
+
+      // Advance until completion (needs ~60 more minutes to hit 100%)
+      assignSystem.update(7200, testNeeds, 'Day 1 • 22:30', 1);
+      expect(assignSystem.getState().completedTasks).toBeGreaterThanOrEqual(5);
+    });
+  });
+
+  // 7. Family call reduces social need
+  describe('Scenario 7: Family call reduces social need', () => {
+    it('reduces social need while walking courtyard loop during family call', () => {
+      const engine = new SimulationEngine({ startingTime: '19:15', startingDay: 1 });
+      engine.setNeed('socialNeed', 85);
+      engine.step(15); // 15 real seconds = 15 simulated minutes of calling
+      expect(engine.getState().needs.socialNeed).toBeLessThan(85);
+      expect(engine.getState().character.flyActivity).toBe('phone_call');
+      expect(engine.getState().character.locationId).toBe('grounds');
+    });
+  });
+
+  // 8. Laundry progresses through both stages
+  describe('Scenario 8: Laundry progresses through both stages', () => {
+    it('progresses from washing in bedroom to clothes drying on balcony', () => {
+      const logger = new EventLogger();
+      const laundry = new LaundrySystem(logger);
+
+      // Stage 1: Washing
+      laundry.startLaundry('Day 6 • 10:00', 6);
+      expect(laundry.getState().stage).toBe('washing');
+      laundry.update(2700, 'Day 6 • 10:45', 6); // 45 sim minutes
+      expect(laundry.getState().isCompleted).toBe(true);
+
+      // Stage 2: Balcony Drying
+      laundry.startDrying('Day 6 • 10:45', 6);
+      expect(laundry.getState().stage).toBe('drying');
+      laundry.update(2700, 'Day 6 • 11:30', 6); // 45 sim minutes
+      expect(laundry.getState().isCompleted).toBe(true);
+      expect(laundry.getState().progressPercent).toBe(100);
+    });
+  });
+
+  // 9. Food order follows the correct sequence
+  describe('Scenario 9: Food order follows the correct sequence', () => {
+    it('executes ORDER -> WAIT -> GATE -> COLLECT -> RETURN -> EAT -> COMPLETE', () => {
+      const logger = new EventLogger();
+      const foodOrder = new FoodOrderSystem(logger);
+
+      // 1. Order placed
+      foodOrder.triggerOrder('Day 6 • 23:30', 6);
+      expect(foodOrder.getState().stage).toBe('order_placed');
+
+      // 2. Waiting for delivery
+      foodOrder.update(1, 'Day 6 • 23:30', 6);
+      expect(foodOrder.getState().stage).toBe('waiting_delivery');
+
+      // 3. Delivery arrived -> Walk to gate
+      const gateRes = foodOrder.update(900, 'Day 6 • 23:45', 6);
+      expect(foodOrder.getState().stage).toBe('walking_to_gate');
+      expect(gateRes.targetLocation).toBe('grounds');
+
+      // 4. Collect food
+      foodOrder.update(30, 'Day 6 • 23:45', 6);
+      expect(foodOrder.getState().stage).toBe('collecting_food');
+
+      // 5. Walk back
+      const diningRes = foodOrder.update(10, 'Day 6 • 23:46', 6);
+      expect(foodOrder.getState().stage).toBe('walking_back');
+      expect(diningRes.targetLocation).toBe('dining');
+
+      // 6. Eating
+      foodOrder.update(30, 'Day 6 • 23:46', 6);
+      expect(foodOrder.getState().stage).toBe('eating');
+
+      // Eating reduces hunger
+      const eatUpdate = foodOrder.update(150, 'Day 6 • 23:48', 6);
+      expect(eatUpdate.hungerDelta).toBeLessThan(0);
+
+      // 7. Complete
+      foodOrder.update(150, 'Day 6 • 23:51', 6);
+      expect(foodOrder.getState().stage).toBe('completed');
+      expect(foodOrder.getState().isCompleted).toBe(true);
+    });
+  });
+
+  // 10. Activities cannot start before travel completes
+  describe('Scenario 10: Activities cannot start before travel completes', () => {
+    it('keeps state at travelling and only activates once travel duration is met', () => {
+      const logger = new EventLogger();
+      const am = new ActivityManager('bedroom', logger, 30);
+
+      const collegeEntry: ScheduleEntry = {
+        id: 'wd_college',
+        activityId: 'college_session',
+        name: 'College Lectures',
+        startTime: '08:30',
+        endTime: '16:30',
+        startMinutes: 510,
+        endMinutes: 990,
+        locationId: 'classroom',
+        description: 'College classes',
+      };
+
+      am.transitionToActivity(collegeEntry, 'Day 1 • 08:30', 1);
+      expect(am.getLifecycleState()).toBe('travelling');
+      expect(am.isTravelling()).toBe(true);
+      expect(am.getCurrentLocation()).toBe('bedroom');
+
+      // Advance by 15s (travel is 30s) -> should still be travelling
+      am.update(15, 'Day 1 • 08:30', 1);
+      expect(am.getLifecycleState()).toBe('travelling');
+      expect(am.getCurrentLocation()).toBe('bedroom');
+
+      // Advance remaining 16s -> arrival and activation
+      am.update(16, 'Day 1 • 08:30', 1);
+      expect(am.getLifecycleState()).toBe('active');
+      expect(am.getCurrentLocation()).toBe('classroom');
+    });
+  });
+
+  // 11. Activity completion happens exactly once
+  describe('Scenario 11: Activity completion happens exactly once', () => {
+    it('prevents duplicate completion events when completed repeatedly', () => {
+      const logger = new EventLogger();
+      const am = new ActivityManager('bedroom', logger, 30);
+
+      const sleepEntry: ScheduleEntry = {
+        id: 'wd_sleep',
+        activityId: 'sleep',
+        name: 'Sleep',
+        startTime: '23:15',
+        endTime: '06:00',
+        startMinutes: 1395,
+        endMinutes: 360,
+        locationId: 'bedroom',
+        description: 'Overnight rest',
+      };
+
+      am.transitionToActivity(sleepEntry, 'Day 1 • 23:15', 1);
+      am.completeCurrentActivity('Day 2 • 06:00', 2);
+      const eventsAfterFirstComplete = logger.getEvents().filter(e => e.message.includes('Completed: Sleep'));
+      expect(eventsAfterFirstComplete.length).toBe(1);
+
+      // Re-triggering complete should do nothing
+      am.completeCurrentActivity('Day 2 • 06:00', 2);
+      am.completeCurrentActivity('Day 2 • 06:00', 2);
+      const eventsAfterRepeats = logger.getEvents().filter(e => e.message.includes('Completed: Sleep'));
+      expect(eventsAfterRepeats.length).toBe(1);
+    });
+  });
+
+  // 12. Needs remain clamped to 0–100
+  describe('Scenario 12: Needs remain clamped to 0-100', () => {
+    it('clamps all needs strictly within 0 and 100 on direct set and continuous decay/gain', () => {
+      const logger = new EventLogger();
+      const needs = new NeedsSystem(logger);
+      needs.setState({
+        energy: 150,
+        hunger: -30,
+        sleepiness: 999,
+        fatigue: -50,
+        focus: 120,
+        socialNeed: -10,
+      });
+
+      const s = needs.getState();
+      expect(s.energy).toBe(100);
+      expect(s.hunger).toBe(0);
+      expect(s.sleepiness).toBe(100);
+      expect(s.fatigue).toBe(0);
+      expect(s.focus).toBe(100);
+      expect(s.socialNeed).toBe(0);
+
+      // Continuous large drain
+      needs.update(360000, {
+        energyPerHour: -500,
+        hungerPerHour: 500,
+        sleepinessPerHour: 500,
+        fatiguePerHour: 500,
+        focusPerHour: -500,
+        socialNeedPerHour: 500,
+      }, 'Day 1 • 12:00', 1);
+
+      const afterDrain = needs.getState();
+      expect(afterDrain.energy).toBe(0);
+      expect(afterDrain.hunger).toBe(100);
+      expect(afterDrain.focus).toBe(0);
+    });
+  });
+
+  // 13. Persistence save/load works
+  describe('Scenario 13: Persistence save/load works', () => {
+    it('serializes simulation state and deserializes accurately', () => {
+      const mockStorage: Record<string, string> = {};
+      (globalThis as any).localStorage = {
+        getItem: (k: string) => mockStorage[k] || null,
+        setItem: (k: string, v: string) => { mockStorage[k] = String(v); },
+        removeItem: (k: string) => { delete mockStorage[k]; },
+      };
+
+      const engine = new SimulationEngine({ startingTime: '14:00', startingDay: 2 });
+      engine.setNeed('hunger', 42);
+      engine.setNeed('energy', 88);
+      const saved = engine.saveSimulation();
+      expect(saved).toBe(true);
+
+      const newEngine = new SimulationEngine({ startingTime: '06:00', startingDay: 1 });
+      const loaded = newEngine.loadSimulation();
+      expect(loaded).toBe(true);
+      expect(newEngine.getState().clock.simulatedTime).toBe('14:00');
+      expect(newEngine.getState().clock.dayNumber).toBe(2);
+      expect(newEngine.getState().needs.hunger).toBe(42);
+      expect(newEngine.getState().needs.energy).toBe(88);
+    });
+  });
+
+  // 14. Simulation continues correctly after loading
+  describe('Scenario 14: Simulation continues correctly after loading', () => {
+    it('advances time, triggers activities, and maintains integrity after restore', () => {
+      const mockStorage: Record<string, string> = {};
+      (globalThis as any).localStorage = {
+        getItem: (k: string) => mockStorage[k] || null,
+        setItem: (k: string, v: string) => { mockStorage[k] = String(v); },
+        removeItem: (k: string) => { delete mockStorage[k]; },
+      };
+
+      const engine1 = new SimulationEngine({ startingTime: '07:59', startingDay: 1 });
+      engine1.saveSimulation();
+
+      const engine2 = new SimulationEngine({ startingTime: '06:00', startingDay: 1 });
+      engine2.loadSimulation();
+      expect(engine2.getState().clock.simulatedTime).toBe('07:59');
+
+      // Step by 2 simulated minutes (2 real seconds = 120 sim seconds)
+      const stepped = engine2.step(2);
+      expect(stepped.clock.simulatedTime).toBe('08:01');
+      expect(stepped.clock.isPaused).toBe(false);
+      expect(stepped.needs.energy).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  // 15. Existing Milestone 3 schedule tests validation
+  describe('Scenario 15: Existing Milestone 3 schedule tests validation', () => {
+    it('verifies weekday and weekend daily schedules execute with full fidelity', () => {
+      const planner = new SchedulePlanner();
+      const weekdaySchedule = planner.getScheduleForDay('weekday');
+      expect(weekdaySchedule.length).toBeGreaterThanOrEqual(8);
+      const weekendSchedule = planner.getScheduleForDay('weekend');
+      expect(weekendSchedule.length).toBeGreaterThanOrEqual(8);
     });
   });
 

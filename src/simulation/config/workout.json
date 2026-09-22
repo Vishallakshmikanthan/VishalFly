@@ -1,0 +1,174 @@
+{
+  "weeklyRotation": {
+    "Monday": "push",
+    "Tuesday": "pull",
+    "Wednesday": "legs",
+    "Thursday": "push",
+    "Friday": "pull",
+    "Saturday": "legs",
+    "Sunday": "rest"
+  },
+  "plans": {
+    "push": {
+      "id": "ppl_push",
+      "name": "Push Day — Chest, Shoulders & Triceps",
+      "type": "push",
+      "exercises": [
+        {
+          "id": "bench_press",
+          "name": "Bench Press",
+          "sets": 4,
+          "reps": 8,
+          "restDurationSeconds": 60,
+          "muscleGroup": "Chest",
+          "targetWeightKg": 60,
+          "equipmentWaypoint": "bench_press"
+        },
+        {
+          "id": "incline_db_press",
+          "name": "Incline Dumbbell Press",
+          "sets": 3,
+          "reps": 10,
+          "restDurationSeconds": 50,
+          "muscleGroup": "Upper Chest",
+          "targetWeightKg": 20,
+          "equipmentWaypoint": "dumbbells"
+        },
+        {
+          "id": "shoulder_press",
+          "name": "Shoulder Press",
+          "sets": 3,
+          "reps": 10,
+          "restDurationSeconds": 45,
+          "muscleGroup": "Deltoids",
+          "targetWeightKg": 16,
+          "equipmentWaypoint": "dumbbells"
+        },
+        {
+          "id": "lateral_raise",
+          "name": "Lateral Raise",
+          "sets": 3,
+          "reps": 12,
+          "restDurationSeconds": 40,
+          "muscleGroup": "Side Delts",
+          "targetWeightKg": 8,
+          "equipmentWaypoint": "dumbbells"
+        },
+        {
+          "id": "triceps_pushdown",
+          "name": "Triceps Pushdown",
+          "sets": 3,
+          "reps": 12,
+          "restDurationSeconds": 40,
+          "muscleGroup": "Triceps",
+          "targetWeightKg": 25,
+          "equipmentWaypoint": "cable_machine"
+        }
+      ]
+    },
+    "pull": {
+      "id": "ppl_pull",
+      "name": "Pull Day — Back, Traps & Biceps",
+      "type": "pull",
+      "exercises": [
+        {
+          "id": "deadlift",
+          "name": "Deadlift",
+          "sets": 4,
+          "reps": 6,
+          "restDurationSeconds": 70,
+          "muscleGroup": "Posterior Chain",
+          "targetWeightKg": 90,
+          "equipmentWaypoint": "squat_rack"
+        },
+        {
+          "id": "lat_pulldown",
+          "name": "Lat Pulldown",
+          "sets": 3,
+          "reps": 10,
+          "restDurationSeconds": 50,
+          "muscleGroup": "Lats",
+          "targetWeightKg": 50,
+          "equipmentWaypoint": "cable_machine"
+        },
+        {
+          "id": "seated_row",
+          "name": "Seated Row",
+          "sets": 3,
+          "reps": 10,
+          "restDurationSeconds": 50,
+          "muscleGroup": "Rhomboids & Lats",
+          "targetWeightKg": 45,
+          "equipmentWaypoint": "cable_machine"
+        },
+        {
+          "id": "face_pull",
+          "name": "Face Pull",
+          "sets": 3,
+          "reps": 12,
+          "restDurationSeconds": 40,
+          "muscleGroup": "Rear Deltoids",
+          "targetWeightKg": 20,
+          "equipmentWaypoint": "cable_machine"
+        },
+        {
+          "id": "dumbbell_curl",
+          "name": "Dumbbell Curl",
+          "sets": 3,
+          "reps": 12,
+          "restDurationSeconds": 40,
+          "muscleGroup": "Biceps",
+          "targetWeightKg": 12,
+          "equipmentWaypoint": "dumbbells"
+        }
+      ]
+    },
+    "legs": {
+      "id": "ppl_legs",
+      "name": "Legs Day — Quads, Hamstrings & Calves",
+      "type": "legs",
+      "exercises": [
+        {
+          "id": "squat",
+          "name": "Barbell Squat",
+          "sets": 4,
+          "reps": 8,
+          "restDurationSeconds": 65,
+          "muscleGroup": "Quads & Glutes",
+          "targetWeightKg": 80,
+          "equipmentWaypoint": "squat_rack"
+        },
+        {
+          "id": "leg_press",
+          "name": "Leg Press",
+          "sets": 3,
+          "reps": 10,
+          "restDurationSeconds": 50,
+          "muscleGroup": "Quads",
+          "targetWeightKg": 120,
+          "equipmentWaypoint": "leg_press"
+        },
+        {
+          "id": "leg_curl",
+          "name": "Leg Curl",
+          "sets": 3,
+          "reps": 12,
+          "restDurationSeconds": 45,
+          "muscleGroup": "Hamstrings",
+          "targetWeightKg": 40,
+          "equipmentWaypoint": "leg_press"
+        },
+        {
+          "id": "calf_raise",
+          "name": "Standing Calf Raise",
+          "sets": 4,
+          "reps": 15,
+          "restDurationSeconds": 35,
+          "muscleGroup": "Calves",
+          "targetWeightKg": 50,
+          "equipmentWaypoint": "bench_press"
+        }
+      ]
+    }
+  }
+}

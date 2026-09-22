@@ -1,26 +1,38 @@
-import React, { useState } from 'react';
-import { Compass, Clock, MapPin, Calendar, ArrowRight, ScrollText, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Compass, Clock, MapPin, Calendar, ScrollText, Sparkles, Wrench } from 'lucide-react';
 import { useGameStore } from '../../store/useGameStore';
 import { LocationSelector } from './LocationSelector';
 import { SimulationControls } from './SimulationControls';
 import { NeedsMeters } from './NeedsMeters';
 import { EventLogPanel } from './EventLogPanel';
+import { ActivityInspector } from './ActivityInspector';
+import { DevPanel } from './DevPanel';
 import { LOCATIONS } from '../../navigation/locationGraph';
 
 export const HUD: React.FC = () => {
   const simulatedTime = useGameStore((state) => state.simulatedTime);
   const locationName = useGameStore((state) => state.locationName);
   const roomSubLocation = useGameStore((state) => state.roomSubLocation);
-  const flyActivity = useGameStore((state) => state.flyActivity);
   const currentSpot = useGameStore((state) => state.currentSpot);
   const currentLocation = useGameStore((state) => state.currentLocation);
   const simulationClock = useGameStore((state) => state.simulationClock);
-  const currentActivity = useGameStore((state) => state.currentActivity);
-  const nextActivity = useGameStore((state) => state.nextActivity);
   const selectedCollegeBehavior = useGameStore((state) => state.selectedCollegeBehavior);
   const recentEvents = useGameStore((state) => state.recentEvents);
 
   const [isLogOpen, setIsLogOpen] = useState(false);
+  const [isDevOpen, setIsDevOpen] = useState(false);
+
+  // Global F3 shortcut listener for Developer Panel
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'F3') {
+        e.preventDefault();
+        setIsDevOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const currentLocConfig = LOCATIONS[currentLocation] || LOCATIONS.bedroom;
 
@@ -49,7 +61,7 @@ export const HUD: React.FC = () => {
                     Vishal<span className="text-amber-400">Fly</span>
                   </h1>
                   <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 font-semibold border border-amber-500/20">
-                    Sim v3
+                    Milestone 4
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 flex items-center gap-1 font-sans">
@@ -84,7 +96,7 @@ export const HUD: React.FC = () => {
             <LocationSelector />
           </div>
 
-          {/* Top Right: Clock & Routine Status */}
+          {/* Top Right: Clock & Controls */}
           <div className="flex flex-col items-end gap-2 pointer-events-auto self-end md:self-auto">
             <div className="glass-panel px-4 py-2.5 rounded-xl flex items-center gap-3.5 shadow-xl">
               {/* Day & Weekday */}
@@ -115,6 +127,15 @@ export const HUD: React.FC = () => {
                 </div>
               </div>
 
+              {/* Developer Panel Button (F3) */}
+              <button
+                onClick={() => setIsDevOpen(true)}
+                className="p-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all border border-slate-700/50"
+                title="Open Developer Panel (F3)"
+              >
+                <Wrench className="w-4 h-4 text-amber-400" />
+              </button>
+
               {/* Events Log Trigger */}
               <button
                 onClick={() => setIsLogOpen(true)}
@@ -130,38 +151,9 @@ export const HUD: React.FC = () => {
           </div>
         </div>
 
-        {/* Second Row: Active Activity Banner */}
-        <div className="flex items-center justify-between pointer-events-auto">
-          {currentActivity && (
-            <div className="glass-panel px-4 py-2 rounded-xl flex items-center gap-3 shadow-lg border border-amber-500/20 text-xs">
-              <div className="flex items-center gap-2">
-                <div className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-                </div>
-                <span className="text-slate-400 uppercase font-mono text-[10px] tracking-wider">Current:</span>
-                <span className="font-bold text-white tracking-tight">
-                  {currentActivity.scheduleEntry.name}
-                </span>
-                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-amber-300 border border-slate-700 capitalize">
-                  {currentActivity.state}
-                </span>
-                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-800/80 text-slate-300 border border-slate-700/60 capitalize hidden sm:inline">
-                  Pose: {flyActivity.replace(/_/g, ' ')}
-                </span>
-              </div>
-
-              {nextActivity && (
-                <div className="hidden lg:flex items-center gap-2 pl-3 border-l border-slate-700/60 text-slate-400">
-                  <ArrowRight className="w-3.5 h-3.5 text-slate-500" />
-                  <span className="uppercase font-mono text-[10px]">Next ({nextActivity.startTime}):</span>
-                  <span className="font-medium text-slate-300">
-                    {nextActivity.entry.name}
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
+        {/* Second Row: Activity Inspector Panel */}
+        <div className="flex items-start justify-end pointer-events-none">
+          <ActivityInspector />
         </div>
       </header>
 
@@ -172,6 +164,9 @@ export const HUD: React.FC = () => {
 
       {/* Slide-in Event Log Panel */}
       <EventLogPanel isOpen={isLogOpen} onClose={() => setIsLogOpen(false)} />
+
+      {/* Developer Testing Control Panel (F3) */}
+      <DevPanel isOpen={isDevOpen} onClose={() => setIsDevOpen(false)} />
     </>
   );
 };

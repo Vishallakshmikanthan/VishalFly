@@ -56,6 +56,10 @@ export class EventLogger {
     return [...this.events];
   }
 
+  public getEvents(): SimulationEvent[] {
+    return this.getAll();
+  }
+
   public subscribe(listener: EventListener): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);

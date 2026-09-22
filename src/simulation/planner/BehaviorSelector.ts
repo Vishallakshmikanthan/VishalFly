@@ -7,6 +7,7 @@ export interface BehaviorDetails {
   name: string;
   flyActivity: FlyActivity;
   targetLandmark: string;
+  targetWaypoint: string;
   description: string;
 }
 
@@ -14,37 +15,42 @@ export const COLLEGE_BEHAVIOR_DETAILS: Record<CollegeSubBehavior, BehaviorDetail
   lecture: {
     behavior: 'lecture',
     name: 'Listening to Lecture',
-    flyActivity: 'perched_on_desk',
+    flyActivity: 'sitting',
     targetLandmark: 'Front Row Student Desks',
-    description: 'Perched attentively on the front desk observing the professor.',
+    targetWaypoint: 'student_desk_front',
+    description: 'Sitting attentively on the front desk observing the professor.',
   },
   dozing: {
     behavior: 'dozing',
     name: 'Dozing off in Class',
-    flyActivity: 'perched_on_desk',
-    targetLandmark: 'Back Seating & Student Backpacks',
-    description: 'Resting quietly on the corner of a notebook.',
+    flyActivity: 'dozing',
+    targetLandmark: 'Front Row Student Desks',
+    targetWaypoint: 'student_desk_front',
+    description: 'Lowered body orientation, sleepy and inactive on the desk corner.',
   },
   laptop: {
     behavior: 'laptop',
     name: 'Browsing Project on Laptop',
-    flyActivity: 'perched_on_laptop',
+    flyActivity: 'browsing',
     targetLandmark: 'Middle Row Student Desks',
-    description: 'Perched on the laptop bezel watching code compile.',
+    targetWaypoint: 'laptop_spot',
+    description: 'Perched on the laptop facing the screen in focused browsing.',
   },
   reels: {
     behavior: 'reels',
     name: 'Watching Reels',
-    flyActivity: 'perched_on_desk',
+    flyActivity: 'sitting',
     targetLandmark: 'Middle Row Student Desks',
-    description: 'Hovering near student smartphone scrolling vertical video feeds.',
+    targetWaypoint: 'student_desk_mid',
+    description: 'Near smartphone enjoying short video reels entertainment.',
   },
   mobile_game: {
     behavior: 'mobile_game',
     name: 'Playing Mobile Game',
-    flyActivity: 'hovering',
-    targetLandmark: 'Center Walking Aisle',
-    description: 'Darting around quickly as student maneuvers in a mobile game.',
+    flyActivity: 'gaming',
+    targetLandmark: 'Middle Row Student Desks',
+    targetWaypoint: 'student_desk_mid',
+    description: 'Engaged in a fast-paced mobile gaming session on desk.',
   },
 };
 

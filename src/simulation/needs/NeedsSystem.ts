@@ -128,6 +128,17 @@ export class NeedsSystem {
     }
   }
 
+  public setState(state: Partial<NeedState>): void {
+    this.state = {
+      energy: Math.max(0, Math.min(100, state.energy !== undefined ? state.energy : this.state.energy)),
+      hunger: Math.max(0, Math.min(100, state.hunger !== undefined ? state.hunger : this.state.hunger)),
+      sleepiness: Math.max(0, Math.min(100, state.sleepiness !== undefined ? state.sleepiness : this.state.sleepiness)),
+      fatigue: Math.max(0, Math.min(100, state.fatigue !== undefined ? state.fatigue : this.state.fatigue)),
+      focus: Math.max(0, Math.min(100, state.focus !== undefined ? state.focus : this.state.focus)),
+      socialNeed: Math.max(0, Math.min(100, state.socialNeed !== undefined ? state.socialNeed : this.state.socialNeed)),
+    };
+  }
+
   public reset(initialState?: Partial<NeedState>): void {
     this.state = {
       ...INITIAL_NEEDS_STATE,

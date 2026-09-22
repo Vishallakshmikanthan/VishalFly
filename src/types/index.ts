@@ -8,7 +8,41 @@ export type FlyActivity =
   | 'perched_on_lamp'
   | 'perched_on_plant'
   | 'perched_on_podium'
-  | 'perched_on_table';
+  | 'perched_on_table'
+  | 'idle'
+  | 'walking'
+  | 'sitting'
+  | 'sleeping'
+  | 'working'
+  | 'eating'
+  | 'phone_call'
+  | 'workout'
+  | 'resting'
+  | 'laundry'
+  | 'drying_clothes'
+  | 'gaming'
+  | 'browsing'
+  | 'dozing';
+
+export type CharacterActivityState =
+  | 'idle'
+  | 'walking'
+  | 'flying'
+  | 'sitting'
+  | 'sleeping'
+  | 'working'
+  | 'eating'
+  | 'phone_call'
+  | 'workout'
+  | 'resting'
+  | 'laundry'
+  | 'drying_clothes'
+  | 'gaming'
+  | 'browsing'
+  | 'dozing';
+
+export type Waypoints = Record<string, Vector3Tuple>;
+export type WalkingPath = Vector3Tuple[];
 
 export interface RoomBounds {
   minX: number;
@@ -59,6 +93,7 @@ export interface LocationConfig {
   bounds: RoomBounds;
   camera: CameraPreset;
   landmarks: Landmark[];
+  waypoints?: Record<string, Vector3Tuple>;
 }
 
 export interface TransitionState {

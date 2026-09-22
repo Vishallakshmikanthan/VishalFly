@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
-import { useGameStore } from '../../../store/useGameStore';
+import { useGameStore, simulationEngine } from '../../../store/useGameStore';
 import { LOCATIONS } from '../../../navigation/locationGraph';
 import { FruitFly } from './FruitFly';
 
@@ -23,6 +23,7 @@ export const FlyController: React.FC = () => {
   const roomBounds = useGameStore((state) => state.roomBounds);
   const currentLocation = useGameStore((state) => state.currentLocation);
   const flyPosition = useGameStore((state) => state.flyPosition);
+  const flyActivity = useGameStore((state) => state.flyActivity);
   const isAutonomous = useGameStore((state) => state.isAutonomous);
   const currentActivity = useGameStore((state) => state.currentActivity);
 
@@ -169,27 +170,35 @@ export const FlyController: React.FC = () => {
       pitch.current = THREE.MathUtils.lerp(pitch.current, moveDir.y * -0.35, dt * 10);
       roll.current = THREE.MathUtils.lerp(roll.current, -moveDir.x * 0.4, dt * 10);
     } else if (isAutonomous) {
-      // Autonomous steering towards current activity landmark
+      // Autonomous waypoint navigation
       const currentLocConfig = LOCATIONS[currentLocation];
-      const targetLandmarkName = currentActivity?.definition.targetLandmarkName;
-      const targetLm = currentLocConfig?.landmarks.find((lm) => lm.name === targetLandmarkName) ||
-        currentLocConfig?.landmarks[0];
+      const activeWaypointKey = simulationEngine.getCurrentWaypoint();
+      const waypointCoords = currentLocConfig?.waypoints?.[activeWaypointKey];
 
       let targetX = 0;
       let targetY = 1.6;
       let targetZ = 0;
 
-      if (targetLm) {
-        targetX = (targetLm.minX + targetLm.maxX) / 2;
-        targetZ = (targetLm.minZ + targetLm.maxZ) / 2;
-        targetY = targetLm.minY !== undefined ? (targetLm.minY + (targetLm.maxY || targetLm.minY + 1.2)) / 2 : 1.6;
+      if (waypointCoords) {
+        targetX = waypointCoords[0];
+        targetY = waypointCoords[1];
+        targetZ = waypointCoords[2];
+      } else {
+        const targetLandmarkName = currentActivity?.definition.targetLandmarkName;
+        const targetLm = currentLocConfig?.landmarks.find((lm) => lm.name === targetLandmarkName) ||
+          currentLocConfig?.landmarks[0];
+        if (targetLm) {
+          targetX = (targetLm.minX + targetLm.maxX) / 2;
+          targetZ = (targetLm.minZ + targetLm.maxZ) / 2;
+          targetY = targetLm.minY !== undefined ? (targetLm.minY + (targetLm.maxY || targetLm.minY + 1.2)) / 2 : 1.6;
+        }
       }
 
-      // Organic hover wander
+      // Small organic micro-wander around target waypoint
       const timeSec = performance.now() / 1000;
-      const wanderX = targetX + Math.sin(timeSec * 1.4) * 0.25;
-      const wanderY = targetY + Math.sin(timeSec * 2.1) * 0.12;
-      const wanderZ = targetZ + Math.cos(timeSec * 1.1) * 0.25;
+      const wanderX = targetX + Math.sin(timeSec * 1.4) * 0.15;
+      const wanderY = targetY + Math.sin(timeSec * 2.1) * 0.08;
+      const wanderZ = targetZ + Math.cos(timeSec * 1.1) * 0.15;
 
       const autoDir = new THREE.Vector3(
         wanderX - position.current.x,
@@ -198,11 +207,33 @@ export const FlyController: React.FC = () => {
       );
       const dist = autoDir.length();
 
-      if (dist > 0.45) {
+      // Dynamic movement speed & acceleration based on activity
+      const currentSimPose = simulationEngine.getCurrentFlyActivity();
+      let autoSpeed = 4.2;
+      let autoAccel = 16.0;
+
+      if (currentSimPose === 'phone_call') {
+        autoSpeed = 2.4; // steady walking pace
+        autoAccel = 10.0;
+      } else if (currentSimPose === 'workout') {
+        autoSpeed = 3.6;
+        autoAccel = 14.0;
+      } else if (currentLocation === 'travel') {
+        autoSpeed = 5.2;
+        autoAccel = 22.0;
+      }
+
+      // Clamp to autoSpeed
+      if (velocity.current.length() > autoSpeed) {
+        velocity.current.clampLength(0, autoSpeed);
+      }
+
+      if (dist > 0.35) {
         autoDir.normalize();
-        velocity.current.x += autoDir.x * 4.5 * dt;
-        velocity.current.y += autoDir.y * 3.5 * dt;
-        velocity.current.z += autoDir.z * 4.5 * dt;
+        // Acceleration towards waypoint
+        velocity.current.x += autoDir.x * autoAccel * dt;
+        velocity.current.y += autoDir.y * (autoAccel * 0.8) * dt;
+        velocity.current.z += autoDir.z * autoAccel * dt;
 
         targetRotation.current = Math.atan2(autoDir.x, autoDir.z) + Math.PI;
         if (!isMoving) {
@@ -210,12 +241,12 @@ export const FlyController: React.FC = () => {
           setFlyActivity('flying');
         }
       } else {
-        // Arrived at spot, adopt activity pose
+        // Arrived at waypoint: decelerate and adopt active state pose
+        velocity.current.multiplyScalar(0.85);
         if (isMoving) {
           setIsMoving(false);
-          const activityPose = currentActivity?.definition.defaultFlyActivity || 'hovering';
-          setFlyActivity(activityPose);
         }
+        setFlyActivity(currentSimPose);
       }
 
       pitch.current = THREE.MathUtils.lerp(pitch.current, 0, dt * 6);
@@ -234,8 +265,8 @@ export const FlyController: React.FC = () => {
     velocity.current.y -= velocity.current.y * friction * dt;
     velocity.current.z -= velocity.current.z * friction * dt;
 
-    // Clamp maximum speed
-    if (velocity.current.length() > moveSpeed) {
+    // Clamp maximum speed for manual flight
+    if (!isAutonomous && velocity.current.length() > moveSpeed) {
       velocity.current.clampLength(0, moveSpeed);
     }
 
@@ -312,7 +343,7 @@ export const FlyController: React.FC = () => {
 
   return (
     <group ref={groupRef} position={[...flyPosition]}>
-      <FruitFly isMoving={isMoving} />
+      <FruitFly isMoving={isMoving} activity={flyActivity} />
     </group>
   );
 };

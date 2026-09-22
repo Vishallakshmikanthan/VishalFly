@@ -143,6 +143,14 @@ export class SimulationClock {
     this.previousFormattedMinute = this.state.simulatedTime;
   }
 
+  public setDay(dayNumber: number, dayOfWeek?: DayOfWeek): void {
+    this.state.dayNumber = Math.max(1, dayNumber);
+    if (dayOfWeek) {
+      this.state.dayOfWeek = dayOfWeek;
+      this.state.dayType = this.settings.weekendDays.includes(dayOfWeek) ? 'weekend' : 'weekday';
+    }
+  }
+
   public restartDay(targetTime?: string): void {
     const restartTime = targetTime || this.settings.startingTime;
     const mins = this.parseTimeToMinutes(restartTime);

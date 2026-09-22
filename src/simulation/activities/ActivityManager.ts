@@ -48,6 +48,14 @@ export class ActivityManager {
     this.travelDurationSeconds = Math.max(0, durationSeconds);
   }
 
+  public transitionToActivity(
+    entry: ScheduleEntry,
+    timestamp: string,
+    dayNumber: number
+  ): void {
+    this.syncScheduleEntry(entry, entry.startMinutes, timestamp, dayNumber);
+  }
+
   /**
    * Called by the simulation engine when the schedule indicates an entry is active.
    */
@@ -124,11 +132,22 @@ export class ActivityManager {
         activityId: this.currentInstance.definition.id,
         locationId: this.currentLocationId,
       });
+
+      if (this.currentInstance.definition.eventMessages?.onStart) {
+        this.eventLogger.log({
+          timestamp,
+          dayNumber,
+          category: 'activity',
+          message: this.currentInstance.definition.eventMessages.onStart,
+          activityId: this.currentInstance.definition.id,
+          locationId: this.currentLocationId,
+        });
+      }
     }
   }
 
-  private completeCurrentActivity(timestamp: string, dayNumber: number): void {
-    if (!this.currentInstance) return;
+  public completeCurrentActivity(timestamp: string, dayNumber: number): void {
+    if (!this.currentInstance || this.currentInstance.state === 'completed') return;
 
     this.currentInstance.state = 'completed';
     this.eventLogger.log({
@@ -139,6 +158,25 @@ export class ActivityManager {
       activityId: this.currentInstance.definition.id,
       locationId: this.currentLocationId,
     });
+
+    if (this.currentInstance.definition.eventMessages?.onComplete) {
+      this.eventLogger.log({
+        timestamp,
+        dayNumber,
+        category: 'activity',
+        message: this.currentInstance.definition.eventMessages.onComplete,
+        activityId: this.currentInstance.definition.id,
+        locationId: this.currentLocationId,
+      });
+    }
+  }
+
+  public setProgress(progressPercent: number, actionLabel?: string): void {
+    if (!this.currentInstance) return;
+    this.currentInstance.progressPercent = Math.min(100, Math.max(0, progressPercent));
+    if (actionLabel) {
+      this.currentInstance.currentAction = actionLabel;
+    }
   }
 
   /**

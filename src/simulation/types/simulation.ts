@@ -94,6 +94,145 @@ export interface NeedsModifiers {
   socialNeedPerHour: number;
 }
 
+export type WorkoutType = 'push' | 'pull' | 'legs' | 'rest';
+
+export type WorkoutStateMachineState = 
+  | 'ARRIVE'
+  | 'WARMUP'
+  | 'SELECT_EXERCISE'
+  | 'SETUP'
+  | 'LIFT'
+  | 'REST'
+  | 'NEXT_SET'
+  | 'NEXT_EXERCISE'
+  | 'COMPLETE';
+
+export interface Exercise {
+  id: string;
+  name: string;
+  sets: number;
+  reps: number;
+  restDurationSeconds: number; // simulated seconds
+  muscleGroup: string;
+  targetWeightKg?: number;
+  equipmentWaypoint?: string;
+}
+
+export interface WorkoutPlan {
+  id: string;
+  name: string;
+  type: WorkoutType;
+  exercises: Exercise[];
+}
+
+export interface WorkoutProgress {
+  currentExerciseIndex: number;
+  currentExerciseName: string;
+  currentSet: number;
+  totalSets: number;
+  currentReps: number;
+  targetReps: number;
+  progressPercent: number;
+  state: WorkoutStateMachineState;
+  restRemainingSeconds: number;
+}
+
+export interface WorkoutSession {
+  plan: WorkoutPlan;
+  currentExerciseIndex: number;
+  currentSet: number;
+  currentReps: number;
+  state: WorkoutStateMachineState;
+  stateElapsedSimSeconds: number;
+  restRemainingSimSeconds: number;
+  progressPercent: number;
+  isCompleted: boolean;
+}
+
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'midnight_snack';
+
+export interface MealDefinition {
+  type: MealType;
+  name: string;
+  durationSimMinutes: number;
+  hungerReductionTotal: number;
+  energyGainTotal: number;
+  focusGainTotal: number;
+}
+
+export interface MealSession {
+  meal: MealDefinition;
+  elapsedSimSeconds: number;
+  progressPercent: number;
+  isCompleted: boolean;
+}
+
+export interface ProjectState {
+  totalProgress: number; // 0 to 100
+  currentProject: string; // "VishalFly"
+  focus: number;
+  sessionProgress: number; // in current session
+  sessionElapsedSimMinutes: number;
+  completedSessions: number;
+  isWorking: boolean;
+}
+
+export interface AssignmentState {
+  progress: number; // 0 to 100
+  currentTask: string;
+  completedTasks: number;
+  isWorking: boolean;
+}
+
+export type LaundryStage = 'idle' | 'washing' | 'drying' | 'completed';
+
+export interface LaundryState {
+  stage: LaundryStage;
+  progressPercent: number;
+  elapsedSimSeconds: number;
+  isCompleted: boolean;
+}
+
+export type FoodOrderStage = 
+  | 'idle' 
+  | 'order_placed' 
+  | 'waiting_delivery' 
+  | 'walking_to_gate' 
+  | 'collecting_food' 
+  | 'walking_back' 
+  | 'eating' 
+  | 'completed';
+
+export interface FoodOrderState {
+  stage: FoodOrderStage;
+  elapsedSimSeconds: number;
+  deliveryDurationSimSeconds: number;
+  progressPercent: number;
+  isCompleted: boolean;
+}
+
+export interface FamilyCallState {
+  isActive: boolean;
+  callDurationSimMinutes: number;
+  pathWaypointIndex: number;
+  isCompleted: boolean;
+}
+
+export type MorningRoutineStage = 
+  | 'idle'
+  | 'waking_up' 
+  | 'leaving_bed' 
+  | 'moving_room' 
+  | 'preparation' 
+  | 'completed';
+
+export interface MorningRoutineState {
+  stage: MorningRoutineStage;
+  elapsedSimSeconds: number;
+  progressPercent: number;
+  isCompleted: boolean;
+}
+
 export interface ActivityDefinition {
   id: string;
   displayName: string;
@@ -101,7 +240,14 @@ export interface ActivityDefinition {
   defaultFlyActivity: FlyActivity;
   needsModifiers: NeedsModifiers;
   targetLandmarkName?: string;
+  targetWaypoint?: string;
+  durationSimMinutes?: number;
   completionCondition?: string;
+  eventMessages?: {
+    onStart?: string;
+    onComplete?: string;
+    onProgress?: string;
+  };
 }
 
 export interface ActivityInstance {
@@ -112,6 +258,8 @@ export interface ActivityInstance {
   elapsedSimulatedSeconds: number;
   selectedSubBehavior?: CollegeSubBehavior;
   targetLocation: string;
+  currentAction?: string;
+  progressPercent?: number;
 }
 
 export interface NeedState {
@@ -166,4 +314,12 @@ export interface SimulationState {
   needs: NeedState;
   recentEvents: SimulationEvent[];
   settings: SimulationSettings;
+  workoutSession: WorkoutSession | null;
+  projectState: ProjectState;
+  assignmentState: AssignmentState;
+  mealSession: MealSession | null;
+  laundryState: LaundryState;
+  foodOrderState: FoodOrderState;
+  familyCallState: FamilyCallState;
+  morningRoutineState: MorningRoutineState;
 }

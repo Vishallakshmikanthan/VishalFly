@@ -1,68 +1,153 @@
 import React, { useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
+import { FlyActivity } from '../../../types';
 
 interface FruitFlyProps {
   isMoving?: boolean;
+  activity?: FlyActivity;
 }
 
 /**
- * Procedural 3D Fruit Fly Character:
- * - Rounded golden-brown amber body with abdominal stripes
- * - Large expressive ruby compound eyes
- * - Two translucent wings with high-frequency fluttering animation
- * - Six jointed legs tucked in flight pose
- * - Delicate antennae
- * - Hovering bob & tilt idle physics
- * - Subtle ambient warm glow to stand out against dark charcoal walls
+ * Procedural 3D Fruit Fly Character with 15 Distinct Activity Poses:
+ * - IDLE, WALKING, FLYING, SITTING, SLEEPING, WORKING, EATING, PHONE_CALL
+ * - WORKOUT, RESTING, LAUNDRY, DRYING_CLOTHES, GAMING, BROWSING, DOZING
+ * - Expressive ruby compound eyes with variable glow
+ * - Dynamic translucent wings with state-dependent fluttering & folding
+ * - Six jointed legs and twitching antennae
  */
-export const FruitFly: React.FC<FruitFlyProps> = ({ isMoving = false }) => {
+export const FruitFly: React.FC<FruitFlyProps> = ({ 
+  isMoving = false, 
+  activity = 'hovering' 
+}) => {
   const bodyRef = useRef<THREE.Group>(null);
   const leftWingRef = useRef<THREE.Group>(null);
   const rightWingRef = useRef<THREE.Group>(null);
   const leftAntennaRef = useRef<THREE.Group>(null);
   const rightAntennaRef = useRef<THREE.Group>(null);
+  const lightRef = useRef<THREE.PointLight>(null);
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
 
-    // 1. Wing-flapping animation (rapid flutter, faster when moving)
-    const flapFreq = isMoving ? 55 : 32;
-    const flapAmp = isMoving ? 0.55 : 0.28;
-    const flap = Math.sin(time * flapFreq) * flapAmp;
+    // 1. Wing-flapping and folding animation per activity state
+    let flapFreq = isMoving ? 55 : 32;
+    let flapAmp = isMoving ? 0.55 : 0.28;
+    let wingFoldZ = 0;
+    let wingPitchX = 0;
+
+    const isGrounded = activity === 'sleeping' || activity === 'sitting' || activity === 'resting';
+    const isWorkingState = activity === 'working' || activity === 'browsing';
+    const isGaming = activity === 'gaming';
+    const isDozing = activity === 'dozing';
+    const isEating = activity === 'eating';
+    const isWorkout = activity === 'workout';
+    const isCall = activity === 'phone_call';
+
+    if (activity === 'sleeping') {
+      flapFreq = 8;
+      flapAmp = 0.02; // barely breathing
+      wingFoldZ = -0.3;
+    } else if (isGrounded) {
+      flapFreq = 12;
+      flapAmp = 0.06;
+      wingFoldZ = -0.2;
+    } else if (isDozing) {
+      flapFreq = 14;
+      flapAmp = 0.12;
+    } else if (isWorkout) {
+      flapFreq = 60;
+      flapAmp = 0.6;
+    } else if (isGaming) {
+      flapFreq = 48;
+      flapAmp = 0.45;
+    }
+
+    const flap = Math.sin(time * flapFreq) * flapAmp + wingFoldZ;
+    wingPitchX = Math.cos(time * flapFreq) * 0.12;
 
     if (leftWingRef.current) {
       leftWingRef.current.rotation.z = flap;
-      leftWingRef.current.rotation.x = Math.cos(time * flapFreq) * 0.12;
+      leftWingRef.current.rotation.x = wingPitchX;
     }
     if (rightWingRef.current) {
       rightWingRef.current.rotation.z = -flap;
-      rightWingRef.current.rotation.x = Math.cos(time * flapFreq) * 0.12;
+      rightWingRef.current.rotation.x = wingPitchX;
     }
 
-    // 2. Gentle hovering idle bobbing & micro-oscillation
+    // 2. Body pose, bobbing, and orientation per activity state
     if (bodyRef.current) {
-      const bobY = Math.sin(time * 3.5) * 0.035;
-      const tiltZ = Math.sin(time * 2.2) * 0.04;
-      const pitchX = Math.cos(time * 1.8) * 0.03;
+      let bobY = Math.sin(time * 3.5) * 0.035;
+      let tiltZ = Math.sin(time * 2.2) * 0.04;
+      let pitchX = Math.cos(time * 1.8) * 0.03;
+      let yawY = 0;
+
+      if (activity === 'sleeping') {
+        bobY = Math.sin(time * 1.5) * 0.01 - 0.05; // Resting flat
+        pitchX = 0.15; // Lowered head
+        tiltZ = 0;
+      } else if (isDozing) {
+        bobY = Math.sin(time * 2.0) * 0.02 - 0.03;
+        pitchX = 0.28; // Drooping head
+        tiltZ = Math.sin(time * 1.2) * 0.08;
+      } else if (isEating) {
+        // Rhythmic dipping forward
+        bobY = Math.sin(time * 7) * 0.04 - 0.03;
+        pitchX = 0.2 + Math.sin(time * 7) * 0.1;
+      } else if (isWorkout) {
+        // High-energy rhythmic pressing/bobbing
+        bobY = Math.sin(time * 9) * 0.08;
+        pitchX = Math.cos(time * 9) * 0.1;
+      } else if (isCall) {
+        // Walking call sway and head tilt
+        tiltZ = 0.18 + Math.sin(time * 2.5) * 0.06;
+        bobY = Math.sin(time * 4.5) * 0.025;
+      } else if (isGaming) {
+        // Darting micro-jitters
+        yawY = Math.sin(time * 18) * 0.12;
+        pitchX = Math.cos(time * 14) * 0.08;
+      } else if (activity === 'browsing') {
+        // Horizontal scan across monitor
+        yawY = Math.sin(time * 2.0) * 0.22;
+      } else if (isWorkingState) {
+        pitchX = -0.1; // Alert upright pose facing laptop
+      }
 
       bodyRef.current.position.y = bobY;
       bodyRef.current.rotation.z = tiltZ;
       bodyRef.current.rotation.x = pitchX;
+      bodyRef.current.rotation.y = yawY;
     }
 
-    // 3. Subtle twitching of antennae
+    // 3. Antennae twitching
     if (leftAntennaRef.current && rightAntennaRef.current) {
-      const twitch = Math.sin(time * 8) * 0.08;
+      const twitchSpeed = isGaming ? 24 : isWorkingState ? 14 : isDozing ? 3 : 8;
+      const twitchAmp = isDozing ? 0.02 : 0.08;
+      const twitch = Math.sin(time * twitchSpeed) * twitchAmp;
       leftAntennaRef.current.rotation.y = twitch;
       rightAntennaRef.current.rotation.y = -twitch;
     }
+
+    // 4. Dynamic eye luminescence and personal point light
+    if (lightRef.current) {
+      if (activity === 'sleeping' || isDozing) {
+        lightRef.current.intensity = 0.2;
+      } else if (isWorkout) {
+        lightRef.current.intensity = 0.9;
+      } else {
+        lightRef.current.intensity = 0.65;
+      }
+    }
   });
+
+  const eyeColor = activity === 'sleeping' ? '#7f1d1d' : '#dc2626';
+  const eyeEmissive = activity === 'sleeping' ? '#450a0a' : isMoving || activity === 'workout' ? '#b91c1c' : '#991b1b';
 
   return (
     <group ref={bodyRef} name="FruitFlyModel" scale={[1.2, 1.2, 1.2]}>
-      {/* Subtle fly personal glow to ensure high visibility against dark walls */}
+      {/* Subtle fly personal glow */}
       <pointLight
+        ref={lightRef}
         position={[0, 0.15, 0]}
         color="#fbbf24"
         intensity={0.65}
@@ -70,17 +155,16 @@ export const FruitFly: React.FC<FruitFlyProps> = ({ isMoving = false }) => {
         decay={2}
       />
 
-      {/* 1. Abdomen (Rounded golden-brown ellipsoid with stripes) */}
+      {/* 1. Abdomen (Rounded golden-brown amber with dark chitin rings) */}
       <group position={[0, -0.02, -0.16]} rotation={[0.2, 0, 0]}>
         <mesh castShadow>
           <sphereGeometry args={[0.11, 16, 16]} />
           <meshStandardMaterial
-            color="#d97706" // Warm golden-amber
+            color="#d97706"
             roughness={0.4}
             metalness={0.2}
           />
         </mesh>
-        {/* Abdomen stripe rings */}
         {[-0.04, 0, 0.04].map((z, idx) => (
           <mesh key={`stripe-${idx}`} position={[0, 0, z]}>
             <torusGeometry args={[0.105, 0.012, 8, 16]} />
@@ -89,56 +173,53 @@ export const FruitFly: React.FC<FruitFlyProps> = ({ isMoving = false }) => {
         ))}
       </group>
 
-      {/* 2. Thorax (Chitin segment) */}
+      {/* 2. Thorax */}
       <mesh position={[0, 0.02, 0.01]} castShadow>
         <sphereGeometry args={[0.09, 16, 16]} />
         <meshStandardMaterial
-          color="#92400e" // Darker bronze chitin
+          color="#92400e"
           roughness={0.45}
           metalness={0.3}
         />
       </mesh>
 
-      {/* 3. Head & Expressive Compound Eyes */}
+      {/* 3. Head & Compound Eyes */}
       <group position={[0, 0.03, 0.12]}>
-        {/* Head center */}
         <mesh castShadow>
           <sphereGeometry args={[0.065, 16, 16]} />
           <meshStandardMaterial color="#451a03" roughness={0.5} />
         </mesh>
 
-        {/* Large Ruby Compound Eye (Left) */}
+        {/* Large Ruby Eye (Left) */}
         <group position={[-0.055, 0.02, 0.02]}>
           <mesh castShadow>
             <sphereGeometry args={[0.048, 16, 16]} />
             <meshStandardMaterial
-              color="#dc2626" // Vivid ruby-red
+              color={eyeColor}
               roughness={0.15}
               metalness={0.6}
-              emissive="#991b1b"
-              emissiveIntensity={0.25}
+              emissive={eyeEmissive}
+              emissiveIntensity={0.3}
             />
           </mesh>
-          {/* Eye specular highlight */}
           <mesh position={[-0.02, 0.02, 0.03]}>
             <sphereGeometry args={[0.01, 8, 8]} />
             <meshBasicMaterial color="#ffffff" />
           </mesh>
         </group>
 
-        {/* Large Ruby Compound Eye (Right) */}
+        {/* Large Ruby Eye (Right) */}
         <group position={[0.055, 0.02, 0.02]}>
           <mesh castShadow>
             <sphereGeometry args={[0.048, 16, 16]} />
             <meshStandardMaterial
-              color="#dc2626"
+              color={eyeColor}
               roughness={0.15}
               metalness={0.6}
-              emissive="#991b1b"
-              emissiveIntensity={0.25}
+              emissive={eyeEmissive}
+              emissiveIntensity={0.3}
             />
           </mesh>
-          {/* Eye specular highlight */}
           <mesh position={[0.02, 0.02, 0.03]}>
             <sphereGeometry args={[0.01, 8, 8]} />
             <meshBasicMaterial color="#ffffff" />
@@ -170,22 +251,19 @@ export const FruitFly: React.FC<FruitFlyProps> = ({ isMoving = false }) => {
       </group>
 
       {/* 4. Translucent Wings */}
-      {/* Left Wing */}
       <group ref={leftWingRef} position={[-0.05, 0.08, -0.02]}>
         <group position={[-0.14, 0, -0.05]} rotation={[-0.1, -0.2, 0.15]}>
-          {/* Wing Membrane */}
           <mesh castShadow>
             <boxGeometry args={[0.26, 0.004, 0.15]} />
             <meshPhysicalMaterial
               color="#e0f2fe"
               transparent
-              opacity={0.6}
+              opacity={0.65}
               roughness={0.1}
-              transmission={0.8}
+              transmission={0.85}
               ior={1.4}
             />
           </mesh>
-          {/* Main wing vein */}
           <mesh position={[0, 0.003, 0.04]}>
             <boxGeometry args={[0.25, 0.003, 0.006]} />
             <meshBasicMaterial color="#94a3b8" />
@@ -193,22 +271,19 @@ export const FruitFly: React.FC<FruitFlyProps> = ({ isMoving = false }) => {
         </group>
       </group>
 
-      {/* Right Wing */}
       <group ref={rightWingRef} position={[0.05, 0.08, -0.02]}>
         <group position={[0.14, 0, -0.05]} rotation={[-0.1, 0.2, -0.15]}>
-          {/* Wing Membrane */}
           <mesh castShadow>
             <boxGeometry args={[0.26, 0.004, 0.15]} />
             <meshPhysicalMaterial
               color="#e0f2fe"
               transparent
-              opacity={0.6}
+              opacity={0.65}
               roughness={0.1}
-              transmission={0.8}
+              transmission={0.85}
               ior={1.4}
             />
           </mesh>
-          {/* Main wing vein */}
           <mesh position={[0, 0.003, 0.04]}>
             <boxGeometry args={[0.25, 0.003, 0.006]} />
             <meshBasicMaterial color="#94a3b8" />
@@ -216,20 +291,17 @@ export const FruitFly: React.FC<FruitFlyProps> = ({ isMoving = false }) => {
         </group>
       </group>
 
-      {/* 5. Six Small Legs (Jointed, tucked in flight) */}
-      {/* Left Legs */}
+      {/* 5. Six Jointed Legs */}
       {[
-        { pos: [-0.07, -0.05, 0.06], rot: [0.3, 0, 0.5] },   // Front left
-        { pos: [-0.08, -0.06, 0.00], rot: [0, 0, 0.6] },     // Mid left
-        { pos: [-0.07, -0.05, -0.06], rot: [-0.3, 0, 0.7] }, // Hind left
+        { pos: [-0.07, -0.05, 0.06], rot: [0.3, 0, 0.5] },
+        { pos: [-0.08, -0.06, 0.00], rot: [0, 0, 0.6] },
+        { pos: [-0.07, -0.05, -0.06], rot: [-0.3, 0, 0.7] },
       ].map((leg, i) => (
         <group key={`l-leg-${i}`} position={leg.pos as [number, number, number]} rotation={leg.rot as [number, number, number]}>
-          {/* Upper leg segment */}
           <mesh position={[0, -0.03, 0]}>
             <cylinderGeometry args={[0.004, 0.004, 0.07, 6]} />
             <meshStandardMaterial color="#451a03" />
           </mesh>
-          {/* Lower leg segment */}
           <mesh position={[-0.015, -0.07, 0]} rotation={[0, 0, -0.6]}>
             <cylinderGeometry args={[0.003, 0.003, 0.06, 6]} />
             <meshStandardMaterial color="#78350f" />
@@ -237,19 +309,16 @@ export const FruitFly: React.FC<FruitFlyProps> = ({ isMoving = false }) => {
         </group>
       ))}
 
-      {/* Right Legs */}
       {[
-        { pos: [0.07, -0.05, 0.06], rot: [0.3, 0, -0.5] },   // Front right
-        { pos: [0.08, -0.06, 0.00], rot: [0, 0, -0.6] },     // Mid right
-        { pos: [0.07, -0.05, -0.06], rot: [-0.3, 0, -0.7] }, // Hind right
+        { pos: [0.07, -0.05, 0.06], rot: [0.3, 0, -0.5] },
+        { pos: [0.08, -0.06, 0.00], rot: [0, 0, -0.6] },
+        { pos: [0.07, -0.05, -0.06], rot: [-0.3, 0, -0.7] },
       ].map((leg, i) => (
         <group key={`r-leg-${i}`} position={leg.pos as [number, number, number]} rotation={leg.rot as [number, number, number]}>
-          {/* Upper leg segment */}
           <mesh position={[0, -0.03, 0]}>
             <cylinderGeometry args={[0.004, 0.004, 0.07, 6]} />
             <meshStandardMaterial color="#451a03" />
           </mesh>
-          {/* Lower leg segment */}
           <mesh position={[0.015, -0.07, 0]} rotation={[0, 0, 0.6]}>
             <cylinderGeometry args={[0.003, 0.003, 0.06, 6]} />
             <meshStandardMaterial color="#78350f" />

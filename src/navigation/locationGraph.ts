@@ -78,6 +78,14 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
         maxY: 3.5,
       },
     ],
+    waypoints: {
+      bed: [-2.2, 0.9, -2.1],
+      desk: [2.2, 1.1, -2.6],
+      wardrobe: [-3.1, 1.5, -2.7],
+      balcony_door: [2.0, 1.4, -3.7],
+      center: [0, 1.8, 0],
+      entrance: [-3.0, 1.2, 1.3],
+    },
   },
 
   classroom: {
@@ -166,6 +174,14 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
         maxY: 3.2,
       },
     ],
+    waypoints: {
+      entrance: [-3.4, 1.2, 3.2],
+      podium: [0, 1.2, -3.3],
+      screen: [0, 2.5, -3.8],
+      student_desk_front: [-1.2, 1.1, -1.5],
+      student_desk_mid: [1.2, 1.1, 0.0],
+      laptop_spot: [-1.2, 1.1, -1.5],
+    },
   },
 
   dining: {
@@ -245,6 +261,12 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
         maxY: 3.0,
       },
     ],
+    waypoints: {
+      entrance: [-3.2, 1.2, 3.0],
+      buffet_counter: [-1.3, 1.2, -3.3],
+      dining_table_seat: [0, 1.1, 0],
+      water_station: [3.3, 1.2, 1.6],
+    },
   },
 
   gym: {
@@ -297,6 +319,16 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
         maxY: 2.5,
       },
     ],
+    waypoints: {
+      entrance: [0, 1.2, 3.2],
+      warmup_zone: [0, 1.2, 1.5],
+      bench_press: [-1.5, 0.9, -0.5],
+      dumbbells: [2.2, 1.1, -2.5],
+      squat_rack: [-2.2, 1.4, -2.5],
+      leg_press: [2.0, 1.1, 0.5],
+      cable_machine: [0, 1.5, -3.2],
+      rest_bench: [0, 0.9, 0],
+    },
   },
 
   grounds: {
@@ -340,6 +372,14 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
         maxY: 3.0,
       },
     ],
+    waypoints: {
+      building_exit: [-3.2, 1.2, 3.2],
+      path_node_1: [-3.0, 0.8, -2.5],
+      path_node_2: [2.5, 0.8, -2.5],
+      path_node_3: [2.5, 0.8, 2.5],
+      path_node_4: [-3.0, 0.8, 2.5],
+      apartment_gate: [0, 1.2, 4.2],
+    },
   },
 
   balcony: {
@@ -383,6 +423,12 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
         maxY: 2.5,
       },
     ],
+    waypoints: {
+      doorway: [0, 1.2, 2.5],
+      clothesline: [0, 1.6, 0.5],
+      railing_sunlight: [0, 1.3, -2.0],
+      drying_rack: [-1.2, 1.2, 0.5],
+    },
   },
 
   travel: {
@@ -417,5 +463,8 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
         maxY: 3.0,
       },
     ],
+    waypoints: {
+      transit: [0, 1.8, 0],
+    },
   },
 };
