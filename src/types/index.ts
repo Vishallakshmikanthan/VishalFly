@@ -64,6 +64,13 @@ export type LocationId =
   | 'balcony' 
   | 'travel';
 
+export type ActiveDashboardView = 
+  | 'simulation' 
+  | 'timeline' 
+  | 'analytics' 
+  | 'replay' 
+  | 'settings';
+
 export * from '../simulation/types/simulation';
 
 export interface Landmark {

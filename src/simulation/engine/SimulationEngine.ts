@@ -27,6 +27,12 @@ import { MorningRoutineSystem } from '../systems/MorningRoutineSystem';
 import { SimulationPersistence } from '../persistence/SimulationPersistence';
 import { CognitiveEngine } from '../../cognition/CognitiveEngine';
 import { CognitiveInspectorData } from '../../cognition/debug/CognitiveInspectorState';
+import { SnapshotRecorder } from '../replay/SnapshotRecorder';
+import { ReplayEngine } from '../replay/ReplayEngine';
+import { AnalyticsTracker } from '../analytics/AnalyticsTracker';
+import { AnalyticsReport } from '../analytics/AnalyticsTypes';
+import { LOCATIONS } from '../../navigation/locationGraph';
+import { LocationId } from '../../types';
 
 export type SimulationStateListener = (state: SimulationState) => void;
 
@@ -48,6 +54,11 @@ export class SimulationEngine {
   public familyCallSystem: FamilyCallSystem;
   public morningRoutineSystem: MorningRoutineSystem;
   public cognitiveEngine: CognitiveEngine;
+
+  // Milestone 8 Replay & Analytics Systems
+  public snapshotRecorder: SnapshotRecorder;
+  public replayEngine: ReplayEngine;
+  public analyticsTracker: AnalyticsTracker;
 
   private isAutonomous: boolean = true;
   private currentSpot: string = 'Center Room Airspace';
@@ -80,6 +91,10 @@ export class SimulationEngine {
       settings.travelDurationSeconds,
       {
         onActivityCompleted: (instance, timestamp, dayNumber) => {
+          this.analyticsTracker.recordActivityCompletion(
+            instance.definition.id, 
+            instance.scheduleEntry.name
+          );
           this.cognitiveEngine.recordConfirmedOutcome({
             eventType: `${instance.definition.id}_completed`,
             key: instance.definition.id,
@@ -93,6 +108,10 @@ export class SimulationEngine {
           });
         },
         onActivityInterrupted: (instance, timestamp, dayNumber) => {
+          this.analyticsTracker.recordActivityInterruption(
+            instance.definition.id, 
+            instance.scheduleEntry.name
+          );
           this.cognitiveEngine.recordConfirmedOutcome({
             eventType: `${instance.definition.id}_interrupted`,
             key: instance.definition.id,
@@ -124,6 +143,11 @@ export class SimulationEngine {
     this.foodOrderSystem = new FoodOrderSystem(this.eventLogger);
     this.familyCallSystem = new FamilyCallSystem(this.eventLogger);
     this.morningRoutineSystem = new MorningRoutineSystem(this.eventLogger);
+
+    // Initialize Milestone 8 Replay & Analytics
+    this.snapshotRecorder = new SnapshotRecorder();
+    this.replayEngine = new ReplayEngine(this.snapshotRecorder);
+    this.analyticsTracker = new AnalyticsTracker();
 
     this.lastDayNumber = this.clock.getState().dayNumber;
     this.lastDayType = this.clock.getState().dayType;
@@ -272,6 +296,7 @@ export class SimulationEngine {
             const mrKey = `morning_${clockState.dayNumber}`;
             if (!this.recordedSubsystemCompletions.has(mrKey)) {
               this.recordedSubsystemCompletions.add(mrKey);
+              this.analyticsTracker.recordMorningRoutineCompleted();
               this.cognitiveEngine.recordConfirmedOutcome({
                 eventType: 'morning_routine_completed',
                 key: 'wake_up_morning_routine',
@@ -407,6 +432,11 @@ export class SimulationEngine {
               const wsKey = `workout_${clockState.dayNumber}_${updatedSession.plan.id}`;
               if (!this.recordedSubsystemCompletions.has(wsKey)) {
                 this.recordedSubsystemCompletions.add(wsKey);
+                this.analyticsTracker.recordWorkoutCompletion(
+                  updatedSession.plan.name, 
+                  updatedSession.currentSet, 
+                  updatedSession.currentReps
+                );
                 this.cognitiveEngine.recordConfirmedOutcome({
                   eventType: 'workout_finished',
                   key: 'perform_workout',
@@ -454,6 +484,7 @@ export class SimulationEngine {
               const mealKey = `meal_${clockState.dayNumber}_${mealType}`;
               if (!this.recordedSubsystemCompletions.has(mealKey)) {
                 this.recordedSubsystemCompletions.add(mealKey);
+                this.analyticsTracker.recordMealCompletion(mealType);
                 this.cognitiveEngine.recordConfirmedOutcome({
                   eventType: 'meal_completed',
                   key: 'eat_meal',
@@ -534,6 +565,7 @@ export class SimulationEngine {
             const laundryKey = `laundry_${clockState.dayNumber}_wash`;
             if (!this.recordedSubsystemCompletions.has(laundryKey)) {
               this.recordedSubsystemCompletions.add(laundryKey);
+              this.analyticsTracker.recordLaundryCompleted();
               this.cognitiveEngine.recordConfirmedOutcome({
                 eventType: 'laundry_completed',
                 key: 'perform_laundry',
@@ -609,6 +641,7 @@ export class SimulationEngine {
             const foodKey = `food_order_${clockState.dayNumber}`;
             if (!this.recordedSubsystemCompletions.has(foodKey)) {
               this.recordedSubsystemCompletions.add(foodKey);
+              this.analyticsTracker.recordMealCompletion('midnight_order');
               this.cognitiveEngine.recordConfirmedOutcome({
                 eventType: 'food_collected',
                 key: 'midnight_food_order',
@@ -716,6 +749,72 @@ export class SimulationEngine {
       cognitive: this.cognitiveEngine.getInspectorData(currentInstance?.scheduleEntry.name || 'Idle'),
     };
 
+    // 9. Track Analytics & Record Historical Snapshot
+    this.analyticsTracker.trackStep({
+      deltaSimSec,
+      clock: clockState,
+      locationId: this.activityManager.getCurrentLocation(),
+      currentActivity: currentInstance,
+      needs: this.needsSystem.getState(),
+      workoutSession: this.workoutSystem.getCurrentSession(),
+      projectState: this.projectSystem.getState(),
+      assignmentState: this.assignmentSystem.getState(),
+      mealSession: this.mealSystem.getCurrentSession(),
+      familyCallState: this.familyCallSystem.getState(),
+    });
+
+    const currentLocId = this.activityManager.getCurrentLocation() as LocationId;
+    const currentLocConfig = LOCATIONS[currentLocId] || LOCATIONS.bedroom;
+    const isTransitionMilestone = this.lastHandledActivityId !== actId || tickResult.dayRolledOver;
+
+    this.snapshotRecorder.record({
+      timestamp,
+      simulatedSeconds: clockState.totalElapsedSimulatedSeconds,
+      currentMinutes: clockState.currentMinutes,
+      dayNumber: clockState.dayNumber,
+      dayOfWeek: clockState.dayOfWeek,
+      locationId: currentLocId,
+      locationName: currentLocConfig.name,
+      currentSpot: this.currentSpot,
+      currentWaypoint: this.currentWaypoint,
+      flyActivity: this.currentFlyActivity,
+      flyPosition: [...currentLocConfig.spawnPosition],
+      currentActivity: currentInstance ? {
+        id: currentInstance.definition.id,
+        name: currentInstance.scheduleEntry.name,
+        progressPercent: progressVal,
+        actionLabel: activeActionLabel,
+        state: currentInstance.state,
+        subBehavior: this.selectedCollegeBehavior || undefined,
+      } : null,
+      needs: { ...this.needsSystem.getState() },
+      workoutSummary: this.workoutSystem.getCurrentSession() ? {
+        planName: this.workoutSystem.getCurrentSession()!.plan.name,
+        exerciseName: this.workoutSystem.getCurrentSession()!.plan.exercises[this.workoutSystem.getCurrentSession()!.currentExerciseIndex]?.name || 'Exercise',
+        set: this.workoutSystem.getCurrentSession()!.currentSet,
+        totalSets: this.workoutSystem.getCurrentSession()!.plan.exercises[this.workoutSystem.getCurrentSession()!.currentExerciseIndex]?.sets || 3,
+        reps: this.workoutSystem.getCurrentSession()!.currentReps,
+        state: this.workoutSystem.getCurrentSession()!.state,
+      } : null,
+      projectSummary: {
+        currentProject: this.projectSystem.getState().currentProject,
+        progress: Math.round(this.projectSystem.getState().totalProgress),
+        sessions: this.projectSystem.getState().completedSessions,
+      },
+      assignmentSummary: {
+        task: this.assignmentSystem.getState().currentTask,
+        progress: Math.round(this.assignmentSystem.getState().progress),
+      },
+      mealSummary: this.mealSystem.getCurrentSession() ? {
+        name: this.mealSystem.getCurrentSession()!.meal.name,
+        hungerReduction: this.mealSystem.getCurrentSession()!.meal.hungerReductionTotal,
+      } : null,
+      cognitiveSummary: this.cognitiveEngine.getIsCognitionEnabled() ? {
+        goal: currentInstance?.scheduleEntry.name || 'Idle',
+        selectedBehavior: activeActionLabel,
+      } : null,
+    }, isTransitionMilestone);
+
     // Emit to listeners
     this.notifyListeners(state);
 
@@ -813,6 +912,8 @@ export class SimulationEngine {
     this.recordedSubsystemCompletions.clear();
     this.cognitiveEngine.internalStateManager.reset(this.needsSystem.getState());
     this.cognitiveEngine.memory.clear();
+    this.analyticsTracker.reset();
+    this.snapshotRecorder.clear();
     this.evaluateSchedule();
 
     this.eventLogger.log({
@@ -1024,6 +1125,23 @@ export class SimulationEngine {
     return this.cognitiveEngine.getInspectorData(
       this.activityManager.getCurrentInstance()?.scheduleEntry.name || 'Idle'
     );
+  }
+
+  public getAnalyticsReport(): AnalyticsReport {
+    return this.analyticsTracker.generateReport(
+      this.clock.getState(),
+      this.projectSystem.getState(),
+      this.assignmentSystem.getState(),
+      this.workoutSystem.getCurrentSession()
+    );
+  }
+
+  public getReplayEngine(): ReplayEngine {
+    return this.replayEngine;
+  }
+
+  public getSnapshotRecorder(): SnapshotRecorder {
+    return this.snapshotRecorder;
   }
 
   public getState(): SimulationState {

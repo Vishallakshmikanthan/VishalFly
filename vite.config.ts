@@ -7,5 +7,17 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    watch: {
+      ignored: [
+        '**/fruitfly-neural/**',
+        '**/*.pdf',
+        '**/*.zip',
+        '**/*.mp4',
+        '**/*.mp3',
+        '**/*.mpeg',
+        '**/node_modules/**',
+        '**/.git/**',
+      ],
+    },
   },
 });

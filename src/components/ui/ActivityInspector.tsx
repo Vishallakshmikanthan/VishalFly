@@ -235,7 +235,29 @@ export const ActivityInspector: React.FC = () => {
         </div>
       )}
 
-      {/* 7. Midnight Food Order Card */}
+      {/* 7. College Lecture Behavior Card */}
+      {actId === 'college_activities' && (
+        <div className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60 flex flex-col gap-1.5 text-xs">
+          <div className="flex justify-between items-center">
+            <span className="font-bold text-purple-300 flex items-center gap-1">
+              <GraduationCap className="w-3.5 h-3.5 text-purple-400" />
+              Classroom Behavior
+            </span>
+            <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 capitalize">
+              {currentActivity.selectedSubBehavior || 'lecture'}
+            </span>
+          </div>
+          <span className="text-[10px] text-slate-400">
+            {currentActivity.selectedSubBehavior === 'dozing' ? 'Dozing off in back desk • Conserving energy'
+             : currentActivity.selectedSubBehavior === 'laptop' ? 'Hacking on laptop • Coding during lecture'
+             : currentActivity.selectedSubBehavior === 'reels' ? 'Watching reels & shorts under the desk'
+             : currentActivity.selectedSubBehavior === 'mobile_game' ? 'Playing mobile gaming session'
+             : 'Attentive lecture listening & note taking'}
+          </span>
+        </div>
+      )}
+
+      {/* 8. Midnight Food Order Card */}
       {foodOrderState.stage !== 'idle' && (
         <div className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60 flex flex-col gap-1.5 text-xs">
           <div className="flex justify-between items-center">
@@ -249,6 +271,26 @@ export const ActivityInspector: React.FC = () => {
           </div>
           <span className="text-[10px] text-slate-400">
             Delivery to gate • Pick up and late night meal feast
+          </span>
+        </div>
+      )}
+
+      {/* 9. Sleep & Morning Routine Card */}
+      {(actId === 'sleep' || actId === 'wake_up_morning_routine') && (
+        <div className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60 flex flex-col gap-1.5 text-xs">
+          <div className="flex justify-between items-center">
+            <span className="font-bold text-sky-300 flex items-center gap-1">
+              <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+              {actId === 'sleep' ? 'Night Sleep' : 'Morning Routine'}
+            </span>
+            <span className="font-mono text-[10px] text-emerald-400">
+              Restoring Energy
+            </span>
+          </div>
+          <span className="text-[10px] text-slate-400">
+            {actId === 'sleep' 
+              ? 'Deep sleep resting in PG bedroom • Metabolic recovery'
+              : 'Waking up, leaving bed, hydration & day preparation'}
           </span>
         </div>
       )}

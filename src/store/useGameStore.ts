@@ -25,12 +25,16 @@ import {
   MorningRoutineState,
   WorkoutType,
   MealType,
-  DayOfWeek
+  DayOfWeek,
+  ActiveDashboardView
 } from '../types';
 import { LOCATIONS } from '../navigation/locationGraph';
 import { SimulationEngine } from '../simulation/engine/SimulationEngine';
-import { INITIAL_NEEDS_STATE } from '../simulation/config/defaults';
+import { INITIAL_NEEDS_STATE, DEFAULT_SIMULATION_SETTINGS } from '../simulation/config/defaults';
 import { CognitiveInspectorData } from '../cognition/debug/CognitiveInspectorState';
+import { ReplayPlaybackState, ReplaySpeed } from '../simulation/replay/ReplayTypes';
+import { AnalyticsReport } from '../simulation/analytics/AnalyticsTypes';
+import { SimulationSettings } from '../simulation/types/simulation';
 
 interface GameState {
   // Active Location
@@ -125,6 +129,35 @@ interface GameState {
   saveSimulation: () => boolean;
   loadSimulation: () => boolean;
   resetSimulation: () => void;
+
+  // Milestone 8 Premium Dashboard & View Routing
+  activeView: ActiveDashboardView;
+  setActiveView: (view: ActiveDashboardView) => void;
+
+  // Milestone 8 Replay Studio
+  isReplayMode: boolean;
+  replayState: ReplayPlaybackState;
+  startReplay: (initialIndex?: number) => void;
+  exitReplay: () => void;
+  playReplay: () => void;
+  pauseReplay: () => void;
+  toggleReplayPlay: () => void;
+  setReplaySpeed: (speed: ReplaySpeed) => void;
+  scrubReplay: (index: number) => void;
+  stepReplayForward: () => void;
+  stepReplayBackward: () => void;
+  jumpReplayToStart: () => void;
+  jumpReplayToEnd: () => void;
+  jumpReplayToEvent: (timestamp: string) => void;
+
+  // Milestone 8 Analytics
+  analyticsReport: AnalyticsReport;
+  refreshAnalytics: () => void;
+
+  // Milestone 8 Settings
+  simulationSettings: SimulationSettings;
+  updateSimulationSettings: (settings: Partial<SimulationSettings>) => void;
+  resetSimulationSettings: () => void;
 }
 
 const initialLoc = LOCATIONS.bedroom;
@@ -174,6 +207,13 @@ export const useGameStore = create<GameState>((set, get) => {
     // Milestone 6 Cognitive State
     isCognitionEnabled: simulationEngine.cognitiveEngine.getIsCognitionEnabled(),
     cognitiveInspectorData: simulationEngine.getCognitiveInspectorState(),
+
+    // Milestone 8 View Routing, Replay, Analytics & Settings
+    activeView: 'simulation',
+    isReplayMode: false,
+    replayState: simulationEngine.replayEngine.getPlaybackState(),
+    analyticsReport: simulationEngine.getAnalyticsReport(),
+    simulationSettings: { ...DEFAULT_SIMULATION_SETTINGS, ...simulationEngine.clock.getSettings() },
     
     resetCameraTrigger: 0,
     followFly: false,
@@ -290,6 +330,11 @@ export const useGameStore = create<GameState>((set, get) => {
 
     syncFromSimulation: (simState: SimulationState) => {
       const current = get();
+
+      // If replay mode is active, do not overwrite the visual historical state!
+      if (current.isReplayMode) {
+        return;
+      }
 
       // Check if simulation triggered location change in autonomous mode
       const targetLoc = simState.character.locationId as LocationId;
@@ -420,6 +465,169 @@ export const useGameStore = create<GameState>((set, get) => {
     resetSimulation: () => {
       simulationEngine.resetSimulation();
       get().switchLocation('bedroom', 'Resetting simulation');
+      set({
+        analyticsReport: simulationEngine.getAnalyticsReport(),
+        replayState: simulationEngine.replayEngine.getPlaybackState(),
+      });
+    },
+
+    // Milestone 8 Actions
+    setActiveView: (view: ActiveDashboardView) => {
+      if (view === 'analytics') {
+        get().refreshAnalytics();
+      }
+      set({ activeView: view });
+    },
+
+    startReplay: (initialIndex?: number) => {
+      const snap = simulationEngine.replayEngine.startReplay(initialIndex);
+      if (snap) {
+        // Pause live simulation during replay
+        simulationEngine.pause();
+        set({
+          isReplayMode: true,
+          activeView: 'replay',
+          currentLocation: snap.locationId,
+          currentSpot: snap.currentSpot,
+          flyActivity: snap.flyActivity,
+          flyPosition: snap.flyPosition,
+          needs: snap.needs,
+          simulatedTime: snap.timestamp.split('• ')[1] || snap.timestamp,
+          replayState: simulationEngine.replayEngine.getPlaybackState(),
+        });
+      }
+    },
+
+    exitReplay: () => {
+      simulationEngine.replayEngine.stopReplay();
+      set({
+        isReplayMode: false,
+        activeView: 'simulation',
+        replayState: simulationEngine.replayEngine.getPlaybackState(),
+      });
+      // Synchronize back to live engine state
+      get().syncFromSimulation(simulationEngine.getState());
+    },
+
+    playReplay: () => {
+      simulationEngine.replayEngine.play();
+    },
+
+    pauseReplay: () => {
+      simulationEngine.replayEngine.pause();
+    },
+
+    toggleReplayPlay: () => {
+      simulationEngine.replayEngine.togglePlay();
+    },
+
+    setReplaySpeed: (speed: ReplaySpeed) => {
+      simulationEngine.replayEngine.setSpeed(speed);
+    },
+
+    scrubReplay: (index: number) => {
+      const snap = simulationEngine.replayEngine.scrubTo(index);
+      if (snap && get().isReplayMode) {
+        set({
+          currentLocation: snap.locationId,
+          currentSpot: snap.currentSpot,
+          flyActivity: snap.flyActivity,
+          flyPosition: snap.flyPosition,
+          needs: snap.needs,
+          simulatedTime: snap.timestamp.split('• ')[1] || snap.timestamp,
+        });
+      }
+    },
+
+    stepReplayForward: () => {
+      const snap = simulationEngine.replayEngine.stepForward();
+      if (snap && get().isReplayMode) {
+        set({
+          currentLocation: snap.locationId,
+          currentSpot: snap.currentSpot,
+          flyActivity: snap.flyActivity,
+          flyPosition: snap.flyPosition,
+          needs: snap.needs,
+          simulatedTime: snap.timestamp.split('• ')[1] || snap.timestamp,
+        });
+      }
+    },
+
+    stepReplayBackward: () => {
+      const snap = simulationEngine.replayEngine.stepBackward();
+      if (snap && get().isReplayMode) {
+        set({
+          currentLocation: snap.locationId,
+          currentSpot: snap.currentSpot,
+          flyActivity: snap.flyActivity,
+          flyPosition: snap.flyPosition,
+          needs: snap.needs,
+          simulatedTime: snap.timestamp.split('• ')[1] || snap.timestamp,
+        });
+      }
+    },
+
+    jumpReplayToStart: () => {
+      const snap = simulationEngine.replayEngine.jumpToStart();
+      if (snap && get().isReplayMode) {
+        set({
+          currentLocation: snap.locationId,
+          currentSpot: snap.currentSpot,
+          flyActivity: snap.flyActivity,
+          flyPosition: snap.flyPosition,
+          needs: snap.needs,
+          simulatedTime: snap.timestamp.split('• ')[1] || snap.timestamp,
+        });
+      }
+    },
+
+    jumpReplayToEnd: () => {
+      const snap = simulationEngine.replayEngine.jumpToEnd();
+      if (snap && get().isReplayMode) {
+        set({
+          currentLocation: snap.locationId,
+          currentSpot: snap.currentSpot,
+          flyActivity: snap.flyActivity,
+          flyPosition: snap.flyPosition,
+          needs: snap.needs,
+          simulatedTime: snap.timestamp.split('• ')[1] || snap.timestamp,
+        });
+      }
+    },
+
+    jumpReplayToEvent: (timestamp: string) => {
+      const snap = simulationEngine.replayEngine.jumpToTimestamp(timestamp);
+      if (snap) {
+        simulationEngine.pause();
+        set({
+          isReplayMode: true,
+          activeView: 'replay',
+          currentLocation: snap.locationId,
+          currentSpot: snap.currentSpot,
+          flyActivity: snap.flyActivity,
+          flyPosition: snap.flyPosition,
+          needs: snap.needs,
+          simulatedTime: snap.timestamp.split('• ')[1] || snap.timestamp,
+          replayState: simulationEngine.replayEngine.getPlaybackState(),
+        });
+      }
+    },
+
+    refreshAnalytics: () => {
+      set({ analyticsReport: simulationEngine.getAnalyticsReport() });
+    },
+
+    updateSimulationSettings: (newSettings: Partial<SimulationSettings>) => {
+      const current = get().simulationSettings;
+      const merged = { ...current, ...newSettings };
+      if (newSettings.simulatedSecondsPerRealSecond !== undefined) {
+        simulationEngine.clock.setSpeed(1); // resets scale appropriately
+      }
+      set({ simulationSettings: merged });
+    },
+
+    resetSimulationSettings: () => {
+      set({ simulationSettings: { ...DEFAULT_SIMULATION_SETTINGS } });
     },
   };
 });
@@ -427,6 +635,25 @@ export const useGameStore = create<GameState>((set, get) => {
 // Subscribe simulation engine to push state changes to store
 simulationEngine.subscribe((state) => {
   useGameStore.getState().syncFromSimulation(state);
+});
+
+// Subscribe replay engine to push playback updates to store
+simulationEngine.replayEngine.subscribe((replayState) => {
+  const isReplay = useGameStore.getState().isReplayMode;
+  if (isReplay && replayState.activeSnapshot) {
+    const snap = replayState.activeSnapshot;
+    useGameStore.setState({
+      replayState,
+      currentLocation: snap.locationId,
+      currentSpot: snap.currentSpot,
+      flyActivity: snap.flyActivity,
+      flyPosition: snap.flyPosition,
+      needs: snap.needs,
+      simulatedTime: snap.timestamp.split('• ')[1] || snap.timestamp,
+    });
+  } else {
+    useGameStore.setState({ replayState });
+  }
 });
 
 // Start simulation engine loop automatically
