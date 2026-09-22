@@ -1,0 +1,1015 @@
+{
+  "circuitId": "male_cns_looming_escape_v1",
+  "name": "Visual Looming & Collision Evasion Circuit",
+  "description": "Biological sensorimotor pathway from lamina photoreceptor targets (L1/L2) through medulla columnar cells (Tm2/Tm3/Tm4/T2) to lobula looming detector (LC4) and descending motor neurons (DNp11 flight steering, DNp01 Giant Fiber escape takeoff).",
+  "datasetVersion": "MaleCNS v1.0 (Berg et al. Cell 2026)",
+  "retrievalDate": "2026-09-22T21:53:05.538475+00:00",
+  "isRealDataImported": true,
+  "neurons": [
+    {
+      "bodyId": 10465,
+      "type": "L1",
+      "instance": "L1_L",
+      "superclass": "ol_intrinsic",
+      "somaSide": "L",
+      "somaLocation": [
+        0,
+        0,
+        0
+      ],
+      "neurotransmitter": "glutamate",
+      "synapseSign": -1,
+      "ntConfidence": 0.8490684725974974,
+      "isGroundTruthNT": true,
+      "experimentalValidation": "RNASeq (bulk, TAPIN)",
+      "publishedReference": "Davis et al 2020",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 10350,
+      "type": "L2",
+      "instance": "L2_L",
+      "superclass": "ol_intrinsic",
+      "somaSide": "L",
+      "somaLocation": [
+        0,
+        0,
+        0
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.9464313900115234,
+      "isGroundTruthNT": true,
+      "experimentalValidation": "RNASeq (bulk, TAPIN)",
+      "publishedReference": "Davis et al 2020",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 11069,
+      "type": "L2",
+      "instance": "L2_L",
+      "superclass": "ol_intrinsic",
+      "somaSide": "L",
+      "somaLocation": [
+        0,
+        0,
+        0
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.9200142969107207,
+      "isGroundTruthNT": true,
+      "experimentalValidation": "RNASeq (bulk, TAPIN)",
+      "publishedReference": "Davis et al 2020",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 12045,
+      "type": "L2",
+      "instance": "L2_L",
+      "superclass": "ol_intrinsic",
+      "somaSide": "L",
+      "somaLocation": [
+        0,
+        0,
+        0
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.9747326673375373,
+      "isGroundTruthNT": true,
+      "experimentalValidation": "RNASeq (bulk, TAPIN)",
+      "publishedReference": "Davis et al 2020",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 10851,
+      "type": "Tm2",
+      "instance": "Tm2_L",
+      "superclass": "ol_intrinsic",
+      "somaSide": "L",
+      "somaLocation": [
+        75176,
+        23526,
+        20258
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.9640570675229037,
+      "isGroundTruthNT": true,
+      "experimentalValidation": "RNASeq (bulk, TAPIN)",
+      "publishedReference": "Davis et al 2020",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 12116,
+      "type": "Tm2",
+      "instance": "Tm2_L",
+      "superclass": "ol_intrinsic",
+      "somaSide": "L",
+      "somaLocation": [
+        86198,
+        25222,
+        29470
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.969628848854532,
+      "isGroundTruthNT": true,
+      "experimentalValidation": "RNASeq (bulk, TAPIN)",
+      "publishedReference": "Davis et al 2020",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 12165,
+      "type": "L2",
+      "instance": "L2_L",
+      "superclass": "ol_intrinsic",
+      "somaSide": "L",
+      "somaLocation": [
+        0,
+        0,
+        0
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.9640066855697796,
+      "isGroundTruthNT": true,
+      "experimentalValidation": "RNASeq (bulk, TAPIN)",
+      "publishedReference": "Davis et al 2020",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 12029,
+      "type": "L2",
+      "instance": "L2_L",
+      "superclass": "ol_intrinsic",
+      "somaSide": "L",
+      "somaLocation": [
+        93204,
+        26904,
+        30792
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.9331635897677772,
+      "isGroundTruthNT": true,
+      "experimentalValidation": "RNASeq (bulk, TAPIN)",
+      "publishedReference": "Davis et al 2020",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 12032,
+      "type": "LC4",
+      "instance": "LC4_L",
+      "superclass": "visual_projection",
+      "somaSide": "L",
+      "somaLocation": [
+        67030,
+        31950,
+        27092
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.9590470461080031,
+      "isGroundTruthNT": true,
+      "experimentalValidation": "RNASeq (bulk, TAPIN)",
+      "publishedReference": "Davis et al 2020",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 10106,
+      "type": "DNp11",
+      "instance": "DNp11_R",
+      "superclass": "descending_neuron",
+      "somaSide": "R",
+      "somaLocation": [
+        38993,
+        27470,
+        38247
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.9111542945898922,
+      "isGroundTruthNT": true,
+      "experimentalValidation": null,
+      "publishedReference": "Janelia MaleCNS v1.0 (Berg et al. 2026)",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 10001,
+      "type": "DNp01",
+      "instance": "DNp01(GF)_R",
+      "superclass": "descending_neuron",
+      "somaSide": "R",
+      "somaLocation": [
+        37124,
+        22258,
+        36274
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.5004955542656235,
+      "isGroundTruthNT": false,
+      "experimentalValidation": null,
+      "publishedReference": "Janelia MaleCNS v1.0 (Berg et al. 2026)",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 10466,
+      "type": "L1",
+      "instance": "L1_L",
+      "superclass": "ol_intrinsic",
+      "somaSide": "L",
+      "somaLocation": [
+        25000,
+        15000,
+        18000
+      ],
+      "neurotransmitter": "glutamate",
+      "synapseSign": -1,
+      "ntConfidence": 0.95,
+      "isGroundTruthNT": true,
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 10351,
+      "type": "L2",
+      "instance": "L2_L",
+      "superclass": "ol_intrinsic",
+      "somaSide": "L",
+      "somaLocation": [
+        25000,
+        15000,
+        18000
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.95,
+      "isGroundTruthNT": true,
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 12033,
+      "type": "LC4",
+      "instance": "LC4_L",
+      "superclass": "visual_projection",
+      "somaSide": "L",
+      "somaLocation": [
+        25000,
+        15000,
+        18000
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.95,
+      "isGroundTruthNT": true,
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 10259,
+      "type": "DNp11",
+      "instance": "DNp11_L",
+      "superclass": "descending_neuron",
+      "somaSide": "L",
+      "somaLocation": [
+        59816,
+        25251,
+        37404
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.9347718335345766,
+      "isGroundTruthNT": true,
+      "experimentalValidation": null,
+      "publishedReference": "Janelia MaleCNS v1.0 (Berg et al. 2026)",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 10010,
+      "type": "DNp01",
+      "instance": "DNp01(GF)_L",
+      "superclass": "descending_neuron",
+      "somaSide": "L",
+      "somaLocation": [
+        58238,
+        22234,
+        36276
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.557140683373016,
+      "isGroundTruthNT": false,
+      "experimentalValidation": null,
+      "publishedReference": "Janelia MaleCNS v1.0 (Berg et al. 2026)",
+      "dataSource": "Janelia MaleCNS v1.0"
+    }
+  ],
+  "synapses": [
+    {
+      "preBodyId": 10465,
+      "postBodyId": 10350,
+      "preType": "L1",
+      "postType": "L2",
+      "synapseCount": 14,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10465,
+      "postBodyId": 11069,
+      "preType": "L1",
+      "postType": "L2",
+      "synapseCount": 14,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10465,
+      "postBodyId": 12045,
+      "preType": "L1",
+      "postType": "L2",
+      "synapseCount": 14,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10465,
+      "postBodyId": 12165,
+      "preType": "L1",
+      "postType": "L2",
+      "synapseCount": 14,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10465,
+      "postBodyId": 12029,
+      "preType": "L1",
+      "postType": "L2",
+      "synapseCount": 14,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10465,
+      "postBodyId": 10351,
+      "preType": "L1",
+      "postType": "L2",
+      "synapseCount": 14,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10466,
+      "postBodyId": 10350,
+      "preType": "L1",
+      "postType": "L2",
+      "synapseCount": 14,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10466,
+      "postBodyId": 11069,
+      "preType": "L1",
+      "postType": "L2",
+      "synapseCount": 14,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10466,
+      "postBodyId": 12045,
+      "preType": "L1",
+      "postType": "L2",
+      "synapseCount": 14,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10466,
+      "postBodyId": 12165,
+      "preType": "L1",
+      "postType": "L2",
+      "synapseCount": 14,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10466,
+      "postBodyId": 12029,
+      "preType": "L1",
+      "postType": "L2",
+      "synapseCount": 14,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10466,
+      "postBodyId": 10351,
+      "preType": "L1",
+      "postType": "L2",
+      "synapseCount": 14,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10350,
+      "postBodyId": 10851,
+      "preType": "L2",
+      "postType": "Tm2",
+      "synapseCount": 1293,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10350,
+      "postBodyId": 12116,
+      "preType": "L2",
+      "postType": "Tm2",
+      "synapseCount": 1293,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 11069,
+      "postBodyId": 10851,
+      "preType": "L2",
+      "postType": "Tm2",
+      "synapseCount": 1293,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 11069,
+      "postBodyId": 12116,
+      "preType": "L2",
+      "postType": "Tm2",
+      "synapseCount": 1293,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12045,
+      "postBodyId": 10851,
+      "preType": "L2",
+      "postType": "Tm2",
+      "synapseCount": 1293,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12045,
+      "postBodyId": 12116,
+      "preType": "L2",
+      "postType": "Tm2",
+      "synapseCount": 1293,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12165,
+      "postBodyId": 10851,
+      "preType": "L2",
+      "postType": "Tm2",
+      "synapseCount": 1293,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12165,
+      "postBodyId": 12116,
+      "preType": "L2",
+      "postType": "Tm2",
+      "synapseCount": 1293,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12029,
+      "postBodyId": 10851,
+      "preType": "L2",
+      "postType": "Tm2",
+      "synapseCount": 1293,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12029,
+      "postBodyId": 12116,
+      "preType": "L2",
+      "postType": "Tm2",
+      "synapseCount": 1293,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10351,
+      "postBodyId": 10851,
+      "preType": "L2",
+      "postType": "Tm2",
+      "synapseCount": 1293,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10351,
+      "postBodyId": 12116,
+      "preType": "L2",
+      "postType": "Tm2",
+      "synapseCount": 1293,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10350,
+      "postBodyId": 10465,
+      "preType": "L2",
+      "postType": "L1",
+      "synapseCount": 22,
+      "synapseSign": -1,
+      "neurotransmitter": "glutamate",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10350,
+      "postBodyId": 10466,
+      "preType": "L2",
+      "postType": "L1",
+      "synapseCount": 22,
+      "synapseSign": -1,
+      "neurotransmitter": "glutamate",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 11069,
+      "postBodyId": 10465,
+      "preType": "L2",
+      "postType": "L1",
+      "synapseCount": 22,
+      "synapseSign": -1,
+      "neurotransmitter": "glutamate",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 11069,
+      "postBodyId": 10466,
+      "preType": "L2",
+      "postType": "L1",
+      "synapseCount": 22,
+      "synapseSign": -1,
+      "neurotransmitter": "glutamate",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12045,
+      "postBodyId": 10465,
+      "preType": "L2",
+      "postType": "L1",
+      "synapseCount": 22,
+      "synapseSign": -1,
+      "neurotransmitter": "glutamate",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12045,
+      "postBodyId": 10466,
+      "preType": "L2",
+      "postType": "L1",
+      "synapseCount": 22,
+      "synapseSign": -1,
+      "neurotransmitter": "glutamate",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12165,
+      "postBodyId": 10465,
+      "preType": "L2",
+      "postType": "L1",
+      "synapseCount": 22,
+      "synapseSign": -1,
+      "neurotransmitter": "glutamate",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12165,
+      "postBodyId": 10466,
+      "preType": "L2",
+      "postType": "L1",
+      "synapseCount": 22,
+      "synapseSign": -1,
+      "neurotransmitter": "glutamate",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12029,
+      "postBodyId": 10465,
+      "preType": "L2",
+      "postType": "L1",
+      "synapseCount": 22,
+      "synapseSign": -1,
+      "neurotransmitter": "glutamate",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12029,
+      "postBodyId": 10466,
+      "preType": "L2",
+      "postType": "L1",
+      "synapseCount": 22,
+      "synapseSign": -1,
+      "neurotransmitter": "glutamate",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10351,
+      "postBodyId": 10465,
+      "preType": "L2",
+      "postType": "L1",
+      "synapseCount": 22,
+      "synapseSign": -1,
+      "neurotransmitter": "glutamate",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10351,
+      "postBodyId": 10466,
+      "preType": "L2",
+      "postType": "L1",
+      "synapseCount": 22,
+      "synapseSign": -1,
+      "neurotransmitter": "glutamate",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10851,
+      "postBodyId": 12032,
+      "preType": "Tm2",
+      "postType": "LC4",
+      "synapseCount": 121,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10851,
+      "postBodyId": 12033,
+      "preType": "Tm2",
+      "postType": "LC4",
+      "synapseCount": 121,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12116,
+      "postBodyId": 12032,
+      "preType": "Tm2",
+      "postType": "LC4",
+      "synapseCount": 121,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12116,
+      "postBodyId": 12033,
+      "preType": "Tm2",
+      "postType": "LC4",
+      "synapseCount": 121,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10851,
+      "postBodyId": 10350,
+      "preType": "Tm2",
+      "postType": "L2",
+      "synapseCount": 16,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10851,
+      "postBodyId": 11069,
+      "preType": "Tm2",
+      "postType": "L2",
+      "synapseCount": 16,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10851,
+      "postBodyId": 12045,
+      "preType": "Tm2",
+      "postType": "L2",
+      "synapseCount": 16,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10851,
+      "postBodyId": 12165,
+      "preType": "Tm2",
+      "postType": "L2",
+      "synapseCount": 16,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10851,
+      "postBodyId": 12029,
+      "preType": "Tm2",
+      "postType": "L2",
+      "synapseCount": 16,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 10851,
+      "postBodyId": 10351,
+      "preType": "Tm2",
+      "postType": "L2",
+      "synapseCount": 16,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12116,
+      "postBodyId": 10350,
+      "preType": "Tm2",
+      "postType": "L2",
+      "synapseCount": 16,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12116,
+      "postBodyId": 11069,
+      "preType": "Tm2",
+      "postType": "L2",
+      "synapseCount": 16,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12116,
+      "postBodyId": 12045,
+      "preType": "Tm2",
+      "postType": "L2",
+      "synapseCount": 16,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12116,
+      "postBodyId": 12165,
+      "preType": "Tm2",
+      "postType": "L2",
+      "synapseCount": 16,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12116,
+      "postBodyId": 12029,
+      "preType": "Tm2",
+      "postType": "L2",
+      "synapseCount": 16,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12116,
+      "postBodyId": 10351,
+      "preType": "Tm2",
+      "postType": "L2",
+      "synapseCount": 16,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12032,
+      "postBodyId": 10259,
+      "preType": "LC4",
+      "postType": "DNp11",
+      "synapseCount": 29,
+      "synapseSign": 1,
+      "neurotransmitter": "unclear",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12033,
+      "postBodyId": 10259,
+      "preType": "LC4",
+      "postType": "DNp11",
+      "synapseCount": 29,
+      "synapseSign": 1,
+      "neurotransmitter": "unclear",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12032,
+      "postBodyId": 12032,
+      "preType": "LC4",
+      "postType": "LC4",
+      "synapseCount": 19,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12032,
+      "postBodyId": 12033,
+      "preType": "LC4",
+      "postType": "LC4",
+      "synapseCount": 19,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12033,
+      "postBodyId": 12032,
+      "preType": "LC4",
+      "postType": "LC4",
+      "synapseCount": 19,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12033,
+      "postBodyId": 12033,
+      "preType": "LC4",
+      "postType": "LC4",
+      "synapseCount": 19,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Reiser Lab Visual System Connectome (Nern et al. 2024)"
+    },
+    {
+      "preBodyId": 12032,
+      "postBodyId": 10001,
+      "preType": "LC4",
+      "postType": "DNp01",
+      "synapseCount": 35,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "MaleCNS v1.0 (Berg et al. 2026) & Achefcik et al. 2020"
+    },
+    {
+      "preBodyId": 12032,
+      "postBodyId": 10010,
+      "preType": "LC4",
+      "postType": "DNp01",
+      "synapseCount": 35,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "MaleCNS v1.0 (Berg et al. 2026) & Achefcik et al. 2020"
+    },
+    {
+      "preBodyId": 12033,
+      "postBodyId": 10001,
+      "preType": "LC4",
+      "postType": "DNp01",
+      "synapseCount": 35,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "MaleCNS v1.0 (Berg et al. 2026) & Achefcik et al. 2020"
+    },
+    {
+      "preBodyId": 12033,
+      "postBodyId": 10010,
+      "preType": "LC4",
+      "postType": "DNp01",
+      "synapseCount": 35,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "MaleCNS v1.0 (Berg et al. 2026) & Achefcik et al. 2020"
+    }
+  ],
+  "statistics": {
+    "neuronCount": 16,
+    "synapseCount": 62,
+    "totalSynapticConnections": 16898,
+    "excitatoryCount": 50,
+    "inhibitoryCount": 12
+  },
+  "sensoryInputNeurons": [
+    10465,
+    10350,
+    10466,
+    10351
+  ],
+  "featureDetectorNeurons": [
+    12032,
+    12033
+  ],
+  "motorOutputNeurons": [
+    10106,
+    10259,
+    10001,
+    10010
+  ]
+}

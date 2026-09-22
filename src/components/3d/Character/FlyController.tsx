@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
-import { useGameStore, simulationEngine } from '../../../store/useGameStore';
+import { useGameStore, simulationEngine, connectomeFlyController } from '../../../store/useGameStore';
 import { LOCATIONS } from '../../../navigation/locationGraph';
 import { FruitFly } from './FruitFly';
 
@@ -12,6 +12,7 @@ import { FruitFly } from './FruitFly';
  * - Strictly enforces active environment's room collision boundaries
  * - Teleports & synchronizes fly position when location changes
  * - Dynamic landmark detection for the active location
+ * - Closed-loop Biological Connectome Autonomous Neural Flight Controller
  */
 export const FlyController: React.FC = () => {
   const groupRef = useRef<THREE.Group>(null);
@@ -25,6 +26,8 @@ export const FlyController: React.FC = () => {
   const flyPosition = useGameStore((state) => state.flyPosition);
   const flyActivity = useGameStore((state) => state.flyActivity);
   const isAutonomous = useGameStore((state) => state.isAutonomous);
+  const controllerMode = useGameStore((state) => state.controllerMode);
+  const setConnectomeSnapshot = useGameStore((state) => state.setConnectomeSnapshot);
   const currentActivity = useGameStore((state) => state.currentActivity);
 
   // Flight vectors
@@ -169,8 +172,34 @@ export const FlyController: React.FC = () => {
       // Calculate banking angles
       pitch.current = THREE.MathUtils.lerp(pitch.current, moveDir.y * -0.35, dt * 10);
       roll.current = THREE.MathUtils.lerp(roll.current, -moveDir.x * 0.4, dt * 10);
+    } else if (controllerMode === 'connectome') {
+      // 1. Biological Connectome Neural Dynamics Closed-Loop Autonomous Flight
+      const result = connectomeFlyController.update(
+        [position.current.x, position.current.y, position.current.z],
+        [velocity.current.x, velocity.current.y, velocity.current.z],
+        targetRotation.current,
+        roomBounds,
+        dt
+      );
+
+      position.current.set(...result.newPosition);
+      velocity.current.set(...result.newVelocity);
+      targetRotation.current = result.newRotation;
+      pitch.current = THREE.MathUtils.lerp(pitch.current, result.pitch, dt * 8);
+      roll.current = THREE.MathUtils.lerp(roll.current, result.roll, dt * 8);
+
+      const flightSpeed = velocity.current.length();
+      if (flightSpeed > 0.3) {
+        if (!isMoving) setIsMoving(true);
+        setFlyActivity('flying');
+      } else {
+        if (isMoving) setIsMoving(false);
+        setFlyActivity(result.activityPose);
+      }
+
+      setConnectomeSnapshot(result.snapshot);
     } else if (isAutonomous) {
-      // Autonomous waypoint navigation
+      // 2. Schedule-Driven & Cognitive Utility Waypoint Navigation
       const currentLocConfig = LOCATIONS[currentLocation];
       const activeWaypointKey = simulationEngine.getCurrentWaypoint();
       const waypointCoords = currentLocConfig?.waypoints?.[activeWaypointKey];

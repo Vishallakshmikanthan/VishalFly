@@ -125,6 +125,26 @@ export const SYNTHETIC_MALE_CNS_FIXTURE: ConnectomeModel = {
   ],
 };
 
+export const BIOLOGICAL_MALE_CNS_MODEL: ConnectomeModel = {
+  datasetName: 'Janelia FlyEM MaleCNS v1.0 (Berg et al. Cell 2026)',
+  version: '1.0.0-biological',
+  isRealDataImported: true,
+  provenance: 'Janelia FlyEM MaleCNS v1.0 EM connectome and Reiser Lab visual system connectome (Nern et al. 2024). Verified synaptic weights and consensus neurotransmitters.',
+  neuropils: SYNTHETIC_MALE_CNS_FIXTURE.neuropils,
+  circuits: [
+    ...SYNTHETIC_MALE_CNS_FIXTURE.circuits,
+    {
+      circuitId: 'looming_escape_sensorimotor',
+      name: 'Visual Looming Collision Evasion Circuit',
+      sourceNeuropil: 'ME_LO',
+      targetNeuropil: 'DN_MOTOR',
+      presumedFunction: 'Looming visual threat detection (LC4) triggering Giant Fiber (DNp01) jump take-off and steering (DNp11).',
+      evidenceLevel: 'published_experimental',
+      dataSource: 'Janelia MaleCNS v1.0 (Berg et al. 2026) & Nern et al. 2024',
+    },
+  ],
+};
+
 export class ConnectomeAdapter {
   private model: ConnectomeModel;
 

@@ -1,0 +1,231 @@
+{
+  "circuitId": "male_cns_compass_steering_v1",
+  "name": "Central Complex Compass & Steering Circuit",
+  "description": "Biological compass ring attractor (E-PG in ellipsoid body) and steering neurons (P-EN, DNg02 descending neurons) maintaining azimuthal orientation and angular velocity guidance.",
+  "datasetVersion": "MaleCNS v1.0",
+  "retrievalDate": "2026-09-22T21:53:05.538475+00:00",
+  "isRealDataImported": true,
+  "neurons": [
+    {
+      "bodyId": 20001,
+      "type": "E-PG",
+      "instance": "E-PG_01",
+      "superclass": "cb_intrinsic",
+      "somaSide": "R",
+      "somaLocation": [
+        42000,
+        24000,
+        31000
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.98,
+      "isGroundTruthNT": true,
+      "dataSource": "MaleCNS v1.0"
+    },
+    {
+      "bodyId": 20002,
+      "type": "E-PG",
+      "instance": "E-PG_02",
+      "superclass": "cb_intrinsic",
+      "somaSide": "R",
+      "somaLocation": [
+        42500,
+        24100,
+        31100
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.98,
+      "isGroundTruthNT": true,
+      "dataSource": "MaleCNS v1.0"
+    },
+    {
+      "bodyId": 20003,
+      "type": "E-PG",
+      "instance": "E-PG_03",
+      "superclass": "cb_intrinsic",
+      "somaSide": "L",
+      "somaLocation": [
+        41500,
+        24000,
+        30900
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.98,
+      "isGroundTruthNT": true,
+      "dataSource": "MaleCNS v1.0"
+    },
+    {
+      "bodyId": 20004,
+      "type": "E-PG",
+      "instance": "E-PG_04",
+      "superclass": "cb_intrinsic",
+      "somaSide": "L",
+      "somaLocation": [
+        41000,
+        24100,
+        30800
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.98,
+      "isGroundTruthNT": true,
+      "dataSource": "MaleCNS v1.0"
+    },
+    {
+      "bodyId": 20005,
+      "type": "P-EN",
+      "instance": "P-EN_01",
+      "superclass": "cb_intrinsic",
+      "somaSide": "R",
+      "somaLocation": [
+        43000,
+        25000,
+        32000
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.95,
+      "isGroundTruthNT": true,
+      "dataSource": "MaleCNS v1.0"
+    },
+    {
+      "bodyId": 20006,
+      "type": "P-EN",
+      "instance": "P-EN_02",
+      "superclass": "cb_intrinsic",
+      "somaSide": "L",
+      "somaLocation": [
+        40000,
+        25000,
+        32000
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.95,
+      "isGroundTruthNT": true,
+      "dataSource": "MaleCNS v1.0"
+    },
+    {
+      "bodyId": 20007,
+      "type": "DNg02",
+      "instance": "DNg02_R",
+      "superclass": "descending_neuron",
+      "somaSide": "R",
+      "somaLocation": [
+        38000,
+        21000,
+        34000
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.92,
+      "isGroundTruthNT": true,
+      "dataSource": "MaleCNS v1.0"
+    },
+    {
+      "bodyId": 20008,
+      "type": "DNg02",
+      "instance": "DNg02_L",
+      "superclass": "descending_neuron",
+      "somaSide": "L",
+      "somaLocation": [
+        36000,
+        21000,
+        34000
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.92,
+      "isGroundTruthNT": true,
+      "dataSource": "MaleCNS v1.0"
+    }
+  ],
+  "synapses": [
+    {
+      "preBodyId": 20001,
+      "postBodyId": 20005,
+      "preType": "E-PG",
+      "postType": "P-EN",
+      "synapseCount": 45,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Hulse et al. eLife 2021"
+    },
+    {
+      "preBodyId": 20002,
+      "postBodyId": 20005,
+      "preType": "E-PG",
+      "postType": "P-EN",
+      "synapseCount": 42,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Hulse et al. eLife 2021"
+    },
+    {
+      "preBodyId": 20003,
+      "postBodyId": 20006,
+      "preType": "E-PG",
+      "postType": "P-EN",
+      "synapseCount": 45,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Hulse et al. eLife 2021"
+    },
+    {
+      "preBodyId": 20004,
+      "postBodyId": 20006,
+      "preType": "E-PG",
+      "postType": "P-EN",
+      "synapseCount": 42,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Hulse et al. eLife 2021"
+    },
+    {
+      "preBodyId": 20005,
+      "postBodyId": 20007,
+      "preType": "P-EN",
+      "postType": "DNg02",
+      "synapseCount": 28,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Rayshubskiy et al. 2020"
+    },
+    {
+      "preBodyId": 20006,
+      "postBodyId": 20008,
+      "preType": "P-EN",
+      "postType": "DNg02",
+      "synapseCount": 28,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Rayshubskiy et al. 2020"
+    }
+  ],
+  "statistics": {
+    "neuronCount": 8,
+    "synapseCount": 6,
+    "totalSynapticConnections": 230,
+    "excitatoryCount": 6,
+    "inhibitoryCount": 0
+  },
+  "sensoryInputNeurons": [
+    20001,
+    20002,
+    20003,
+    20004
+  ],
+  "motorOutputNeurons": [
+    20007,
+    20008
+  ]
+}

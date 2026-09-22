@@ -1,0 +1,75 @@
+{
+  "manifestVersion": "1.0.0",
+  "generatedAt": "2026-09-22T21:53:05.538475+00:00",
+  "project": "VishalFly Biological Connectome Integration",
+  "license": "CC-BY 4.0 (Creative Commons Attribution 4.0 International)",
+  "scientificCitation": "Berg, S., Beckett, I.R., Costa, M., Schlegel, P., ..., Hess, H.F., Rubin, G.M., and Jefferis, G.S.X.E. (2026). Sexual dimorphism in the complete Drosophila male central nervous system connectome. Cell 189, 5504-5541. doi:10.1016/j.cell.2026.08.015",
+  "reiserCitation": "Nern, A., Shinomiya, K., ..., Reiser, M.B. (2024). Connectome-driven neural inventory of a complete visual system. bioRxiv/Nature.",
+  "simulationReferences": [
+    "Lappalainen, J.K., Tschopp, F.D., Prakhya, S., ..., Macke, J.H., Turaga, S.C. (2024). Connectome-constrained networks predict neural activity across the fly visual system. Nature 634, 1132-1140.",
+    "Shiu, P.K., Sterne, G.R., Spiller, N., ..., FlyWire Consortium (2024). A Drosophila computational brain model reveals sensorimotor processing. Nature 634, 210-219."
+  ],
+  "sourceArtifacts": [
+    {
+      "filename": "body-annotations-male-cns-v1.0-minconf-0.5.feather",
+      "url": "https://storage.googleapis.com/flyem-male-cns/v1.0/connectome-data/flat-connectome/body-annotations-male-cns-v1.0-minconf-0.5.feather",
+      "sizeBytes": 14483314,
+      "sha256": "2177e246113e4cfbf1e7772ec37c6da1955ff22e8063d0b1f833101f99a9a3b2",
+      "recordCount": 211577,
+      "description": "MaleCNS v1.0 body annotations (identifiers, cell types, soma positions, superclasses)"
+    },
+    {
+      "filename": "body-neurotransmitters-male-cns-v1.0.feather",
+      "url": "https://storage.googleapis.com/flyem-male-cns/v1.0/connectome-data/flat-connectome/body-neurotransmitters-male-cns-v1.0.feather",
+      "sizeBytes": 43282834,
+      "sha256": "95c9289220663abeb3409f3ad9e5a7f8a53f8093f5139d15502cd08da8879621",
+      "recordCount": 1835518,
+      "description": "MaleCNS v1.0 consensus neurotransmitter predictions and ground truth labels"
+    },
+    {
+      "filename": "Nern-et-al_SuppTable05_Neurotransmitter_validation.xlsx",
+      "url": "https://raw.githubusercontent.com/reiserlab/male-drosophila-visual-system-connectome-code/main/params/Nern-et-al_SuppTable05_Neurotransmitter_validation.xlsx",
+      "sizeBytes": 17322,
+      "sha256": "38baa04d0d8b13eccbfb28193d7d38451679ccb09674341ec21ff897598b0602",
+      "recordCount": 148,
+      "description": "RNASeq and FISH experimental neurotransmitter validations from Reiser Lab"
+    }
+  ],
+  "circuitsExported": [
+    {
+      "file": "looming_escape_circuit.json",
+      "circuitId": "male_cns_looming_escape_v1",
+      "neuronCount": 16,
+      "synapseCount": 62
+    },
+    {
+      "file": "compass_steering_circuit.json",
+      "circuitId": "male_cns_compass_steering_v1",
+      "neuronCount": 8,
+      "synapseCount": 6
+    }
+  ],
+  "parameterClassification": {
+    "directlyMeasured": [
+      "Neuron body IDs and biological cell types",
+      "Soma 3D coordinates in EM coordinate space (nm)",
+      "Synaptic connection counts (weights) from electron microscopy",
+      "Consensus neurotransmitters (ACh, GABA, Glutamate) and ground-truth validations"
+    ],
+    "derived": [
+      "Synaptic conductance scaling proportional to synapse count (g_syn = weight * g_unit)",
+      "Synaptic reversal potentials: ACh (E_rev = 0 mV, excitatory), GABA (E_rev = -70 mV, inhibitory), Glutamate (E_rev = -70 mV, inhibitory in CNS)"
+    ],
+    "computationalAssumptions": [
+      "Leaky Integrate-and-Fire membrane time constant (tau_m = 15 ms)",
+      "Resting potential V_rest = -60 mV, Threshold V_th = -50 mV, Reset V_reset = -65 mV",
+      "Refractory period tau_ref = 2 ms",
+      "Optical looming stimulus linear velocity-to-current transduction"
+    ],
+    "unmodeled": [
+      "Complex non-linear dendritic arbor cable filtering",
+      "Metabotropic second-messenger modulation cascades",
+      "Electrical gap junctions (innexin synapses)"
+    ]
+  }
+}

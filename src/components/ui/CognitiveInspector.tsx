@@ -11,7 +11,6 @@ import {
   Sparkles, 
   Compass, 
   History, 
-  BookOpen, 
   Layers, 
   Info,
   Flame,
@@ -28,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useGameStore } from '../../store/useGameStore';
 import { MemoryOutcome } from '../../cognition/types/cognition';
+import { BiologicalConnectomeInspector } from './BiologicalConnectomeInspector';
 
 interface CognitiveInspectorProps {
   isOpen: boolean;
@@ -58,7 +58,6 @@ export const CognitiveInspector: React.FC<CognitiveInspectorProps> = ({ isOpen, 
   const memory = cognitiveData?.recentMemory || [];
   const relevantMemories = cognitiveData?.relevantMemories || [];
   const comparison = cognitiveData?.comparison;
-  const connectome = cognitiveData?.connectomeStatus;
   const snapshot = cognitiveData?.lastPerceptionSnapshot;
   const adaptationStatus = cognitiveData?.adaptationStatus;
 
@@ -171,7 +170,7 @@ export const CognitiveInspector: React.FC<CognitiveInspectorProps> = ({ isOpen, 
             { id: 'adaptation', label: 'Adaptive Experiments', icon: Sliders },
             { id: 'drives', label: 'Internal Drives', icon: Zap },
             { id: 'comparison', label: 'Schedule vs Cognitive', icon: Compass },
-            { id: 'connectome', label: 'Connectome Adapter', icon: BookOpen },
+            { id: 'connectome', label: 'Biological Connectome', icon: BrainCircuit },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -837,46 +836,9 @@ export const CognitiveInspector: React.FC<CognitiveInspectorProps> = ({ isOpen, 
             </div>
           )}
 
-          {/* TAB 8: CONNECTOME ADAPTER & SCIENTIFIC STATUS */}
+          {/* TAB 8: BIOLOGICAL CONNECTOME NEURAL BRAIN INTEGRATION */}
           {activeTab === 'connectome' && (
-            <div className="flex flex-col gap-4">
-              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col gap-2">
-                <div className="flex items-center gap-2 text-amber-400 font-bold">
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>Scientific Honesty &amp; Boundary Declaration</span>
-                </div>
-                <p className="text-slate-300 leading-relaxed text-xs">
-                  This architecture is inspired by Drosophila neuroethological circuits (central complex navigation and mushroom body associative memory abstractions). 
-                  <strong> No real biological connectome data file from the MaleCNS dataset is bundled or simulated</strong>. The adapter interface defines structural schemas and verified neuropil taxonomy from published literature for future dataset ingestion.
-                </p>
-              </div>
-
-              {connectome && (
-                <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex flex-col gap-2 font-mono text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Dataset Adapter Reference:</span>
-                    <span className="text-cyan-300 font-bold">{connectome.dataset}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Real Biological Data Imported:</span>
-                    <span className="text-amber-400 font-bold">
-                      {connectome.isRealDataImported ? 'YES' : 'NO (Synthetic Structural Fixture)'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Neuropils Defined:</span>
-                    <span className="text-white">{connectome.neuropilsCount} Anatomical Centers</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Exemplar Circuits:</span>
-                    <span className="text-white">{connectome.circuitsCount} Pathway Schemas</span>
-                  </div>
-                  <div className="pt-2 border-t border-slate-800 text-slate-400 text-[11px] font-sans">
-                    <strong>Provenance: </strong>{connectome.provenance}
-                  </div>
-                </div>
-              )}
-            </div>
+            <BiologicalConnectomeInspector />
           )}
 
         </div>

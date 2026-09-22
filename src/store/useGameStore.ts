@@ -35,6 +35,10 @@ import { CognitiveInspectorData } from '../cognition/debug/CognitiveInspectorSta
 import { ReplayPlaybackState, ReplaySpeed } from '../simulation/replay/ReplayTypes';
 import { AnalyticsReport } from '../simulation/analytics/AnalyticsTypes';
 import { SimulationSettings } from '../simulation/types/simulation';
+import { ControllerMode, NeuralStateSnapshot } from '../cognition/connectome/types';
+import { ConnectomeFlyController } from '../cognition/connectome/controller/ConnectomeFlyController';
+
+export const connectomeFlyController = new ConnectomeFlyController();
 
 interface GameState {
   // Active Location
@@ -87,6 +91,13 @@ interface GameState {
   setAdaptationEnabled: (enabled: boolean) => void;
   clearCognitiveMemory: () => void;
   resetAdaptationDefaults: () => void;
+
+  // Milestone Connectome Neural Brain Integration
+  controllerMode: ControllerMode;
+  connectomeSnapshot: NeuralStateSnapshot | null;
+  setControllerMode: (mode: ControllerMode) => void;
+  setConnectomeSnapshot: (snapshot: NeuralStateSnapshot) => void;
+  triggerConnectomeThreat: () => void;
   
   // Camera & view controls
   resetCameraTrigger: number;
@@ -207,6 +218,13 @@ export const useGameStore = create<GameState>((set, get) => {
     // Milestone 6 Cognitive State
     isCognitionEnabled: simulationEngine.cognitiveEngine.getIsCognitionEnabled(),
     cognitiveInspectorData: simulationEngine.getCognitiveInspectorState(),
+
+    // Milestone Connectome Neural Brain State
+    controllerMode: 'connectome',
+    connectomeSnapshot: null,
+    setControllerMode: (controllerMode) => set({ controllerMode, isAutonomous: controllerMode !== 'manual' }),
+    setConnectomeSnapshot: (connectomeSnapshot) => set({ connectomeSnapshot }),
+    triggerConnectomeThreat: () => connectomeFlyController.triggerThreatStimulus(),
 
     // Milestone 8 View Routing, Replay, Analytics & Settings
     activeView: 'simulation',
