@@ -1,4 +1,4 @@
-import { Compass, Sparkles, Brain } from 'lucide-react';
+import { Compass, Sparkles, Brain, Globe } from 'lucide-react';
 import { useGameStore } from '../../store/useGameStore';
 import { NeedsMeters } from './NeedsMeters';
 import { ActivityInspector } from './ActivityInspector';
@@ -17,7 +17,10 @@ export const HUD: React.FC<HUDProps> = () => {
   const selectedCollegeBehavior = useGameStore((state) => state.selectedCollegeBehavior);
   const controllerMode = useGameStore((state) => state.controllerMode);
   const connectomeSnapshot = useGameStore((state) => state.connectomeSnapshot);
+  const livingWorldTelemetry = useGameStore((state) => state.livingWorldTelemetry);
+  const setActiveView = useGameStore((state) => state.setActiveView);
   const isEscapeActive = connectomeSnapshot?.motorOutputs?.dnEscapeSpike || (connectomeSnapshot?.motorOutputs?.dnEscapeRate ?? 0) > 18.0;
+  const primaryEvent = livingWorldTelemetry?.activeEvents?.[0];
 
   return (
     <div className="w-full h-full pointer-events-none relative">
@@ -54,6 +57,19 @@ export const HUD: React.FC<HUDProps> = () => {
               <Sparkles className="w-3 h-3 text-purple-400" />
               <span className="capitalize font-medium">{selectedCollegeBehavior}</span>
             </div>
+          )}
+
+          {/* Living World Emergent Event Indicator */}
+          {primaryEvent && (
+            <button
+              onClick={() => setActiveView('living_world')}
+              className="glass-pill px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 text-xs text-amber-300 border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 transition-all pointer-events-auto shadow-sm"
+              title="Emergent World Event Active (Click to inspect Living World)"
+            >
+              <Globe className="w-3 h-3 text-amber-400 animate-spin" style={{ animationDuration: '8s' }} />
+              <span className="font-semibold">{primaryEvent.title}</span>
+              <span className="text-[10px] font-mono text-amber-400/80">({Math.round(primaryEvent.remainingSimSeconds)}s)</span>
+            </button>
           )}
         </div>
 

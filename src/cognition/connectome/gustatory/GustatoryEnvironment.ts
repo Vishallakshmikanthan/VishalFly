@@ -251,6 +251,13 @@ export class GustatoryEnvironment {
     this.replenishFood(surfaceId);
   }
 
+  public modifyFoodRemaining(surfaceId: string, delta: number): void {
+    const surface = this.surfaces.find((s) => s.id === surfaceId);
+    if (surface) {
+      surface.foodRemaining = Math.max(0.0, Math.min(100.0, surface.foodRemaining + delta));
+    }
+  }
+
   public replenishFood(surfaceId?: string): void {
     for (const surface of this.surfaces) {
       if (!surfaceId || surface.id === surfaceId) {

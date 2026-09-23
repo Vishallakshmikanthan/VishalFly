@@ -19,6 +19,18 @@ VishalFly now transitions from rule-based heuristic cognition to an **autonomous
 - **Sub-Millisecond Performance**: Optimized `Float32Array` vectorized dynamics running in $< 0.05\,\text{ms}$ per frame ($< 50\,\mu\text{s}$), consuming $< 0.3\%$ of the 60 FPS Three.js frame budget.
 - **Full Scientific Documentation**: See [`docs/CONNECTOME_INTEGRATION.md`](file:///c:/Users/Lenovo/Downloads/VishalFly/docs/CONNECTOME_INTEGRATION.md) for full equations, data provenance, and citations.
 
+## 🌿 What's New in Milestone 5: Living World, Emergent Events & Autonomous Daily Life
+
+Milestone 5 introduces a lightweight, deterministic-capable **Living World Event System** and contextual arbitration:
+- **Lightweight Emergent Events**: 18 configurable world event definitions across 6 typed categories (`ambient_creature`, `lighting_ambience`, `food_availability`, `college_apartment_activity`, `interruption`, `weekend_routine`).
+- **Deterministic Seeded PRNG**: Driven by Mulberry32 algorithm ensuring identical event sequences and reproducible tests across accelerated simulation speeds.
+- **Autonomous Decision Arbitration**: Treats schedules as contextual priority guides rather than movement scripts. Computes multi-factor utility evaluations combining base utility, schedule compatibility, physiological needs, world event modifiers, and learned Mushroom Body odor valences.
+- **Hysteresis Anti-Oscillation**: 120-second cooldown on switched-away behaviors to prevent rapid thrashing between adjacent actions.
+- **Spatial & Depletion Memory**: Cognitive memory retains recently visited interaction perches and remembers depleted food surfaces up to 90 simulated minutes.
+- **Continuous Non-Teleporting Weekend Routines**: Smooth physical flight transit for weekend laundry (bedroom wardrobe -> balcony clothesline -> return) and midnight food order collection (entrance gate pickup -> dining table feeding).
+- **Dedicated Living World UI**: Interactive dashboard panel with active event countdown timers, cumulative environmental influence telemetry, live decision score breakdown, category toggles, seed sandbox, and recent event logs.
+- **Full Documentation**: See [`docs/LIVING_WORLD_EVENTS.md`](file:///c:/Users/Lenovo/Downloads/VishalFly/docs/LIVING_WORLD_EVENTS.md) for full architecture and equations.
+
 ---
 
 ## What's New in Milestone 3 (Life Simulation Engine)

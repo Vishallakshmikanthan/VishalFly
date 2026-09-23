@@ -8,6 +8,7 @@ import { CognitiveConfig } from '../config/CognitiveConfig';
 
 export class ActionSelector {
   private config: CognitiveConfig;
+  private behaviorCooldowns: Map<string, number> = new Map();
 
   constructor(config: CognitiveConfig) {
     this.config = config;
@@ -15,6 +16,41 @@ export class ActionSelector {
 
   public updateConfig(config: Partial<CognitiveConfig>): void {
     this.config = { ...this.config, ...config };
+  }
+
+  /**
+   * Advances cooldown timers by delta simulated seconds.
+   */
+  public updateCooldowns(deltaSimSeconds: number): void {
+    if (deltaSimSeconds <= 0) return;
+    for (const [key, remaining] of Array.from(this.behaviorCooldowns.entries())) {
+      const next = remaining - deltaSimSeconds;
+      if (next <= 0) {
+        this.behaviorCooldowns.delete(key);
+      } else {
+        this.behaviorCooldowns.set(key, next);
+      }
+    }
+  }
+
+  public getActiveCooldowns(): Record<string, number> {
+    const res: Record<string, number> = {};
+    for (const [k, v] of this.behaviorCooldowns.entries()) {
+      res[k] = Math.round(v);
+    }
+    return res;
+  }
+
+  public resetCooldowns(): void {
+    this.behaviorCooldowns.clear();
+  }
+
+  public setCooldown(behaviorId: string, durationSimSeconds: number): void {
+    this.behaviorCooldowns.set(behaviorId, durationSimSeconds);
+  }
+
+  public isBehaviorOnCooldown(behaviorId: string): boolean {
+    return (this.behaviorCooldowns.get(behaviorId) ?? 0) > 0;
   }
 
   /**
@@ -149,6 +185,21 @@ export class ActionSelector {
     const isUrgentOverride = this.checkUrgentNeed(context, winningCandidate.id);
     const actionRequest = winningCandidate.createActionRequest(context);
 
+    // If switching behavior, apply a cooldown to previous behavior to prevent oscillation
+    if (activeBehaviorId && winningCandidate.id !== activeBehaviorId) {
+      this.behaviorCooldowns.set(activeBehaviorId, 120);
+    }
+
+    const decisionBreakdown = {
+      scheduleContextScore: Math.round(topEvaluation.baseUtility * topEvaluation.scheduleCompatibility),
+      needDriveScore: topEvaluation.needUrgencyBonus,
+      worldEventScore: topEvaluation.worldEventBonus ?? 0,
+      learnedValenceScore: topEvaluation.learnedValenceBonus ?? 0,
+      hysteresisScore: topEvaluation.continuityBonus - (topEvaluation.cooldownPenalty ?? 0),
+    };
+
+    const cooldownRemainingSeconds = this.behaviorCooldowns.get(winningCandidate.id) ?? 0;
+
     return {
       selectedCandidateId: winningCandidate.id,
       selectedCandidateName: winningCandidate.displayName,
@@ -159,6 +210,8 @@ export class ActionSelector {
       evaluations,
       rejectedCandidates,
       timestamp,
+      decisionBreakdown,
+      cooldownRemainingSeconds,
     };
   }
 

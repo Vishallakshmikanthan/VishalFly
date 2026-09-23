@@ -234,6 +234,40 @@ export class ActivityManager {
     return this.currentInstance?.state === 'travelling';
   }
 
+  /**
+   * Initiates a physical travel transition between locations without instant teleportation.
+   */
+  public initiateTravel(
+    targetLocation: string,
+    reason: string = `Travelling to ${targetLocation}`,
+    timestamp: string = 'Day 1 • 06:00',
+    dayNumber: number = 1
+  ): boolean {
+    if (this.currentLocationId === targetLocation || this.isTravelling()) {
+      return false;
+    }
+
+    if (this.currentInstance) {
+      this.currentInstance.state = 'travelling';
+      this.currentInstance.targetLocation = targetLocation;
+      this.travelElapsedSeconds = 0;
+    }
+
+    this.eventLogger.log({
+      timestamp,
+      dayNumber,
+      category: 'travel',
+      message: reason || `Travelling to ${targetLocation}`,
+      locationId: targetLocation,
+    });
+
+    if (this.callbacks.onLocationChangeRequest) {
+      this.callbacks.onLocationChangeRequest(targetLocation, reason);
+    }
+
+    return true;
+  }
+
   public getLifecycleState(): ActivityLifecycleState {
     return this.currentInstance ? this.currentInstance.state : 'pending';
   }

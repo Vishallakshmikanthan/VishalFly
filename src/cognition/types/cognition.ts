@@ -189,7 +189,7 @@ export interface MemoryRecord {
   simulatedMinutes: number;
   dayNumber: number;
   eventType: string; // e.g. 'lecture_completed', 'workout_finished', 'meal_completed', 'action_rejected'
-  category: 'behavior' | 'location' | 'activity' | 'distraction' | 'need_alert' | 'routine' | 'outcome';
+  category: 'behavior' | 'location' | 'activity' | 'distraction' | 'need_alert' | 'routine' | 'outcome' | 'world_event' | 'food_state';
   key: string;
   value: string;
   location: LocationId;
@@ -254,6 +254,9 @@ export interface CognitiveContext {
   projectState: ProjectState;
   assignmentState: AssignmentState;
   memory: MemoryRecord[];
+  worldEffects?: any;
+  learnedValences?: Record<string, number>;
+  activeCooldowns?: Record<string, number>;
 }
 
 /**
@@ -269,6 +272,9 @@ export interface BehaviorEvaluation {
   needUrgencyBonus: number;   // [0, 100]
   continuityBonus: number;    // [0, 50] (hysteresis)
   repetitionPenalty: number;  // [0, 50]
+  worldEventBonus?: number;   // [0, 40] bonus from active living world events
+  learnedValenceBonus?: number; // [-30, 30] bonus from Mushroom Body associative odor learning
+  cooldownPenalty?: number;   // [0, 50] penalty from behavior switching cooldown
   memoryScoreContribution?: number; // [-20, 20] from relevant memories
   adaptationScoreContribution?: number; // [-20, 20] bounded adaptation
   adaptationScoreDelta?: number; // alias for adaptation score adjustment
@@ -316,6 +322,14 @@ export interface ActionDecision {
   evaluations: BehaviorEvaluation[];
   rejectedCandidates: { candidateId: string; reason: string }[];
   timestamp: string;
+  decisionBreakdown?: {
+    scheduleContextScore: number;
+    needDriveScore: number;
+    worldEventScore: number;
+    learnedValenceScore: number;
+    hysteresisScore: number;
+  };
+  cooldownRemainingSeconds?: number;
 }
 
 /**

@@ -54,6 +54,8 @@ export interface CognitiveStepParams {
   currentWaypoint: string;
   deltaSimSeconds: number;
   forceEvaluate?: boolean;
+  worldEffects?: any;
+  learnedValences?: Record<string, number>;
 }
 
 export interface CognitiveStepResult {
@@ -248,6 +250,9 @@ export class CognitiveEngine {
       };
     }
 
+    // Update cooldown timers
+    this.selector.updateCooldowns(deltaSimSeconds);
+
     // 5. Build Cognitive Context
     const context: CognitiveContext = {
       perception,
@@ -259,6 +264,9 @@ export class CognitiveEngine {
       projectState,
       assignmentState,
       memory: this.memory.getActive(clock.currentMinutes),
+      worldEffects: params.worldEffects,
+      learnedValences: params.learnedValences,
+      activeCooldowns: this.selector.getActiveCooldowns(),
     };
 
     // 6. Behavior Integration & Utility Scoring (including bounded adaptation)

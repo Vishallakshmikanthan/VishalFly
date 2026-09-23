@@ -69,7 +69,8 @@ export type ActiveDashboardView =
   | 'timeline' 
   | 'analytics' 
   | 'replay' 
-  | 'settings';
+  | 'settings'
+  | 'living_world';
 
 export * from '../simulation/types/simulation';
 

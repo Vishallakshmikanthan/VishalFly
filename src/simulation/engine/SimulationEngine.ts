@@ -33,6 +33,13 @@ import { AnalyticsTracker } from '../analytics/AnalyticsTracker';
 import { AnalyticsReport } from '../analytics/AnalyticsTypes';
 import { LOCATIONS } from '../../navigation/locationGraph';
 import { LocationId } from '../../types';
+import { WorldEventSystem } from '../events/WorldEventSystem';
+import { 
+  WorldEventCategory, 
+  WorldEventTelemetry, 
+  AggregateWorldEffects, 
+  WorldEventEvaluationContext 
+} from '../events/WorldEventTypes';
 
 export type SimulationStateListener = (state: SimulationState) => void;
 
@@ -43,6 +50,10 @@ export class SimulationEngine {
   public activityManager: ActivityManager;
   public needsSystem: NeedsSystem;
   public eventLogger: EventLogger;
+
+  // Milestone 5 Living World Event System
+  public worldEventSystem: WorldEventSystem;
+  private activeWorldEffects: AggregateWorldEffects;
 
   // Milestone 4 Daily Life Systems
   public workoutSystem: WorkoutSystem;
@@ -149,6 +160,31 @@ export class SimulationEngine {
     this.replayEngine = new ReplayEngine(this.snapshotRecorder);
     this.analyticsTracker = new AnalyticsTracker();
 
+    // Initialize Milestone 5 Living World Event System
+    this.worldEventSystem = new WorldEventSystem(
+      this.eventLogger,
+      {
+        deterministicSeed: settings.worldEventSeed ?? 42,
+        isMasterEnabled: settings.enableLivingWorld ?? true,
+      },
+      undefined,
+      {
+        onInstantNeedDelta: (delta) => {
+          const cur = this.needsSystem.getState();
+          this.needsSystem.setState({
+            ...cur,
+            energy: Math.max(0, Math.min(100, cur.energy + (delta.energy ?? 0))),
+            hunger: Math.max(0, Math.min(100, cur.hunger + (delta.hunger ?? 0))),
+            sleepiness: Math.max(0, Math.min(100, cur.sleepiness + (delta.sleepiness ?? 0))),
+            fatigue: Math.max(0, Math.min(100, cur.fatigue + (delta.fatigue ?? 0))),
+            focus: Math.max(0, Math.min(100, cur.focus + (delta.focus ?? 0))),
+            socialNeed: Math.max(0, Math.min(100, cur.socialNeed + (delta.socialNeed ?? 0))),
+          });
+        },
+      }
+    );
+    this.activeWorldEffects = this.worldEventSystem.aggregateActiveEffects();
+
     this.lastDayNumber = this.clock.getState().dayNumber;
     this.lastDayType = this.clock.getState().dayType;
 
@@ -199,6 +235,18 @@ export class SimulationEngine {
       this.foodOrderSystem.reset();
       this.recordedSubsystemCompletions.clear();
     }
+
+    // 1b. Living World Event System Update
+    const worldContext: WorldEventEvaluationContext = {
+      clock: clockState,
+      currentLocationId: (this.activityManager.getCurrentLocation() || 'bedroom') as LocationId,
+      needs: this.needsSystem.getState(),
+      activeActivityId: this.activityManager.getCurrentInstance()?.definition.id,
+      isAutonomous: this.isAutonomous,
+      isTravelling: this.activityManager.isTravelling(),
+      hungerLevel: this.needsSystem.getState().hunger,
+    };
+    this.activeWorldEffects = this.worldEventSystem.update(deltaSimSec, worldContext);
 
     // 2. Schedule Planner & Activity Sync
     const activeEntry = this.planner.getActiveEntry(
@@ -556,10 +604,14 @@ export class SimulationEngine {
             this.laundrySystem.startLaundry(timestamp, clockState.dayNumber);
           }
           const ls = this.laundrySystem.update(deltaSimSec, timestamp, clockState.dayNumber);
-          defaultPose = 'laundry';
-          this.currentWaypoint = 'wardrobe';
+          defaultPose = ls.flyActivity || 'laundry';
+          if (ls.currentWaypoint) this.currentWaypoint = ls.currentWaypoint;
           progressVal = ls.progressPercent;
-          activeActionLabel = `Washing Laundry (${ls.progressPercent}%)`;
+          activeActionLabel = `Laundry: ${ls.stage.replace(/_/g, ' ')} (${ls.progressPercent}%)`;
+
+          if (ls.targetLocation && ls.targetLocation !== this.activityManager.getCurrentLocation() && !this.activityManager.isTravelling()) {
+            this.activityManager.initiateTravel(ls.targetLocation, `Moving to ${ls.targetLocation} for laundry`, timestamp, clockState.dayNumber);
+          }
 
           if (ls.isCompleted) {
             const laundryKey = `laundry_${clockState.dayNumber}_wash`;
@@ -585,14 +637,18 @@ export class SimulationEngine {
 
         // Balcony Clothes Drying
         case 'dry_clothes': {
-          if (this.laundrySystem.getState().stage !== 'drying') {
+          if (this.laundrySystem.getState().stage !== 'drying' && this.laundrySystem.getState().stage !== 'hanging_clothes') {
             this.laundrySystem.startDrying(timestamp, clockState.dayNumber);
           }
           const ls = this.laundrySystem.update(deltaSimSec, timestamp, clockState.dayNumber);
-          defaultPose = 'drying_clothes';
-          this.currentWaypoint = 'clothesline';
+          defaultPose = ls.flyActivity || 'drying_clothes';
+          if (ls.currentWaypoint) this.currentWaypoint = ls.currentWaypoint;
           progressVal = ls.progressPercent;
-          activeActionLabel = `Balcony Drying (${ls.progressPercent}%)`;
+          activeActionLabel = `Balcony Drying: ${ls.stage.replace(/_/g, ' ')} (${ls.progressPercent}%)`;
+
+          if (ls.targetLocation && ls.targetLocation !== this.activityManager.getCurrentLocation() && !this.activityManager.isTravelling()) {
+            this.activityManager.initiateTravel(ls.targetLocation, `Moving to ${ls.targetLocation} for clothes drying`, timestamp, clockState.dayNumber);
+          }
 
           if (ls.isCompleted) {
             const laundryKey = `laundry_${clockState.dayNumber}_drying`;
@@ -626,8 +682,8 @@ export class SimulationEngine {
           if (foRes.currentWaypoint) {
             this.currentWaypoint = foRes.currentWaypoint;
           }
-          if (foRes.targetLocation && foRes.targetLocation !== this.activityManager.getCurrentLocation()) {
-            this.activityManager.setCurrentLocation(foRes.targetLocation);
+          if (foRes.targetLocation && foRes.targetLocation !== this.activityManager.getCurrentLocation() && !this.activityManager.isTravelling()) {
+            this.activityManager.initiateTravel(foRes.targetLocation, `Walking to ${foRes.targetLocation} for food collection`, timestamp, clockState.dayNumber);
           }
           if (foRes.hungerDelta !== 0) {
             const currentNeeds = this.needsSystem.getState();
@@ -676,11 +732,27 @@ export class SimulationEngine {
       }
     }
 
-    // 5. Update Needs System Base Modifiers
-    if (currentInstance && deltaSimSec > 0) {
+    // 5. Update Needs System Base Modifiers & World Event Modifiers
+    if (deltaSimSec > 0) {
+      const baseMods = currentInstance ? currentInstance.definition.needsModifiers : {
+        energyPerHour: -1,
+        hungerPerHour: 3,
+        sleepinessPerHour: 2,
+        fatiguePerHour: 0,
+        focusPerHour: 0,
+        socialNeedPerHour: 1,
+      };
+      const combinedMods = {
+        energyPerHour: baseMods.energyPerHour + (this.activeWorldEffects?.needsDeltaPerHour?.energyPerHour ?? 0),
+        hungerPerHour: baseMods.hungerPerHour + (this.activeWorldEffects?.needsDeltaPerHour?.hungerPerHour ?? 0),
+        sleepinessPerHour: baseMods.sleepinessPerHour + (this.activeWorldEffects?.needsDeltaPerHour?.sleepinessPerHour ?? 0),
+        fatiguePerHour: baseMods.fatiguePerHour + (this.activeWorldEffects?.needsDeltaPerHour?.fatiguePerHour ?? 0),
+        focusPerHour: baseMods.focusPerHour + (this.activeWorldEffects?.needsDeltaPerHour?.focusPerHour ?? 0),
+        socialNeedPerHour: baseMods.socialNeedPerHour + (this.activeWorldEffects?.needsDeltaPerHour?.socialNeedPerHour ?? 0),
+      };
       this.needsSystem.update(
         deltaSimSec,
-        currentInstance.definition.needsModifiers,
+        combinedMods,
         timestamp,
         clockState.dayNumber
       );
@@ -709,6 +781,7 @@ export class SimulationEngine {
         laundryState: this.laundrySystem.getState(),
         currentWaypoint: this.currentWaypoint,
         deltaSimSeconds: deltaSimSec,
+        worldEffects: this.activeWorldEffects,
       });
     }
 
@@ -747,6 +820,7 @@ export class SimulationEngine {
       familyCallState: this.familyCallSystem.getState(),
       morningRoutineState: this.morningRoutineSystem.getState(),
       cognitive: this.cognitiveEngine.getInspectorData(currentInstance?.scheduleEntry.name || 'Idle'),
+      livingWorld: this.worldEventSystem.getTelemetry(),
     };
 
     // 9. Track Analytics & Record Historical Snapshot
@@ -1142,6 +1216,45 @@ export class SimulationEngine {
 
   public getSnapshotRecorder(): SnapshotRecorder {
     return this.snapshotRecorder;
+  }
+
+  // Milestone 5 Living World Public Methods
+  public triggerWorldEvent(eventId: string): boolean {
+    const worldContext: WorldEventEvaluationContext = {
+      clock: this.clock.getState(),
+      currentLocationId: (this.activityManager.getCurrentLocation() || 'bedroom') as LocationId,
+      needs: this.needsSystem.getState(),
+      activeActivityId: this.activityManager.getCurrentInstance()?.definition.id,
+      isAutonomous: this.isAutonomous,
+      isTravelling: this.activityManager.isTravelling(),
+      hungerLevel: this.needsSystem.getState().hunger,
+    };
+    const res = this.worldEventSystem.triggerEvent(eventId, worldContext);
+    if (res) {
+      this.step(0);
+    }
+    return res;
+  }
+
+  public setWorldEventCategoryEnabled(category: WorldEventCategory, enabled: boolean): void {
+    this.worldEventSystem.setCategoryEnabled(category, enabled);
+  }
+
+  public setWorldEventsMasterEnabled(enabled: boolean): void {
+    this.worldEventSystem.setMasterEnabled(enabled);
+  }
+
+  public setWorldEventSeed(seed: number): void {
+    this.worldEventSystem.setSeed(seed);
+  }
+
+  public resetWorldEvents(seed?: number): void {
+    this.worldEventSystem.reset(seed);
+    this.step(0);
+  }
+
+  public getWorldEventTelemetry(): WorldEventTelemetry {
+    return this.worldEventSystem.getTelemetry();
   }
 
   public getState(): SimulationState {

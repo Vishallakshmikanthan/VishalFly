@@ -160,4 +160,15 @@ export class OlfactoryEnvironment {
       sourceName: 'No Odor Source',
     };
   }
+
+  public modifySourceIntensity(sourceId: string, delta: number): void {
+    const source = this.sources.find((s) => s.id === sourceId);
+    if (source) {
+      source.baseIntensity = Math.max(0.0, Math.min(1.0, source.baseIntensity + delta));
+    }
+  }
+
+  public getSources(): OdorSourceDefinition[] {
+    return this.sources.map((s) => ({ ...s }));
+  }
 }

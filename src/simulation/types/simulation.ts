@@ -1,5 +1,6 @@
 import { FlyActivity, Vector3Tuple, RoomBounds, CameraPreset, Landmark } from '../../types';
 import type { CognitiveInspectorData } from '../../cognition/debug/CognitiveInspectorState';
+import type { WorldEventTelemetry } from '../events/WorldEventTypes';
 
 export type DayOfWeek = 
   | 'Monday' 
@@ -185,7 +186,16 @@ export interface AssignmentState {
   isWorking: boolean;
 }
 
-export type LaundryStage = 'idle' | 'washing' | 'drying' | 'completed';
+export type LaundryStage = 
+  | 'idle' 
+  | 'preparing_clothes'
+  | 'washing' 
+  | 'carrying_to_balcony'
+  | 'hanging_clothes'
+  | 'drying' 
+  | 'collecting_clothes'
+  | 'returning_to_room'
+  | 'completed';
 
 export interface LaundryState {
   stage: LaundryStage;
@@ -301,6 +311,9 @@ export interface SimulationSettings {
   travelDurationSeconds: number;        // travel duration in sim seconds
   maxEventsInMemory: number;
   collegeBehaviorIntervalMinutes: number;
+  enableLivingWorld?: boolean;
+  enableWeekendEvents?: boolean;
+  worldEventSeed?: number;
 }
 
 export interface SimulationState {
@@ -324,4 +337,5 @@ export interface SimulationState {
   familyCallState: FamilyCallState;
   morningRoutineState: MorningRoutineState;
   cognitive?: CognitiveInspectorData;
+  livingWorld?: WorldEventTelemetry;
 }

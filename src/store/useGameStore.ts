@@ -37,6 +37,7 @@ import { AnalyticsReport } from '../simulation/analytics/AnalyticsTypes';
 import { SimulationSettings } from '../simulation/types/simulation';
 import { ControllerMode, NeuralStateSnapshot } from '../cognition/connectome/types';
 import { ConnectomeFlyController } from '../cognition/connectome/controller/ConnectomeFlyController';
+import { WorldEventTelemetry, WorldEventCategory } from '../simulation/events/WorldEventTypes';
 
 export const connectomeFlyController = new ConnectomeFlyController();
 
@@ -44,6 +45,14 @@ interface GameState {
   // Active Location
   currentLocation: LocationId;
   transitionState: TransitionState;
+
+  // Milestone 5 Living World Event State
+  livingWorldTelemetry: WorldEventTelemetry | null;
+  triggerWorldEvent: (eventId: string) => boolean;
+  setWorldEventCategoryEnabled: (category: WorldEventCategory, enabled: boolean) => void;
+  setWorldEventsMasterEnabled: (enabled: boolean) => void;
+  setWorldEventSeed: (seed: number) => void;
+  resetWorldEvents: (seed?: number) => void;
 
   // Fly state
   flyPosition: Vector3Tuple;
@@ -244,6 +253,9 @@ export const useGameStore = create<GameState>((set, get) => {
     resetLearningValence: () => connectomeFlyController.resetLearning(),
     resetFoodSurfaces: () => connectomeFlyController.resetFoodSurfaces(),
 
+    // Milestone 5 Living World Telemetry
+    livingWorldTelemetry: simulationEngine.getWorldEventTelemetry(),
+
     // Milestone 8 View Routing, Replay, Analytics & Settings
     activeView: 'simulation',
     isReplayMode: false,
@@ -402,6 +414,7 @@ export const useGameStore = create<GameState>((set, get) => {
         morningRoutineState: simState.morningRoutineState,
         cognitiveInspectorData: simState.cognitive || simulationEngine.getCognitiveInspectorState(),
         isCognitionEnabled: simulationEngine.cognitiveEngine.getIsCognitionEnabled(),
+        livingWorldTelemetry: simState.livingWorld || simulationEngine.getWorldEventTelemetry(),
       });
     },
 
@@ -504,7 +517,31 @@ export const useGameStore = create<GameState>((set, get) => {
       set({
         analyticsReport: simulationEngine.getAnalyticsReport(),
         replayState: simulationEngine.replayEngine.getPlaybackState(),
+        livingWorldTelemetry: simulationEngine.getWorldEventTelemetry(),
       });
+    },
+
+    // Milestone 5 Living World Actions
+    triggerWorldEvent: (eventId: string) => {
+      const ok = simulationEngine.triggerWorldEvent(eventId);
+      get().syncFromSimulation(simulationEngine.getState());
+      return ok;
+    },
+    setWorldEventCategoryEnabled: (category: WorldEventCategory, enabled: boolean) => {
+      simulationEngine.setWorldEventCategoryEnabled(category, enabled);
+      set({ livingWorldTelemetry: simulationEngine.getWorldEventTelemetry() });
+    },
+    setWorldEventsMasterEnabled: (enabled: boolean) => {
+      simulationEngine.setWorldEventsMasterEnabled(enabled);
+      set({ livingWorldTelemetry: simulationEngine.getWorldEventTelemetry() });
+    },
+    setWorldEventSeed: (seed: number) => {
+      simulationEngine.setWorldEventSeed(seed);
+      set({ livingWorldTelemetry: simulationEngine.getWorldEventTelemetry() });
+    },
+    resetWorldEvents: (seed?: number) => {
+      simulationEngine.resetWorldEvents(seed);
+      set({ livingWorldTelemetry: simulationEngine.getWorldEventTelemetry() });
     },
 
     // Milestone 8 Actions

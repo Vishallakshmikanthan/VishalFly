@@ -8,7 +8,8 @@ import {
   History, 
   Film, 
   Settings, 
-  Eye 
+  Eye,
+  Globe 
 } from 'lucide-react';
 import { useGameStore } from '../../store/useGameStore';
 import { ActiveDashboardView } from '../../types';
@@ -33,6 +34,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
   const navItems: { id: ActiveDashboardView; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
     { id: 'simulation', label: '3D Simulation', icon: Eye },
+    { id: 'living_world', label: 'Living World', icon: Globe },
     { id: 'timeline', label: 'Timeline & Events', icon: History },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'replay', label: 'Replay Studio', icon: Film },

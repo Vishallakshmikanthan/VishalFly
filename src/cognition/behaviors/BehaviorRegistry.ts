@@ -600,5 +600,153 @@ export class BehaviorRegistry {
         actionLabel: 'Relaxing in PG Room',
       }),
     });
+
+    // 14. Milestone 5: Foraging & Autonomous Food Seeking
+    this.register({
+      id: 'forage_food_seeking',
+      displayName: 'Autonomous Food Foraging',
+      description: 'Seek out remembered, freshly refreshed, or smelled food surfaces driven by hunger and odor valence.',
+      isApplicable: (ctx: CognitiveContext) => {
+        if (ctx.perception.available.isTravelling) {
+          return { eligible: false, reason: 'In transit; cannot begin foraging.' };
+        }
+        const hunger = ctx.perception.available.needs.hunger;
+        const hasFoodEvent = !!ctx.worldEffects?.activityUtilityBonuses?.forage_food_seeking;
+        const hasPositiveOdor = (ctx.learnedValences?.['food_odor'] ?? 0) > 0.2;
+        if (hunger < 25 && !hasFoodEvent && !hasPositiveOdor) {
+          return { eligible: false, reason: 'Hunger low and no active food cues present.' };
+        }
+        return { eligible: true };
+      },
+      evaluateUtility: (ctx: CognitiveContext): BehaviorEvaluation => {
+        const hunger = ctx.perception.available.needs.hunger;
+        const base = 40;
+        const needUrgencyBonus = Math.round(hunger * 0.5);
+        const eventBonusMultiplier = ctx.worldEffects?.activityUtilityBonuses?.forage_food_seeking || 1.0;
+        const worldEventBonus = Math.round((eventBonusMultiplier - 1.0) * 35);
+        const valence = ctx.learnedValences?.['food_odor'] ?? 0.0;
+        const learnedValenceBonus = Math.round(valence * 20);
+
+        // Schedule compatibility: Higher during meals or free time, moderate during study
+        const actId = ctx.activeScheduleEntry?.activityId;
+        const isMealSchedule = actId === 'lunch' || actId === 'dinner' || actId === 'midnight_food_order';
+        const scheduleCompatibility = isMealSchedule ? 1.0 : hunger > 75 ? 0.8 : 0.5;
+
+        const cooldownPenalty = (ctx.activeCooldowns?.['forage_food_seeking'] ?? 0) > 0 ? 30 : 0;
+        const finalScore = Math.max(5, Math.min(100, Math.round(
+          base * scheduleCompatibility + needUrgencyBonus + worldEventBonus + learnedValenceBonus - cooldownPenalty
+        )));
+
+        return {
+          candidateId: 'forage_food_seeking',
+          candidateName: 'Autonomous Food Foraging',
+          isEligible: true,
+          baseUtility: base,
+          scheduleCompatibility,
+          needUrgencyBonus,
+          continuityBonus: 0,
+          repetitionPenalty: 0,
+          worldEventBonus,
+          learnedValenceBonus,
+          cooldownPenalty,
+          finalScore,
+          explanation: `Foraging driven by hunger (${hunger}%), world event bonus (+${worldEventBonus}), and odor valence (+${learnedValenceBonus}).`,
+        };
+      },
+      createActionRequest: (ctx: CognitiveContext): ActionRequest => {
+        const currentLoc = ctx.perception.available.currentLocationId;
+        const isDining = currentLoc === 'dining';
+        const targetWaypoint = isDining ? 'dining_table_seat' : 'desk';
+        return {
+          type: isDining ? 'CONTINUE_ACTIVITY' : 'TRAVEL',
+          targetLocation: isDining ? 'dining' : 'bedroom',
+          targetWaypoint,
+          targetFlyActivity: 'flying',
+          actionLabel: 'Foraging for Food Sources',
+        };
+      },
+    });
+
+    // 15. Milestone 5: Response to Sudden Environmental Interruptions
+    this.register({
+      id: 'respond_to_interruption',
+      displayName: 'Respond to Environmental Disturbance',
+      description: 'React swiftly to sudden drafts, door movements, or vibrations by relocating to a calmer perch.',
+      isApplicable: (ctx: CognitiveContext) => {
+        if (ctx.perception.available.isTravelling) {
+          return { eligible: false, reason: 'Already in transit.' };
+        }
+        if (!ctx.worldEffects?.activeInterruptBehavior && !ctx.worldEffects?.activityUtilityBonuses?.respond_to_interruption) {
+          return { eligible: false, reason: 'No active environmental disturbance.' };
+        }
+        return { eligible: true };
+      },
+      evaluateUtility: (_ctx: CognitiveContext): BehaviorEvaluation => {
+        const base = 85;
+        const worldEventBonus = 15;
+        const finalScore = Math.min(100, base + worldEventBonus);
+
+        return {
+          candidateId: 'respond_to_interruption',
+          candidateName: 'Respond to Environmental Disturbance',
+          isEligible: true,
+          baseUtility: base,
+          scheduleCompatibility: 1.0,
+          needUrgencyBonus: 10,
+          continuityBonus: 0,
+          repetitionPenalty: 0,
+          worldEventBonus,
+          finalScore,
+          explanation: 'Sudden mechanical vibration or airflow draft detected; initiating startle relocation.',
+        };
+      },
+      createActionRequest: (ctx: CognitiveContext): ActionRequest => ({
+        type: 'CONTINUE_ACTIVITY',
+        targetWaypoint: ctx.worldEffects?.suggestedWaypoint || 'lamp',
+        targetFlyActivity: 'flying',
+        actionLabel: 'Relocating from Disturbance',
+      }),
+    });
+
+    // 16. Milestone 5: Ambient Creature & Environment Observation
+    this.register({
+      id: 'observe_ambient_stimulus',
+      displayName: 'Observe Ambient Creature or Scene',
+      description: 'Orient toward visiting ambient creatures or golden hour sunbeams.',
+      isApplicable: (ctx: CognitiveContext) => {
+        const hasCreatures = (ctx.worldEffects?.ambientCreatures?.length ?? 0) > 0;
+        const hasWaypoint = !!ctx.worldEffects?.suggestedWaypoint;
+        if (!hasCreatures && !hasWaypoint) {
+          return { eligible: false, reason: 'No active ambient stimulus present.' };
+        }
+        return { eligible: true };
+      },
+      evaluateUtility: (ctx: CognitiveContext): BehaviorEvaluation => {
+        const base = 45;
+        const distraction = ctx.worldEffects?.attentionDistraction ?? 0.2;
+        const worldEventBonus = Math.round(distraction * 30);
+        const finalScore = Math.min(80, base + worldEventBonus);
+
+        return {
+          candidateId: 'observe_ambient_stimulus',
+          candidateName: 'Observe Ambient Creature or Scene',
+          isEligible: true,
+          baseUtility: base,
+          scheduleCompatibility: 0.7,
+          needUrgencyBonus: 0,
+          continuityBonus: 0,
+          repetitionPenalty: 0,
+          worldEventBonus,
+          finalScore,
+          explanation: `Inquisitive orientation driven by ambient creature or light stimulus (${Math.round(distraction * 100)}% salience).`,
+        };
+      },
+      createActionRequest: (ctx: CognitiveContext): ActionRequest => ({
+        type: 'CONTINUE_ACTIVITY',
+        targetWaypoint: ctx.worldEffects?.suggestedWaypoint || 'window',
+        targetFlyActivity: 'hovering',
+        actionLabel: 'Observing Ambient Scene',
+      }),
+    });
   }
 }

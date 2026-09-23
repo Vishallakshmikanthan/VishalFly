@@ -10,6 +10,7 @@ import { TimelineView } from './components/ui/TimelineView';
 import { AnalyticsView } from './components/ui/AnalyticsView';
 import { ReplayStudioView } from './components/ui/ReplayStudioView';
 import { SettingsView } from './components/ui/SettingsView';
+import { LivingWorldView } from './components/ui/LivingWorldView';
 import { DevPanel } from './components/ui/DevPanel';
 import { CognitiveInspector } from './components/ui/CognitiveInspector';
 import { useGameStore } from './store/useGameStore';
@@ -57,6 +58,13 @@ export const App: React.FC = () => {
             <HUD />
             <ControlsGuide />
             <ViewControls />
+          </div>
+        )}
+
+        {/* View 1.5: Living World Dashboard */}
+        {activeView === 'living_world' && (
+          <div className="w-full h-full bg-[#080a0f]/85 backdrop-blur-xl pointer-events-auto overflow-hidden animate-in fade-in duration-200">
+            <LivingWorldView />
           </div>
         )}
 
