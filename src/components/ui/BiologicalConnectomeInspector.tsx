@@ -17,12 +17,18 @@ import {
   Compass,
   Navigation,
   Wind,
+  Utensils,
+  GraduationCap,
+  Sparkles,
+  RotateCcw,
 } from 'lucide-react';
 import { useGameStore } from '../../store/useGameStore';
 import { ControllerMode } from '../../cognition/connectome/types';
 import loomingCircuitData from '../../cognition/connectome/data/looming_escape_circuit.json';
 import compassCircuitData from '../../cognition/connectome/data/compass_steering_circuit.json';
 import olfactoryCircuitData from '../../cognition/connectome/data/olfactory_food_circuit.json';
+import gustatoryCircuitData from '../../cognition/connectome/data/gustatory_feeding_circuit.json';
+import learningCircuitData from '../../cognition/connectome/data/mushroom_body_learning_circuit.json';
 import manifestData from '../../cognition/connectome/data/male_cns_manifest.json';
 
 export const BiologicalConnectomeInspector: React.FC = () => {
@@ -30,17 +36,26 @@ export const BiologicalConnectomeInspector: React.FC = () => {
   const setControllerMode = useGameStore((state) => state.setControllerMode);
   const connectomeSnapshot = useGameStore((state) => state.connectomeSnapshot);
   const triggerConnectomeThreat = useGameStore((state) => state.triggerConnectomeThreat);
+  const pairOdorReward = useGameStore((state) => state.pairOdorReward);
+  const resetLearningValence = useGameStore((state) => state.resetLearningValence);
+  const resetFoodSurfaces = useGameStore((state) => state.resetFoodSurfaces);
 
-  const [selectedSubTab, setSelectedSubTab] = useState<'activity' | 'navigation' | 'olfactory' | 'circuit' | 'provenance' | 'parameters'>('activity');
+  const [selectedSubTab, setSelectedSubTab] = useState<
+    'activity' | 'navigation' | 'olfactory' | 'gustatory' | 'learning' | 'circuit' | 'provenance' | 'parameters'
+  >('activity');
 
   const neurons = loomingCircuitData.neurons;
   const synapses = loomingCircuitData.synapses;
   const stats = loomingCircuitData.statistics;
   const compassNeurons = compassCircuitData.neurons;
   const olfactoryNeurons = olfactoryCircuitData.neurons;
+  const gustatoryNeurons = gustatoryCircuitData.neurons;
+  const learningNeurons = learningCircuitData.neurons;
   const ccTelemetry = connectomeSnapshot?.centralComplex;
   const delta7Telemetry = ccTelemetry?.delta7;
   const olfactoryTelemetry = connectomeSnapshot?.olfactory;
+  const gustatoryTelemetry = connectomeSnapshot?.gustatory;
+  const learningTelemetry = connectomeSnapshot?.learning;
 
   const motorOutputs = connectomeSnapshot?.motorOutputs;
   const isEscapeActive = motorOutputs?.dnEscapeSpike || (motorOutputs?.dnEscapeRate ?? 0) > 18.0;
@@ -69,6 +84,14 @@ export const BiologicalConnectomeInspector: React.FC = () => {
           text: 'text-cyan-300',
           border: 'border-cyan-500/40',
           name: 'Glu (Inhibitory in CNS)',
+        };
+      case 'dopamine':
+      case 'da':
+        return {
+          bg: 'bg-amber-500/20',
+          text: 'text-amber-300',
+          border: 'border-amber-500/40',
+          name: 'DA (Neuromodulator)',
         };
       default:
         return {
@@ -168,6 +191,8 @@ export const BiologicalConnectomeInspector: React.FC = () => {
           { id: 'activity', label: `Looming Escape (${neurons.length} Neurons)`, icon: Activity },
           { id: 'navigation', label: `Central Complex Steering (${compassNeurons.length} Neurons)`, icon: Compass },
           { id: 'olfactory', label: `Olfactory Chemotaxis (${olfactoryNeurons.length} Neurons)`, icon: Wind },
+          { id: 'gustatory', label: `Gustatory Feeding (${gustatoryNeurons.length} Neurons)`, icon: Utensils },
+          { id: 'learning', label: `Associative Learning (${learningNeurons.length} Neurons)`, icon: GraduationCap },
           { id: 'circuit', label: `Circuit Wiring (${synapses.length} Synapses)`, icon: Layers },
           { id: 'parameters', label: 'Model Parameters', icon: Cpu },
           { id: 'provenance', label: 'Biological Provenance', icon: ShieldCheck },
@@ -638,6 +663,562 @@ export const BiologicalConnectomeInspector: React.FC = () => {
         </div>
       )}
 
+      {/* SUBTAB: GUSTATORY FEEDING & PROBOSCIS EXTENSION */}
+      {selectedSubTab === 'gustatory' && (
+        <div className="flex flex-col gap-4 font-sans text-xs">
+          {/* Top Status Cards */}
+          <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono">
+            {/* 1. Contact Sensing & Surface State */}
+            <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/60 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-slate-400 uppercase">Physical Contact State</span>
+                  <span className="text-[9px] font-semibold text-amber-300 border border-amber-500/40 bg-amber-500/10 px-1 rounded">
+                    [SYNTHETIC: d &le; 0.18m]
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <span
+                    className={`inline-block w-2.5 h-2.5 rounded-full ${
+                      gustatoryTelemetry?.contactState === 'contact_detected'
+                        ? 'bg-emerald-400 animate-ping'
+                        : 'bg-slate-600'
+                    }`}
+                  />
+                  <strong className="text-white text-xs block truncate">
+                    {gustatoryTelemetry?.foodSurfaceName || 'Airborne (No Contact)'}
+                  </strong>
+                </div>
+                <span className="text-[10px] text-cyan-300 block mt-1">
+                  Status: {gustatoryTelemetry?.contactState ?? 'airborne'}
+                </span>
+              </div>
+              <div className="mt-3">
+                <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                  <span>Food Remaining on Surface:</span>
+                  <span className="text-emerald-400 font-bold">
+                    {Math.round(gustatoryTelemetry?.foodRemaining ?? 100)}%
+                  </span>
+                </div>
+                <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all"
+                    style={{ width: `${Math.round(gustatoryTelemetry?.foodRemaining ?? 100)}%` }}
+                  />
+                </div>
+                <button
+                  onClick={resetFoodSurfaces}
+                  className="mt-2.5 w-full px-2 py-1 bg-slate-700/60 hover:bg-slate-600/80 text-slate-200 text-[10px] rounded border border-slate-600 flex items-center justify-center gap-1 transition-colors"
+                >
+                  <RotateCcw className="w-3 h-3 text-slate-300" />
+                  Replenish Food Surfaces
+                </button>
+              </div>
+            </div>
+
+            {/* 2. Tastant Valence & Stimulus */}
+            <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/60 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-slate-400 uppercase">Tastant Category &amp; Strength</span>
+                  <span className="text-[9px] font-semibold text-emerald-300 border border-emerald-500/40 bg-emerald-500/10 px-1 rounded">
+                    [MALE-CNS v1.0 GRN]
+                  </span>
+                </div>
+                <div className="mt-2">
+                  <span
+                    className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border inline-block ${
+                      gustatoryTelemetry?.tastant === 'sucrose'
+                        ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+                        : gustatoryTelemetry?.tastant === 'bitter'
+                        ? 'bg-rose-500/20 border-rose-500/40 text-rose-300'
+                        : 'bg-slate-700/40 border-slate-600 text-slate-400'
+                    }`}
+                  >
+                    {gustatoryTelemetry?.tastant === 'sucrose'
+                      ? 'Sucrose (Attractive Nutrient)'
+                      : gustatoryTelemetry?.tastant === 'bitter'
+                      ? 'Bitter (Aversive Toxicant)'
+                      : 'None (Clean Substrate)'}
+                  </span>
+                </div>
+                <span className="text-[10px] text-slate-400 font-sans block mt-1.5">
+                  Tarsal &amp; labellar receptor inputs activate claw_tpGRN and dorsal_tpGRN pathways.
+                </span>
+              </div>
+              <div className="mt-2">
+                <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                  <span>Stimulus Intensity:</span>
+                  <span className="text-cyan-400">
+                    {Math.round((gustatoryTelemetry?.stimulusStrength ?? 0) * 100)}%
+                  </span>
+                </div>
+                <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-blue-500 to-emerald-400 transition-all"
+                    style={{ width: `${Math.round((gustatoryTelemetry?.stimulusStrength ?? 0) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Proboscis Motor Output & Feeding Intake */}
+            <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/60 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-slate-400 uppercase">Proboscis Motor (MN9) &amp; Intake</span>
+                  <span className="text-[9px] font-semibold text-cyan-300 border border-cyan-500/40 bg-cyan-500/10 px-1 rounded">
+                    [PER REFLEX &amp; INTAKE]
+                  </span>
+                </div>
+                <div className="mt-2 flex items-baseline justify-between">
+                  <span className="text-xs text-slate-300">State:</span>
+                  <strong className="text-amber-400 uppercase text-xs">
+                    {gustatoryTelemetry?.feedingState ?? 'approaching'}
+                  </strong>
+                </div>
+                {gustatoryTelemetry?.interruptionReason && (
+                  <span className="text-[10px] text-rose-400 block font-semibold mt-0.5">
+                    Interrupted: {gustatoryTelemetry.interruptionReason}
+                  </span>
+                )}
+                <span className="text-[10px] text-slate-400 font-sans block mt-1">
+                  Intake Rate: <strong className="text-emerald-300 font-mono">{gustatoryTelemetry?.intakeRate?.toFixed(2) ?? '0.00'}</strong> units/s (Gradual hunger reduction)
+                </span>
+              </div>
+              <div className="mt-2">
+                <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                  <span>Proboscis Extension:</span>
+                  <span className="text-amber-300 font-bold">
+                    {Math.round((gustatoryTelemetry?.proboscisExtension ?? 0) * 100)}%
+                  </span>
+                </div>
+                <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-amber-500 to-emerald-400 transition-all"
+                    style={{ width: `${Math.round((gustatoryTelemetry?.proboscisExtension ?? 0) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Biological Neurons Table */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-white text-xs uppercase tracking-wider font-mono flex items-center gap-1.5">
+                <Utensils className="w-4 h-4 text-emerald-400" />
+                Gustatory Receptor &amp; Proboscis Motor Circuit (MaleCNS v1.0 Biological Grounding)
+              </span>
+              <span className="text-[11px] text-slate-400 font-mono">
+                claw_tpGRN (2) + dorsal_tpGRN (1) &rarr; MN9 Proboscis Motor (2)
+              </span>
+            </div>
+
+            <div className="overflow-x-auto rounded-xl border border-slate-800">
+              <table className="w-full text-left text-xs font-mono">
+                <thead className="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-800">
+                  <tr>
+                    <th className="p-2.5">Neuron ID</th>
+                    <th className="p-2.5">Type &amp; Side</th>
+                    <th className="p-2.5">Superclass</th>
+                    <th className="p-2.5">Neurotransmitter</th>
+                    <th className="p-2.5">Membrane Potential (mV)</th>
+                    <th className="p-2.5">Firing Rate</th>
+                    <th className="p-2.5 text-right">Spike</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {gustatoryNeurons.map((neuron) => {
+                    const vm = connectomeSnapshot?.potentials?.[neuron.bodyId] ?? -60.0;
+                    const rate = connectomeSnapshot?.firingRates?.[neuron.bodyId] ?? 0.0;
+                    const hasSpiked = connectomeSnapshot?.recentSpikes?.includes(neuron.bodyId) ?? false;
+                    const ntStyle = getNTColor(neuron.neurotransmitter);
+                    const vmPercent = Math.min(100, Math.max(0, ((vm + 75) / 30) * 100));
+
+                    return (
+                      <tr
+                        key={neuron.bodyId}
+                        className={`hover:bg-slate-800/40 transition-colors ${
+                          hasSpiked ? 'bg-emerald-500/20 font-bold text-white' : 'text-slate-300'
+                        }`}
+                      >
+                        <td className="p-2.5 text-slate-400">{neuron.bodyId}</td>
+                        <td className="p-2.5 font-bold text-white">
+                          <span>{neuron.type}</span>
+                          <span className="text-[10px] text-slate-400 font-normal ml-1">({neuron.instance})</span>
+                        </td>
+                        <td className="p-2.5 text-slate-400 font-sans text-[11px] capitalize">
+                          {neuron.superclass.replace(/_/g, ' ')}
+                        </td>
+                        <td className="p-2.5">
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] border ${ntStyle.bg} ${ntStyle.text} ${ntStyle.border}`}>
+                            {ntStyle.name}
+                          </span>
+                        </td>
+                        <td className="p-2.5 w-44">
+                          <div className="flex items-center gap-2">
+                            <span className="w-12 text-right">{vm.toFixed(1)}</span>
+                            <div className="flex-1 bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all duration-150"
+                                style={{ width: `${vmPercent}%` }}
+                              />
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-2.5">
+                          <span className={rate > 5 ? 'text-amber-400 font-bold' : 'text-slate-400'}>
+                            {rate.toFixed(1)} Hz
+                          </span>
+                        </td>
+                        <td className="p-2.5 text-right">
+                          <span
+                            className={`inline-block w-2.5 h-2.5 rounded-full transition-transform ${
+                              hasSpiked
+                                ? 'bg-emerald-400 scale-125 shadow-sm shadow-emerald-400 animate-ping'
+                                : 'bg-slate-700'
+                            }`}
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Model Specification & Scientific Integrity Card */}
+          <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-300 space-y-2">
+            <div className="flex items-center gap-2 font-bold text-slate-200">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span>Gustatory &amp; Proboscis Extension Parameter Classification</span>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
+              <strong>Measured:</strong> Gustatory receptor neuron bodies (claw_tpGRN 146756, 158200; dorsal_tpGRN 129802) and proboscis motor neuron 9 bodies (MN9 10331, 16949) with consensus cholinergic identity (ACh) verified in Janelia MaleCNS v1.0.<br />
+              <strong>Derived / Calibrated:</strong> Proboscis extension length derived from MN9 firing rate (0.0 to 1.0) and gradual nutrient intake rate (3.50 units/s hunger depletion).<br />
+              <strong>Synthetic / Modeled:</strong> Physical food surface contact tolerance (d &le; 0.18m) and tastant concentration fields. No teleportation or waypoint-snapping is used.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* SUBTAB: MUSHROOM BODY ASSOCIATIVE ODOR LEARNING */}
+      {selectedSubTab === 'learning' && (
+        <div className="flex flex-col gap-4 font-sans text-xs">
+          {/* Top Status Cards */}
+          <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono">
+            {/* 1. Conditioned Odor Cue & Kenyon Cells */}
+            <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/60 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-slate-400 uppercase">Conditioned Stimulus (CS)</span>
+                  <span className="text-[9px] font-semibold text-cyan-300 border border-cyan-500/40 bg-cyan-500/10 px-1 rounded">
+                    [KENYON CELLS (KC)]
+                  </span>
+                </div>
+                <strong className="text-white text-xs block mt-2 truncate">
+                  {learningTelemetry?.activeOdorCue ?? 'No Active Odor Cue'}
+                </strong>
+                <span className="text-[10px] text-slate-400 font-sans block mt-1">
+                  Sparse Kenyon cell ensemble (KCg-m 14292, KCab-s 11862) encodes odor identity.
+                </span>
+              </div>
+              <div className="mt-2">
+                <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                  <span>KC Population Activation:</span>
+                  <span className="text-cyan-400">
+                    {Math.round((learningTelemetry?.kcActivation ?? 0) * 100)}%
+                  </span>
+                </div>
+                <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-cyan-500 to-blue-400 transition-all"
+                    style={{ width: `${Math.round((learningTelemetry?.kcActivation ?? 0) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Dopaminergic Reinforcement (US) */}
+            <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/60 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-slate-400 uppercase">Dopaminergic Outcome (US)</span>
+                  <span className="text-[9px] font-semibold text-amber-300 border border-amber-500/40 bg-amber-500/10 px-1 rounded">
+                    [PAM / PPL1 REWARD]
+                  </span>
+                </div>
+                <div className="mt-2">
+                  <span
+                    className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border inline-block ${
+                      learningTelemetry?.unconditionedStimulus === 'sucrose_reward'
+                        ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
+                        : learningTelemetry?.unconditionedStimulus === 'bitter_punishment'
+                        ? 'bg-rose-500/20 border-rose-500/40 text-rose-300'
+                        : 'bg-slate-700/40 border-slate-600 text-slate-400'
+                    }`}
+                  >
+                    {learningTelemetry?.unconditionedStimulus === 'sucrose_reward'
+                      ? 'PAM Dopamine Reward (+1.0)'
+                      : learningTelemetry?.unconditionedStimulus === 'bitter_punishment'
+                      ? 'PPL1 Aversive Punishment (-1.0)'
+                      : 'Baseline / Neutral (0.0)'}
+                  </span>
+                </div>
+                <span className="text-[10px] text-slate-400 font-sans block mt-1.5">
+                  PAM04 (37845) &amp; PAM10 (28434) release dopamine to depress avoidance or facilitate approach.
+                </span>
+              </div>
+              <div className="mt-2">
+                <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                  <span>US Signal Strength:</span>
+                  <span className="text-amber-400">
+                    {(learningTelemetry?.rewardSignal ?? 0).toFixed(2)}
+                  </span>
+                </div>
+                <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-rose-500 via-slate-600 to-amber-400 transition-all"
+                    style={{
+                      width: `${Math.round((((learningTelemetry?.rewardSignal ?? 0) + 1.0) / 2.0) * 100)}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 3. MBON Learned Valence & Decision Impact */}
+            <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/60 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-slate-400 uppercase">MBON Learned Valence</span>
+                  <span className="text-[9px] font-semibold text-emerald-300 border border-emerald-500/40 bg-emerald-500/10 px-1 rounded">
+                    [BOUNDED: [-1, +1]]
+                  </span>
+                </div>
+                <div className="mt-2 flex items-baseline justify-between">
+                  <span className="text-xs text-slate-300">Valence:</span>
+                  <strong
+                    className={`text-sm ${
+                      (learningTelemetry?.mbonValence ?? 0) > 0.05
+                        ? 'text-emerald-300'
+                        : (learningTelemetry?.mbonValence ?? 0) < -0.05
+                        ? 'text-rose-300'
+                        : 'text-slate-300'
+                    }`}
+                  >
+                    {(learningTelemetry?.mbonValence ?? 0) > 0 ? '+' : ''}
+                    {(learningTelemetry?.mbonValence ?? 0).toFixed(2)}
+                  </strong>
+                </div>
+                <span className="text-[10px] text-slate-400 font-sans block mt-1">
+                  {(learningTelemetry?.mbonValence ?? 0) > 0.1
+                    ? 'Learned Attraction: Chemotaxis attraction boosted toward this odor.'
+                    : (learningTelemetry?.mbonValence ?? 0) < -0.2
+                    ? 'Learned Aversion: Chemotaxis steering suppressed/diverted.'
+                    : 'Naive Valence: Standard sensory chemotaxis without bias.'}
+                </span>
+              </div>
+              <div className="mt-2">
+                <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                  <span>Valence Gauge (-1 to +1):</span>
+                  <span className="text-cyan-300">
+                    {Math.round((((learningTelemetry?.mbonValence ?? 0) + 1.0) / 2.0) * 100)}%
+                  </span>
+                </div>
+                <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-rose-500 via-slate-600 to-emerald-400 transition-all"
+                    style={{
+                      width: `${Math.round((((learningTelemetry?.mbonValence ?? 0) + 1.0) / 2.0) * 100)}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Interactive Learning Experimentation Controls */}
+          <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <span className="font-bold text-white text-xs">Associative Conditioning Experiment</span>
+                <span className="text-[10px] text-slate-400 font-mono">
+                  (&Delta;V = &alpha; &middot; r_KC &middot; (R_US - V) &middot; &Delta;t)
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1">
+                Trigger dopamine pairing on the active odor ({learningTelemetry?.activeOdorCue ?? 'apple_cider_vinegar'}) to observe behavioral chemotaxis modulation.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => pairOdorReward(learningTelemetry?.activeOdorCue ?? 'apple_cider_vinegar', 1.0)}
+                className="px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-semibold font-mono flex items-center gap-1.5 transition-colors shadow-sm"
+              >
+                + Sugar Reward (+1.0)
+              </button>
+              <button
+                onClick={() => pairOdorReward(learningTelemetry?.activeOdorCue ?? 'apple_cider_vinegar', -1.0)}
+                className="px-3 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-semibold font-mono flex items-center gap-1.5 transition-colors shadow-sm"
+              >
+                - Bitter Punishment (-1.0)
+              </button>
+              <button
+                onClick={resetLearningValence}
+                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold font-mono flex items-center gap-1.5 transition-colors"
+                title="Reset all learned odor valences to zero"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
+                Reset
+              </button>
+            </div>
+          </div>
+
+          {/* Biological Mushroom Body Neurons Table */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-white text-xs uppercase tracking-wider font-mono flex items-center gap-1.5">
+                <GraduationCap className="w-4 h-4 text-cyan-400" />
+                Mushroom Body Kenyon Cells, MBONs &amp; Dopaminergic Circuit (MaleCNS v1.0 Grounding)
+              </span>
+              <span className="text-[11px] text-slate-400 font-mono">
+                KC (2) | PAM Dopamine (2) | MBON Output (2)
+              </span>
+            </div>
+
+            <div className="overflow-x-auto rounded-xl border border-slate-800">
+              <table className="w-full text-left text-xs font-mono">
+                <thead className="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-800">
+                  <tr>
+                    <th className="p-2.5">Neuron ID</th>
+                    <th className="p-2.5">Type &amp; Side</th>
+                    <th className="p-2.5">Superclass</th>
+                    <th className="p-2.5">Neurotransmitter</th>
+                    <th className="p-2.5">Membrane Potential (mV)</th>
+                    <th className="p-2.5">Firing Rate</th>
+                    <th className="p-2.5 text-right">Spike</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {learningNeurons.map((neuron) => {
+                    const vm = connectomeSnapshot?.potentials?.[neuron.bodyId] ?? -60.0;
+                    const rate = connectomeSnapshot?.firingRates?.[neuron.bodyId] ?? 0.0;
+                    const hasSpiked = connectomeSnapshot?.recentSpikes?.includes(neuron.bodyId) ?? false;
+                    const ntStyle = getNTColor(neuron.neurotransmitter);
+                    const vmPercent = Math.min(100, Math.max(0, ((vm + 75) / 30) * 100));
+
+                    return (
+                      <tr
+                        key={neuron.bodyId}
+                        className={`hover:bg-slate-800/40 transition-colors ${
+                          hasSpiked ? 'bg-cyan-500/20 font-bold text-white' : 'text-slate-300'
+                        }`}
+                      >
+                        <td className="p-2.5 text-slate-400">{neuron.bodyId}</td>
+                        <td className="p-2.5 font-bold text-white">
+                          <span>{neuron.type}</span>
+                          <span className="text-[10px] text-slate-400 font-normal ml-1">({neuron.instance})</span>
+                        </td>
+                        <td className="p-2.5 text-slate-400 font-sans text-[11px] capitalize">
+                          {neuron.superclass.replace(/_/g, ' ')}
+                        </td>
+                        <td className="p-2.5">
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] border ${ntStyle.bg} ${ntStyle.text} ${ntStyle.border}`}>
+                            {ntStyle.name}
+                          </span>
+                        </td>
+                        <td className="p-2.5 w-44">
+                          <div className="flex items-center gap-2">
+                            <span className="w-12 text-right">{vm.toFixed(1)}</span>
+                            <div className="flex-1 bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-150"
+                                style={{ width: `${vmPercent}%` }}
+                              />
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-2.5">
+                          <span className={rate > 5 ? 'text-amber-400 font-bold' : 'text-slate-400'}>
+                            {rate.toFixed(1)} Hz
+                          </span>
+                        </td>
+                        <td className="p-2.5 text-right">
+                          <span
+                            className={`inline-block w-2.5 h-2.5 rounded-full transition-transform ${
+                              hasSpiked
+                                ? 'bg-cyan-400 scale-125 shadow-sm shadow-cyan-400 animate-ping'
+                                : 'bg-slate-700'
+                            }`}
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Experience History Log */}
+          {learningTelemetry?.experienceHistory && learningTelemetry.experienceHistory.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <span className="font-bold text-white text-xs uppercase tracking-wider font-mono">
+                Recent Conditioning Trials History
+              </span>
+              <div className="overflow-x-auto rounded-xl border border-slate-800">
+                <table className="w-full text-left text-xs font-mono">
+                  <thead className="bg-slate-900/80 text-slate-400 uppercase text-[10px] border-b border-slate-800">
+                    <tr>
+                      <th className="p-2">Trial #</th>
+                      <th className="p-2">Odor Cue</th>
+                      <th className="p-2">Outcome</th>
+                      <th className="p-2">&Delta;V</th>
+                      <th className="p-2 text-right">Post Valence</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {learningTelemetry.experienceHistory.slice(-5).map((exp, idx) => (
+                      <tr key={idx} className="hover:bg-slate-800/40 text-slate-300">
+                        <td className="p-2 text-slate-400">#{idx + 1}</td>
+                        <td className="p-2 font-bold text-white">{exp.odor}</td>
+                        <td className="p-2 capitalize">
+                          <span className={exp.outcome === 'reward' ? 'text-emerald-400' : 'text-rose-400'}>
+                            {exp.outcome}
+                          </span>
+                        </td>
+                        <td className="p-2 text-cyan-300">{exp.deltaV > 0 ? '+' : ''}{exp.deltaV.toFixed(3)}</td>
+                        <td className="p-2 text-right font-bold text-white">
+                          {exp.finalValence > 0 ? '+' : ''}{exp.finalValence.toFixed(3)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Scientific Integrity Callout */}
+          <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-300 space-y-2">
+            <div className="flex items-center gap-2 font-bold text-slate-200">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span>Mushroom Body Plasticity Parameter Classification</span>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
+              <strong>Measured:</strong> Kenyon cell bodies (14292, 11862), MBON bodies (10013, 10267), and PAM dopaminergic cluster bodies (37845, 28434 with consensus Dopamine) verified in Janelia MaleCNS v1.0.<br />
+              <strong>Modeled Plasticity:</strong> The synaptic plasticity rule (&Delta;V = &alpha; &middot; r_KC &middot; (R_US - V) &middot; &Delta;t) is a three-factor phenomenological model based on published literature (Aso et al. 2014, Hige et al. 2015). Synaptic plasticity is maintained completely independent of measured static EM connectivity tables.<br />
+              <strong>Warning:</strong> In-vivo Drosophila associative memory involves 2000+ KCs and 34 MBON compartments; this model represents a functional 6-neuron microcircuit abstraction for autonomous behavior arbitration.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* SUBTAB 4: CIRCUIT WIRING DIAGRAM & SYNAPSE TABLE */}
       {selectedSubTab === 'circuit' && (
         <div className="flex flex-col gap-4">
@@ -727,7 +1308,9 @@ export const BiologicalConnectomeInspector: React.FC = () => {
               <ul className="list-disc pl-4 text-slate-300 space-y-1 text-[11px]">
                 <li>211,577 neuron bodies with EM spatial coordinates (nm).</li>
                 <li>Synapse counts directly counted from serial section EM.</li>
-                <li>Consensus neurotransmitters (ACh, GABA, Glu) with RNASeq and FISH ground-truth validation.</li>
+                <li>Consensus neurotransmitters (ACh, GABA, Glu, Dopamine) with ground-truth validation.</li>
+                <li>Gustatory receptor neurons (claw_tpGRN, dorsal_tpGRN) &amp; proboscis motor neurons (MN9).</li>
+                <li>Kenyon cells (KCg-m, KCab-s), MBONs (MBON01, MBON14), and PAM dopaminergic cluster.</li>
               </ul>
             </div>
 
@@ -738,28 +1321,33 @@ export const BiologicalConnectomeInspector: React.FC = () => {
               <ul className="list-disc pl-4 text-slate-300 space-y-1 text-[11px]">
                 <li>Synaptic conductance scaled by EM synapse count: g_syn = weight * g_unit.</li>
                 <li>Synaptic reversal potentials: ACh (E_rev = 0 mV), GABA/Glu (E_rev = -70 mV).</li>
+                <li>Proboscis extension length derived from MN9 firing rate (0.0 to 1.0).</li>
+                <li>Feeding consumption: hunger reduction &amp; energy replenishment (3.50 units/s).</li>
+                <li>Three-factor dopamine plasticity: &Delta;V = &alpha; &middot; r_KC &middot; (R_US - V) &middot; &Delta;t.</li>
               </ul>
             </div>
 
             <div className="p-4 rounded-xl bg-slate-900/70 border border-slate-800">
               <span className="font-bold text-amber-300 font-mono text-xs uppercase block mb-1">
-                [C] Computational Assumptions (LIF Model)
+                [C] Computational Assumptions (LIF &amp; Environmental)
               </span>
               <ul className="list-disc pl-4 text-slate-300 space-y-1 text-[11px]">
-                <li>Membrane time constant tau_m = 15.0 ms.</li>
-                <li>Resting potential V_rest = -60.0 mV, Spike threshold V_th = -50.0 mV.</li>
+                <li>Membrane time constant tau_m = 15.0 ms, V_rest = -60.0 mV, V_th = -50.0 mV.</li>
                 <li>Reset potential V_reset = -65.0 mV, Refractory period tau_ref = 2.0 ms.</li>
+                <li>Physical contact sampling tolerance: d &le; 0.18 m to food surface.</li>
+                <li>Bounded associative valence: strictly clamped to [-1.0, +1.0].</li>
               </ul>
             </div>
 
             <div className="p-4 rounded-xl bg-slate-900/70 border border-slate-800">
               <span className="font-bold text-rose-300 font-mono text-xs uppercase block mb-1">
-                [D] Unmodeled Biology
+                [D] Unmodeled Biology (Explicit Limitations)
               </span>
               <ul className="list-disc pl-4 text-slate-300 space-y-1 text-[11px]">
                 <li>Non-linear dendritic arborization cable attenuation.</li>
                 <li>Metabotropic second-messenger cascades.</li>
-                <li>Electrical gap junctions (innexins).</li>
+                <li>Whole-brain 2,000+ KC mushroom body calyx (implemented as 6-neuron microcircuit).</li>
+                <li>Pharyngeal sensory bristles and complex esophagus pumping peristalsis.</li>
               </ul>
             </div>
           </div>

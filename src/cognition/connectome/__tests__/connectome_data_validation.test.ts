@@ -3,6 +3,8 @@ import { ConnectomeGraph } from '../ConnectomeGraph';
 import loomingCircuitData from '../data/looming_escape_circuit.json';
 import compassCircuitData from '../data/compass_steering_circuit.json';
 import olfactoryCircuitData from '../data/olfactory_food_circuit.json';
+import gustatoryCircuitData from '../data/gustatory_feeding_circuit.json';
+import learningCircuitData from '../data/mushroom_body_learning_circuit.json';
 import manifestData from '../data/male_cns_manifest.json';
 import { BiologicalCircuitData } from '../types';
 
@@ -128,12 +130,86 @@ describe('Biological Connectome: Data Validation & Ingestion Integrity', () => {
     expect(d7.missingEdgeData).toContain('unmeasured in local cache');
     expect(d7.implementationStatus).toContain('ExperimentalDelta7Inhibition');
 
-    // 3 exported circuits
-    expect(manifestData.circuitsExported.length).toBe(3);
+    // 5 exported circuits in Milestone 4
+    expect(manifestData.circuitsExported.length).toBe(5);
     const circuitFiles = manifestData.circuitsExported.map((c) => c.file);
     expect(circuitFiles).toContain('looming_escape_circuit.json');
     expect(circuitFiles).toContain('compass_steering_circuit.json');
     expect(circuitFiles).toContain('olfactory_food_circuit.json');
+    expect(circuitFiles).toContain('gustatory_feeding_circuit.json');
+    expect(circuitFiles).toContain('mushroom_body_learning_circuit.json');
+  });
+
+  it('9. gustatory feeding circuit validates biological body IDs, cholinergic transmitter, and zero dangling edges', () => {
+    expect(gustatoryCircuitData.isRealDataImported).toBe(true);
+    expect(gustatoryCircuitData.neurons.length).toBe(5);
+
+    const neuronIds = new Set(gustatoryCircuitData.neurons.map((n) => n.bodyId));
+    expect(neuronIds.has(146756)).toBe(true); // claw_tpGRN_R
+    expect(neuronIds.has(158200)).toBe(true); // claw_tpGRN_L
+    expect(neuronIds.has(129802)).toBe(true); // dorsal_tpGRN_R
+    expect(neuronIds.has(10331)).toBe(true);  // MN9_L
+    expect(neuronIds.has(16949)).toBe(true);  // MN9_R
+
+    for (const neuron of gustatoryCircuitData.neurons) {
+      expect(neuron.bodyId).toBeGreaterThan(0);
+      expect(['claw_tpGRN', 'dorsal_tpGRN', 'MN9']).toContain(neuron.type);
+      expect(neuron.neurotransmitter).toBe('acetylcholine');
+      expect(neuron.synapseSign).toBe(1);
+      expect(neuron.ntConfidence).toBeGreaterThan(0.45);
+    }
+
+    for (const syn of gustatoryCircuitData.synapses) {
+      expect(neuronIds.has(syn.preBodyId)).toBe(true);
+      expect(neuronIds.has(syn.postBodyId)).toBe(true);
+      expect(syn.synapseCount).toBeGreaterThan(0);
+      expect(syn.synapseSign).toBe(1);
+    }
+
+    const graph = new ConnectomeGraph(gustatoryCircuitData as unknown as BiologicalCircuitData);
+    const validation = graph.validateIntegrity();
+    expect(validation.isValid).toBe(true);
+    expect(validation.errors).toHaveLength(0);
+    expect(graph.getSensoryInputNeurons().length).toBe(3); // claw_tpGRN (2) + dorsal_tpGRN (1)
+    expect(graph.getMotorOutputNeurons().length).toBe(2);  // MN9 (2)
+  });
+
+  it('10. mushroom body learning circuit validates biological Kenyon, MBON, and PAM dopamine neurons', () => {
+    expect(learningCircuitData.isRealDataImported).toBe(true);
+    expect(learningCircuitData.neurons.length).toBe(6);
+
+    const neuronIds = new Set(learningCircuitData.neurons.map((n) => n.bodyId));
+    expect(neuronIds.has(14292)).toBe(true); // KCg-m
+    expect(neuronIds.has(11862)).toBe(true); // KCab-s
+    expect(neuronIds.has(37845)).toBe(true); // PAM04
+    expect(neuronIds.has(28434)).toBe(true); // PAM10
+    expect(neuronIds.has(10013)).toBe(true); // MBON01
+    expect(neuronIds.has(10267)).toBe(true); // MBON14
+
+    // PAM dopamine consensus verification
+    const pam04 = learningCircuitData.neurons.find((n) => n.bodyId === 37845);
+    const pam10 = learningCircuitData.neurons.find((n) => n.bodyId === 28434);
+    expect(pam04?.neurotransmitter).toBe('dopamine');
+    expect(pam10?.neurotransmitter).toBe('dopamine');
+    expect(pam04?.ntConfidence).toBeGreaterThan(0.85);
+    expect(pam10?.ntConfidence).toBeGreaterThan(0.85);
+
+    // MBON transmitter verification: MBON01 is glutamate (inhibitory), MBON14 is ACh (excitatory)
+    const mbon01 = learningCircuitData.neurons.find((n) => n.bodyId === 10013);
+    const mbon14 = learningCircuitData.neurons.find((n) => n.bodyId === 10267);
+    expect(mbon01?.neurotransmitter).toBe('glutamate');
+    expect(mbon14?.neurotransmitter).toBe('acetylcholine');
+
+    for (const syn of learningCircuitData.synapses) {
+      expect(neuronIds.has(syn.preBodyId)).toBe(true);
+      expect(neuronIds.has(syn.postBodyId)).toBe(true);
+      expect(syn.synapseCount).toBeGreaterThan(0);
+    }
+
+    const graph = new ConnectomeGraph(learningCircuitData as unknown as BiologicalCircuitData);
+    const validation = graph.validateIntegrity();
+    expect(validation.isValid).toBe(true);
+    expect(validation.errors).toHaveLength(0);
   });
 });
 

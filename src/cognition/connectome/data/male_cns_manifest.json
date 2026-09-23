@@ -1,6 +1,6 @@
 {
   "manifestVersion": "1.0.0",
-  "generatedAt": "2026-09-22T23:34:55.773329+00:00",
+  "generatedAt": "2026-09-23T12:38:45.046592+00:00",
   "project": "VishalFly Biological Connectome Integration",
   "license": "CC-BY 4.0 (Creative Commons Attribution 4.0 International)",
   "scientificCitation": "Berg, S., Beckett, I.R., Costa, M., Schlegel, P., ..., Hess, H.F., Rubin, G.M., and Jefferis, G.S.X.E. (2026). Sexual dimorphism in the complete Drosophila male central nervous system connectome. Cell 189, 5504-5541. doi:10.1016/j.cell.2026.08.015",
@@ -9,7 +9,10 @@
     "Lappalainen, J.K., Tschopp, F.D., Prakhya, S., ..., Macke, J.H., Turaga, S.C. (2024). Connectome-constrained networks predict neural activity across the fly visual system. Nature 634, 1132-1140.",
     "Shiu, P.K., Sterne, G.R., Spiller, N., ..., FlyWire Consortium (2024). A Drosophila computational brain model reveals sensorimotor processing. Nature 634, 210-219.",
     "Root, C.M., Ko, K.I., Jafari, A., and Wang, J.W. (2011). Presynaptic facilitation by neuropeptide signaling mediates odor-driven food search. Cell 145, 133-144.",
-    "Franconville, R., Beron, C., and Jayaraman, V. (2018). Building a functional connectome of the Drosophila central complex. eLife 7, e37017."
+    "Franconville, R., Beron, C., and Jayaraman, V. (2018). Building a functional connectome of the Drosophila central complex. eLife 7, e37017.",
+    "Gordon, M.D., and Scott, K. (2009). Motor control in a Drosophila taste circuit. Neuron 61, 373-384.",
+    "Aso, Y., Hattori, D., Yu, Y., ..., Rubin, G.M. (2014). The neuronal architecture of the mushroom body provides a logic for associative learning. eLife 3, e04577.",
+    "Burke, C.J., Huetteroth, W., Owald, D., ..., Waddell, S. (2012). Layered reward signalling through octopamine and dopamine in Drosophila. Nature 492, 433-437."
   ],
   "sourceArtifacts": [
     {
@@ -55,6 +58,18 @@
       "circuitId": "male_cns_olfactory_food_v1",
       "neuronCount": 6,
       "synapseCount": 4
+    },
+    {
+      "file": "gustatory_feeding_circuit.json",
+      "circuitId": "male_cns_gustatory_feeding_v1",
+      "neuronCount": 5,
+      "synapseCount": 3
+    },
+    {
+      "file": "mushroom_body_learning_circuit.json",
+      "circuitId": "male_cns_mushroom_body_learning_v1",
+      "neuronCount": 6,
+      "synapseCount": 6
     }
   ],
   "delta7Investigation": {
@@ -66,15 +81,16 @@
   },
   "parameterClassification": {
     "directlyMeasured": [
-      "Neuron body IDs and biological cell types (Visual L1-L2, LC4, DNp01/11, Olfactory ORN_DM1, DM1_lPN, Central Complex Delta7)",
+      "Neuron body IDs and biological cell types (Visual L1-L2, LC4, DNp01/11, Olfactory ORN_DM1, DM1_lPN, Central Complex Delta7, Gustatory claw/dorsal_tpGRN, MN9, Mushroom Body KC, MBON, PAM)",
       "Soma 3D coordinates in EM coordinate space (nm)",
       "Visual pathway synaptic connection counts from electron microscopy",
-      "Consensus neurotransmitters (ACh, GABA, Glutamate) and ground-truth validations"
+      "Consensus neurotransmitters (ACh, GABA, Glutamate, Dopamine) and ground-truth validations"
     ],
     "derived": [
       "Synaptic conductance scaling proportional to synapse count (g_syn = weight * g_unit)",
       "Synaptic reversal potentials: ACh (E_rev = 0 mV, excitatory), GABA (E_rev = -70 mV, inhibitory), Glutamate (E_rev = -70 mV, inhibitory in CNS)",
-      "Hunger-modulated olfactory presynaptic gain factor (NPF-mimicking facilitation)"
+      "Hunger-modulated olfactory presynaptic gain factor (NPF-mimicking facilitation)",
+      "Three-factor dopamine-dependent synaptic plasticity updates"
     ],
     "computationalAssumptions": [
       "Leaky Integrate-and-Fire membrane time constant (tau_m = 15 ms)",
@@ -82,12 +98,15 @@
       "Refractory period tau_ref = 2 ms",
       "Optical looming stimulus linear velocity-to-current transduction",
       "Synthetic environmental odor plume diffusion field C(d) = I0 / (1 + (d/d0)^2)",
-      "Experimental Delta7 surround-inhibition cross-coupling gain"
+      "Synthetic environmental tastant contact field (d_contact <= 0.18 m)",
+      "Experimental Delta7 surround-inhibition cross-coupling gain",
+      "Modeled Mushroom Body Kenyon cell-to-MBON synaptic weight plasticity rule"
     ],
     "unmodeled": [
       "Complex non-linear dendritic arbor cable filtering",
-      "Detailed 42-neuron to 16-wedge individual Delta7 EM synapse matrix",
+      "Detailed single-synapse electron microscopy tables for 42 Delta7 and MBON connections (requires 480MB remote GCS dataset)",
       "Metabotropic second-messenger modulation cascades",
+      "Pharyngeal pump and subesophageal zone (SEZ) complex interneuron networks",
       "Electrical gap junctions (innexin synapses)"
     ]
   }

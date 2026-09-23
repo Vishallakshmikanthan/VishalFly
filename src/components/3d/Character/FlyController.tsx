@@ -78,6 +78,8 @@ export const FlyController: React.FC = () => {
   const roll = useRef(0);
 
   const [isMoving, setIsMoving] = useState(false);
+  const [proboscisExt, setProboscisExt] = useState(0);
+  const [isFeedingActive, setIsFeedingActive] = useState(false);
 
   // Sync position whenever location changes or external teleport happens
   useEffect(() => {
@@ -240,11 +242,25 @@ export const FlyController: React.FC = () => {
       pitch.current = THREE.MathUtils.lerp(pitch.current, result.pitch, dt * 8);
       roll.current = THREE.MathUtils.lerp(roll.current, result.roll, dt * 8);
 
+      setProboscisExt(result.proboscisExtension);
+      setIsFeedingActive(result.isFeeding);
+
+      // Apply gradual need updates from feeding to simulation engine
+      if (result.isFeeding && (result.hungerDelta !== 0 || result.energyDelta !== 0)) {
+        const currentHunger = needs?.hunger ?? 0;
+        const currentEnergy = needs?.energy ?? 100;
+        simulationEngine.setNeed('hunger', Math.max(0, currentHunger + result.hungerDelta));
+        simulationEngine.setNeed('energy', Math.min(100, currentEnergy + result.energyDelta));
+      }
+
       const flightSpeed = velocity.current.length();
       const currentSimPose = simulationEngine.getCurrentFlyActivity();
 
       // Check arrival proximity to destination
-      if (currentGoal && currentGoal.isArrived) {
+      if (result.isFeeding) {
+        if (isMoving) setIsMoving(false);
+        setFlyActivity('eating');
+      } else if (currentGoal && currentGoal.isArrived) {
         if (isMoving) setIsMoving(false);
         // Settle into schedule/activity pose when arrived at destination
         setFlyActivity(currentSimPose);
@@ -431,7 +447,12 @@ export const FlyController: React.FC = () => {
 
   return (
     <group ref={groupRef} position={[...flyPosition]}>
-      <FruitFly isMoving={isMoving} activity={flyActivity} />
+      <FruitFly
+        isMoving={isMoving}
+        activity={flyActivity}
+        proboscisExtension={proboscisExt}
+        isFeeding={isFeedingActive}
+      />
     </group>
   );
 };

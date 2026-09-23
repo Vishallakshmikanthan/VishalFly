@@ -98,6 +98,9 @@ interface GameState {
   setControllerMode: (mode: ControllerMode) => void;
   setConnectomeSnapshot: (snapshot: NeuralStateSnapshot) => void;
   triggerConnectomeThreat: () => void;
+  pairOdorReward: (odor: string, reward: number) => void;
+  resetLearningValence: () => void;
+  resetFoodSurfaces: () => void;
   
   // Camera & view controls
   resetCameraTrigger: number;
@@ -237,6 +240,9 @@ export const useGameStore = create<GameState>((set, get) => {
     },
     setConnectomeSnapshot: (connectomeSnapshot) => set({ connectomeSnapshot }),
     triggerConnectomeThreat: () => connectomeFlyController.triggerThreatStimulus(),
+    pairOdorReward: (odor, reward) => connectomeFlyController.pairOdorReward(odor, reward),
+    resetLearningValence: () => connectomeFlyController.resetLearning(),
+    resetFoodSurfaces: () => connectomeFlyController.resetFoodSurfaces(),
 
     // Milestone 8 View Routing, Replay, Analytics & Settings
     activeView: 'simulation',

@@ -3,7 +3,7 @@
   "name": "Antennal Lobe Food Odor (DM1) Circuit",
   "description": "Biological olfactory pathway from food-odor sensitive olfactory receptor neurons (ORN_DM1) to projection neurons (DM1_lPN) mediating innate chemotaxis to vinegar and fermenting fruit aromas.",
   "datasetVersion": "MaleCNS v1.0 (Berg et al. Cell 2026)",
-  "retrievalDate": "2026-09-22T23:34:55.773329+00:00",
+  "retrievalDate": "2026-09-23T12:38:45.046592+00:00",
   "isRealDataImported": true,
   "neurons": [
     {

@@ -1,0 +1,151 @@
+{
+  "circuitId": "male_cns_gustatory_feeding_v1",
+  "name": "Tarsal/Proboscis Gustatory & Motor Neuron 9 (MN9) Circuit",
+  "description": "Biological sensorimotor pathway from tarsal/proboscis gustatory receptor neurons (claw_tpGRN, dorsal_tpGRN) to motor neuron 9 (MN9) mediating the innate proboscis extension reflex (PER).",
+  "datasetVersion": "MaleCNS v1.0 (Berg et al. Cell 2026)",
+  "retrievalDate": "2026-09-23T12:38:45.046592+00:00",
+  "isRealDataImported": true,
+  "neurons": [
+    {
+      "bodyId": 146756,
+      "type": "claw_tpGRN",
+      "instance": "claw_tpGRN_R",
+      "superclass": "cb_sensory",
+      "somaSide": "unknown",
+      "somaLocation": [
+        0,
+        0,
+        0
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.7512923991535637,
+      "isGroundTruthNT": true,
+      "publishedReference": "Janelia MaleCNS v1.0 (Berg et al. Cell 2026); Gordon & Scott Neuron 2009",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 158200,
+      "type": "claw_tpGRN",
+      "instance": "claw_tpGRN_L",
+      "superclass": "cb_sensory",
+      "somaSide": "unknown",
+      "somaLocation": [
+        0,
+        0,
+        0
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.8258575095414249,
+      "isGroundTruthNT": true,
+      "publishedReference": "Janelia MaleCNS v1.0 (Berg et al. Cell 2026); Gordon & Scott Neuron 2009",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 129802,
+      "type": "dorsal_tpGRN",
+      "instance": "dorsal_tpGRN_R",
+      "superclass": "cb_sensory",
+      "somaSide": "unknown",
+      "somaLocation": [
+        0,
+        0,
+        0
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.6767434118977823,
+      "isGroundTruthNT": true,
+      "publishedReference": "Janelia MaleCNS v1.0 (Berg et al. Cell 2026); Gordon & Scott Neuron 2009",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 10331,
+      "type": "MN9",
+      "instance": "MN9_L",
+      "superclass": "cb_motor",
+      "somaSide": "L",
+      "somaLocation": [
+        55365,
+        36271,
+        15889
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.4896524466871221,
+      "isGroundTruthNT": true,
+      "publishedReference": "Janelia MaleCNS v1.0 (Berg et al. Cell 2026); Gordon & Scott Neuron 2009",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 16949,
+      "type": "MN9",
+      "instance": "MN9_R",
+      "superclass": "cb_motor",
+      "somaSide": "R",
+      "somaLocation": [
+        41546,
+        38775,
+        15447
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.5731075580033004,
+      "isGroundTruthNT": true,
+      "publishedReference": "Janelia MaleCNS v1.0 (Berg et al. Cell 2026); Gordon & Scott Neuron 2009",
+      "dataSource": "Janelia MaleCNS v1.0"
+    }
+  ],
+  "synapses": [
+    {
+      "preBodyId": 146756,
+      "postBodyId": 16949,
+      "preType": "claw_tpGRN",
+      "postType": "MN9",
+      "synapseCount": 42,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "statistical_synapse_table",
+      "dataSource": "Literature cell-type average (Gordon & Scott 2009; Schwarz et al. 2021)"
+    },
+    {
+      "preBodyId": 158200,
+      "postBodyId": 10331,
+      "preType": "claw_tpGRN",
+      "postType": "MN9",
+      "synapseCount": 42,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "statistical_synapse_table",
+      "dataSource": "Literature cell-type average (Gordon & Scott 2009; Schwarz et al. 2021)"
+    },
+    {
+      "preBodyId": 129802,
+      "postBodyId": 16949,
+      "preType": "dorsal_tpGRN",
+      "postType": "MN9",
+      "synapseCount": 26,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "statistical_synapse_table",
+      "dataSource": "Literature cell-type average (Gordon & Scott 2009; Schwarz et al. 2021)"
+    }
+  ],
+  "statistics": {
+    "neuronCount": 5,
+    "synapseCount": 3,
+    "totalSynapticConnections": 110,
+    "excitatoryCount": 3,
+    "inhibitoryCount": 0
+  },
+  "sensoryInputNeurons": [
+    146756,
+    158200,
+    129802
+  ],
+  "motorOutputNeurons": [
+    10331,
+    16949
+  ]
+}

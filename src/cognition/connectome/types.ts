@@ -160,6 +160,44 @@ export interface NeuralStateSnapshot {
     distance: number;
     provenance: string;
   };
+  gustatory?: {
+    isContact: boolean;
+    contactState: 'airborne' | 'contact_detected' | 'lost_contact';
+    foodSurfaceName: string | null;
+    tastantType: 'sucrose' | 'bitter' | 'none';
+    tastant: 'sucrose' | 'bitter' | 'none';
+    sweetIntensity: number;
+    bitterIntensity: number;
+    stimulusStrength: number;
+    proboscisExtension: number;
+    feedingState: string;
+    isFeeding: boolean;
+    intakeRate: number;
+    hungerDelta: number;
+    energyDelta: number;
+    distanceToSurface: number;
+    foodRemaining: number;
+    mn9FiringRate: number;
+    grnFiringRate: number;
+    interruptionReason?: string;
+    provenance: string;
+  };
+  learning?: {
+    activeOdorCue: string;
+    unconditionedStimulus: 'sucrose_reward' | 'bitter_punishment' | 'none';
+    rewardSignal: number;
+    kcActivation: number;
+    pamDopamineSignal: number;
+    ppl1DopamineSignal: number;
+    reinforcementSignal: number;
+    learnedValence: number;
+    mbonValence: number;
+    mbonApproachRate: number;
+    mbonAvoidanceRate: number;
+    odorValenceMap: Record<string, number>;
+    experienceHistory?: any[];
+    provenance: string;
+  };
 }
 
 export type ControllerMode = 'schedule' | 'cognitive' | 'connectome' | 'manual';

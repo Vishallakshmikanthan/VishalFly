@@ -376,14 +376,164 @@ The modular `ExperimentalDelta7Inhibition` layer implements cross-column suppres
 
 ---
 
-## 12. Limitations & Next Steps
+## 12. Milestone 4: Gustatory Feeding, Proboscis Extension & Associative Odor Learning
 
-### Known Limitations
-1. **Circuit Scope**: The model simulates three modular microcircuits: (1) 16-neuron visual looming collision escape, (2) 8-neuron central complex compass steering, and (3) 6-neuron antennal lobe DM1 olfactory food circuit. It does not simulate all 130,000+ neurons of the adult male Drosophila brain.
-2. **Local Synapse Table Cache**: Single-synapse electron microscopy tables for $\Delta 7$ and olfactory connections require the 480 MB remote GCS dataset. Modeled literature averages are employed with explicit provenance tags.
-3. **Single Glomerulus Olfaction**: Only the DM1 (food odor) glomerulus is modeled; other glomeruli (e.g. pheromone DA1, CO2 sensing Gr21a/Gr63a, repulsive geosmin DA2) are unmodeled.
+### 12.1 Overview & Scope
 
-### Recommended Next Milestone: Milestone 4
-1. **Gustatory & Feeding Circuit**: Ingest labellar and pharyngeal gustatory receptor neurons ($GRNs$) and motor neurons driving proboscis extension reflex (PER) upon landing on food.
-2. **Associative Odor Learning**: Connect mushroom body Kenyon cells ($KCs$) and Mushroom Body Output Neurons ($MBONs$) with dopaminergic reward signaling for learned odor preference.
+Milestone 4 introduces contact-dependent gustatory chemosensation, proboscis extension reflex (PER) motor control, gradual feeding intake dynamics, and a mushroom-body-inspired associative odor learning subsystem into VishalFly. 
+
+```
+                                  [Physical Contact d <= 0.18m]
+                                                |
+[Food Surface] -----> [Gustatory Environment] --+--> [claw_tpGRN / dorsal_tpGRN]
+(sucrose / bitter)                                         |
+                                                           v  (ACh synaptic drive)
+                                                       [MN9 Motor Neuron]
+                                                           |
+                                                           v  (PER Kinematics)
+                                              [Articulated 3D Proboscis]
+                                                           |
+                                                           v  (Gradual intake: 3.5 u/s)
+                                                 [Hunger & Energy Needs]
+
+[Odor Plume] -------> [ORN DM1 / DM1 lPN] ----> [Kenyon Cells: KCg-m, KCab-s]
+                                                           |
+                                          +----------------+----------------+
+                                          |                                 |
+                                          v                                 v
+                                    [MBON01 Avoidance]              [MBON14 Approach]
+                                          ^                                 ^
+                                          |                                 |
+[Reward / Tastant] -> [PAM04 / PAM10 Dopamine] -----------------------------+
+                                          |
+                                          v  (Three-factor plasticity: dV/dt)
+                               [Learned Odor Valence V in [-1.0, 1.0]]
+                                          |
+                                          v  (Modulates chemotaxis arbitration)
+                            [Connectome Behavior Arbitration]
+```
+
+### 12.2 Ingested Biological Datasets & Provenance
+
+All neuron identifiers are verified from the official **Janelia Research Campus MaleCNS v1.0** connectome dataset (*Berg et al., Cell 2026*):
+
+#### Gustatory & PER Circuit (`gustatory_feeding_circuit.json`)
+| Neuron ID | Symbol / Label | Type | Class | Consensus NT | Provenance |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `146756` | `claw_tpGRN` | `claw_tpGRN` | sensory | Acetylcholine | Janelia MaleCNS v1.0 [MEASURED] |
+| `158200` | `claw_tpGRN` | `claw_tpGRN` | sensory | Acetylcholine | Janelia MaleCNS v1.0 [MEASURED] |
+| `129802` | `dorsal_tpGRN` | `dorsal_tpGRN` | sensory | Acetylcholine | Janelia MaleCNS v1.0 [MEASURED] |
+| `10331` | `MN9` | `MN9` | motor | Acetylcholine | Janelia MaleCNS v1.0 [MEASURED] |
+| `16949` | `MN9` | `MN9` | motor | Acetylcholine | Janelia MaleCNS v1.0 [MEASURED] |
+
+- **Pathway**: Tarsal and labellar gustatory receptor neurons (`claw_tpGRN`, `dorsal_tpGRN`) project into the subesophageal zone (SEZ) to drive motor neuron 9 (`MN9`), triggering proboscis extension reflex (PER) (*Gordon & Scott, Neuron 2009; Schwarz et al., eLife 2017*).
+
+#### Mushroom Body Associative Learning Circuit (`mushroom_body_learning_circuit.json`)
+| Neuron ID | Symbol / Label | Type | Class | Consensus NT | Provenance |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `14292` | `KCg-m` | `KCg-m` | intrinsic | Acetylcholine | Janelia MaleCNS v1.0 [MEASURED] |
+| `11862` | `KCab-s` | `KCab-s` | intrinsic | Acetylcholine | Janelia MaleCNS v1.0 [MEASURED] |
+| `37845` | `PAM04` | `PAM04` | modulatory | Dopamine (>85% conf) | Janelia MaleCNS v1.0 [MEASURED] |
+| `28434` | `PAM10` | `PAM10` | modulatory | Dopamine (>85% conf) | Janelia MaleCNS v1.0 [MEASURED] |
+| `10013` | `MBON01` | `MBON01` | projection | Glutamate | Janelia MaleCNS v1.0 [MEASURED] |
+| `10267` | `MBON14` | `MBON14` | projection | Acetylcholine | Janelia MaleCNS v1.0 [MEASURED] |
+
+- **Pathway**: Olfactory projection neurons activate sparse Kenyon cell populations (`KCg-m`, `KCab-s`). Protocerebral anterior medial (`PAM`) dopaminergic clusters signal unconditioned reward (`R_{US} = +1.0`) or unconditioned punishment/quinine (`R_{US} = -1.0`), modulating KC-to-MBON synaptic weights (*Aso et al., eLife 2014; Hige, Curr Biol 2018*).
+
+### 12.3 Gustatory Environment & Physical Contact Constraints
+
+To prevent artificial teleportation or waypoint snapping, gustatory stimulation and feeding are strictly constrained by physical contact:
+1. **Contact Geometry**: Tastants can only be sampled when Euclidean distance to a registered food surface satisfies:
+   $$d = \|\mathbf{p}_{fly} - \mathbf{p}_{food}\| \le d_{contact\_tolerance} = 0.18\,\text{m}$$
+2. **Food Availability & Depletion**: Each food surface tracks its remaining nutrient volume $F_{rem}$. When $F_{rem} \le 0.0$, the surface is depleted. Contact remains `true` if $d \le 0.18\,\text{m}$, but stimulus strength drops to $0.0$, cleanly triggering a `'food_depleted'` interruption.
+3. **Tastant Categories**:
+   - `attractive` (`sucrose`, $S \in [0.0, 1.0]$): drives GRN excitation $\rightarrow$ MN9 motor activity.
+   - `aversive` (`bitter` / quinine, $B \in [0.0, 1.0]$): inhibits MN9 motor drive, halts feeding, and signals negative reinforcement ($R_{US} = -1.0$).
+   - `neutral`: no gustatory drive.
+
+### 12.4 Proboscis Extension Reflex (PER) & Feeding State Machine
+
+Proboscis extension kinematics and feeding follow an explicit, deterministic state machine:
+- `idle`: Not near food ($d > 0.18\,\text{m}$); proboscis fully retracted ($ext = 0.0$).
+- `approaching`: Connectome chemotaxis steering towards food plume.
+- `contact_sampling`: Physical contact established ($d \le 0.18\,\text{m}$); GRNs sample sucrose and bitter levels.
+- `proboscis_extending`: High sucrose and low bitter stimulate GRNs; MN9 voltage approaches threshold, driving proboscis extension smoothly:
+  $$\frac{d(ext)}{dt} = \frac{ext_{target} - ext}{\tau_{PER}}, \quad \tau_{PER} = 0.08\,\text{s}$$
+- `feeding`: Proboscis extended ($ext \ge 0.70$); fly velocity settles to zero; gradual nutrient consumption occurs:
+  $$\frac{dF_{rem}}{dt} = -r_{intake} \cdot \Delta t, \quad r_{intake} = 3.5\,\text{units/sec}$$
+  $$\Delta \text{Hunger} = -r_{intake} \cdot \Delta t, \quad \Delta \text{Energy} = +0.65 \cdot r_{intake} \cdot \Delta t$$
+- `retracting`: Food depleted, contact lost, or satiation reached; proboscis smoothly retracts to $0.0$.
+- `interrupted`: Bitter tastant encountered, looming collision threat ($LC4$), or physical displacement interrupts feeding instantly with documented cause (`'aversive_bitter'`, `'food_depleted'`, `'contact_lost'`, `'threat_escape'`).
+
+### 12.5 Mushroom Body Associative Learning Subsystem
+
+Plasticity between olfactory cues and behavioral valence is modeled via a biologically grounded, three-factor dopaminergic learning rule:
+
+$$\Delta V(\text{odor}) = \alpha \cdot r_{KC}(\text{odor}) \cdot \left(R_{US} - V(\text{odor})\right) \cdot \Delta t$$
+
+Where:
+- $\alpha = 0.45$: Plasticity learning rate parameter ([DERIVED]).
+- $r_{KC} \in [0.0, 1.0]$: Firing rate / activity of sparse Kenyon cells representing the conditioned stimulus (CS).
+- $R_{US} \in \{-1.0, 0.0, 1.0\}$: Unconditioned stimulus (US) valence delivered by PAM dopaminergic neurons (sugar reward $= +1.0$; quinine shock $= -1.0$; no reinforcement $= 0.0$).
+- $V(\text{odor}) \in [-1.0, 1.0]$: Learned odor valence, strictly bounded using hard clamping to ensure numerical stability across indefinite runtimes.
+
+#### Decision Arbitration Integration
+Learned odor valence directly modulates connectome chemotaxis without hardcoding movements:
+1. **Positive Valence ($V > 0$)**: Enhances attraction to the plume emitter:
+   $$S_{attraction} = S_{base} \times (1.0 + 0.8 \cdot V)$$
+2. **Negative Valence ($V < -0.2$)**: Gates off olfactory food attraction, causing the fly to ignore the odor plume and prioritize other needs or exploratory foraging.
+3. **Safety & Obstacle Bounds**: Visual collision avoidance ($LC4 \rightarrow DNp01/DNp11$) and room boundary repulsions maintain absolute authority over motor steering, preventing learned preferences from causing wall collisions or crashes.
+
+### 12.6 3D Articulated Proboscis & Nutrient Visualization
+
+The fruit fly 3D model (`FruitFly.tsx`) features an articulated, multi-segment proboscis:
+- **Rostrum & Haustellum**: Cylindrical chitin segments that rotate and translate downward from the ventral head capsule according to $ext \in [0.0, 1.0]$.
+- **Labellar Lobes**: Bilateral labellar disks that spread outward as extension reaches the feeding threshold ($ext \ge 0.70$).
+- **Nutrient Ingestion Glow**: A pulsing bioluminescent material indicator (`#00f5d4`, emissive intensity $0.0 \rightarrow 1.2$) on the labellar tip active during the `feeding` state.
+
+### 12.7 Observability & Connectome Inspector Subtabs
+
+The Biological Connectome Inspector has been expanded with two dedicated panels:
+- **Gustatory Subtab**:
+  - Live physical contact distance meter and contact indicator ($d \le 0.18\,\text{m}$).
+  - Live sucrose and bitter stimulus sliders/meters.
+  - Feeding state badge (`idle`, `contact_sampling`, `feeding`, `interrupted`) with interruption reason readout.
+  - Proboscis extension bar ($0\%$ to $100\%$) and nutrient intake rate ($3.5\,\text{u/s}$).
+  - Active GRN (`claw_tpGRN`, `dorsal_tpGRN`) and MN9 voltage and firing rate tables.
+- **Learning Subtab**:
+  - Active conditioned odor cue and Kenyon cell sparse representation.
+  - PAM dopaminergic reinforcement meter ($R_{US} \in [-1.0, +1.0]$).
+  - Learned odor valence gauge ($V \in [-1.0, +1.0]$) with behavioral interpretation.
+  - Three-factor plasticity parameter inspector ($\alpha = 0.45$, bounds $[-1.0, +1.0]$).
+  - Interactive conditioning triggers (Pair Sugar Reward $+1.0$, Pair Bitter Aversive $-1.0$, Reset Plasticity).
+  - Chronological trial history table recording time, odor CS, outcome US, and resulting $\Delta V$.
+
+---
+
+## 13. Parameter Classification & Scientific Integrity
+
+| Parameter | Classification | Value / Source | Scientific Rationale |
+| :--- | :--- | :--- | :--- |
+| **Neuron IDs (`bodyId`)** | [MEASURED] | Exact 64-bit integer IDs (Visual $L1\text{-}L2, LC4, DNp$, Olfactory $ORN, PN, \Delta 7$, Gustatory `claw_tpGRN, dorsal_tpGRN, MN9`, MB `KCg-m, KCab-s, PAM04, PAM10, MBON01, MBON14`) | Grounded in Janelia MaleCNS v1.0 EM segmentation |
+| **Soma 3D Coordinates** | [MEASURED] | $(x, y, z)$ in nm | MaleCNS v1.0 annotations |
+| **Visual Synapse Counts ($N_{syn}$)** | [MEASURED] | Measured EM T-bars (14 to 1293) | Automated synaptic detection verified by human proofreading |
+| **Neurotransmitter Identity** | [MEASURED / DERIVED] | ACh, GABA, Glutamate, Dopamine | Reiser Lab RNASeq/FISH consensus + Janelia CNN predictions (>85% conf) |
+| **Synaptic Reversal Potentials** | [MEASURED / GROUNDED] | $E_{rev}^{exc} = 0\,\text{mV}$, $E_{rev}^{inh} = -70\,\text{mV}$ | Established *Drosophila* physiology (ACh nicotinic vs GABA/GluCl) |
+| **Contact Distance Tolerance** | [GROUNDED / DERIVED] | $d \le 0.18\,\text{m}$ ($1.8\,\text{cm}$ in fly scale) | Labellar contact reach on physical surface |
+| **PER Extension Time Constant** | [DERIVED] | $\tau_{PER} = 80\,\text{ms}$ | High-speed video of proboscis extension (Schwarz et al., 2017) |
+| **Nutrient Intake Rate** | [MODELED] | $r_{intake} = 3.5\,\text{units/sec}$ | Gradual food depletion and hunger reduction |
+| **Dopaminergic Learning Rate** | [DERIVED / MODELED] | $\alpha = 0.45$ | Single-trial / multi-trial associative olfactory conditioning (Aso et al., 2014) |
+| **Learned Valence Bounds** | [COMPUTATIONAL BOUND] | $V \in [-1.0, 1.0]$ | Prevents runaway numerical instability |
+| **Synthetic Odor Diffusion Field** | [COMPUTATIONAL ASSUMPTION] | $C(d) = I_0 / (1 + (d/d_0)^2)$ | Spatial atmospheric dispersion approximation; not biological receptor data |
+| **$\Delta 7$ Cross-Inhibition Coupling**| [COMPUTATIONAL ASSUMPTION] | Modeled bilateral surround inhibition | Single-synapse EM tables unmeasured in local cache |
+| **Complex Dendritic Cable Filtering** | [UNMODELED] | Single-compartment point neuron | Multi-compartmental biophysical cables omitted for real-time 60 FPS performance |
+
+---
+
+## 14. Limitations & Non-Claims
+
+1. **Not a Whole-Brain Simulation**: VishalFly simulates modular functional microcircuits (visual looming escape, central complex steering, antennal lobe DM1 chemotaxis, SEZ gustatory PER, and mushroom body associative valence). It does not simulate all 130,000+ neurons of the adult male Drosophila brain.
+2. **Measured Connectivity vs Plasticity Abstraction**: While neuron identities (`KC`, `PAM`, `MBON`, `GRN`, `MN9`) and transmitter types are extracted from the Janelia MaleCNS v1.0 connectome, dopamine-dependent associative synaptic weight updates are simulated via an explicit three-factor mathematical learning rule ($\Delta V = \alpha \cdot r_{KC} \cdot (R - V) \cdot \Delta t$), as in vivo post-learning EM connectomes do not exist in the static dataset.
+3. **Pharyngeal Ingestion Circuits**: Pharyngeal taste peg neurons and motor pumping neurons are abstracted into the gradual intake model ($r_{intake} = 3.5\,\text{u/s}$) rather than full multi-pump biophysics.
+4. **Unit Tests Do Not Equal Biological Validation**: All 169 passing unit and integration tests verify software correctness, numerical stability, interface contracts, and biophysical bounds; they do not constitute experimental validation of biological animal behavior.
 

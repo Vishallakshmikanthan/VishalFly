@@ -3,7 +3,7 @@
   "name": "Visual Looming & Collision Evasion Circuit",
   "description": "Biological sensorimotor pathway from lamina photoreceptor targets (L1/L2) through medulla columnar cells (Tm2/Tm3/Tm4/T2) to lobula looming detector (LC4) and descending motor neurons (DNp11 flight steering, DNp01 Giant Fiber escape takeoff).",
   "datasetVersion": "MaleCNS v1.0 (Berg et al. Cell 2026)",
-  "retrievalDate": "2026-09-22T23:34:55.773329+00:00",
+  "retrievalDate": "2026-09-23T12:38:45.046592+00:00",
   "isRealDataImported": true,
   "neurons": [
     {

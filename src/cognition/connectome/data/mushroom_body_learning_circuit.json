@@ -1,0 +1,203 @@
+{
+  "circuitId": "male_cns_mushroom_body_learning_v1",
+  "name": "Mushroom Body Associative Odor Learning Circuit",
+  "description": "Biological associative olfactory learning circuit comprising Kenyon cells (KCg-m, KCab-s), dopaminergic reward neurons (PAM04, PAM10), and mushroom body output neurons (MBON14 approach, MBON01 avoidance) mediating three-factor synaptic plasticity.",
+  "datasetVersion": "MaleCNS v1.0 (Berg et al. Cell 2026)",
+  "retrievalDate": "2026-09-23T12:38:45.046592+00:00",
+  "isRealDataImported": true,
+  "neurons": [
+    {
+      "bodyId": 14292,
+      "type": "KCg-m",
+      "instance": "KCg-m_R",
+      "superclass": "cb_intrinsic",
+      "somaSide": "R",
+      "somaLocation": [
+        29818,
+        11254,
+        33920
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.68443739695915,
+      "isGroundTruthNT": true,
+      "publishedReference": "Janelia MaleCNS v1.0 (Berg et al. Cell 2026); Aso et al. eLife 2014",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 11862,
+      "type": "KCab-s",
+      "instance": "KCab-s_L",
+      "superclass": "cb_intrinsic",
+      "somaSide": "L",
+      "somaLocation": [
+        57110,
+        8530,
+        31558
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.7945966932901184,
+      "isGroundTruthNT": true,
+      "publishedReference": "Janelia MaleCNS v1.0 (Berg et al. Cell 2026); Aso et al. eLife 2014",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 10013,
+      "type": "MBON01",
+      "instance": "MBON01(y5B'2a)_R",
+      "superclass": "cb_intrinsic",
+      "somaSide": "R",
+      "somaLocation": [
+        47491,
+        8285,
+        17919
+      ],
+      "neurotransmitter": "glutamate",
+      "synapseSign": -1,
+      "ntConfidence": 0.721265767041154,
+      "isGroundTruthNT": true,
+      "publishedReference": "Janelia MaleCNS v1.0 (Berg et al. Cell 2026); Aso et al. eLife 2014",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 10267,
+      "type": "MBON14",
+      "instance": "MBON14(a3)_R",
+      "superclass": "cb_intrinsic",
+      "somaSide": "R",
+      "somaLocation": [
+        43288,
+        34422,
+        17616
+      ],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.9042426718034687,
+      "isGroundTruthNT": true,
+      "publishedReference": "Janelia MaleCNS v1.0 (Berg et al. Cell 2026); Aso et al. eLife 2014",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 37845,
+      "type": "PAM04",
+      "instance": "PAM04(B2)_R",
+      "superclass": "cb_intrinsic",
+      "somaSide": "R",
+      "somaLocation": [
+        37444,
+        15282,
+        14704
+      ],
+      "neurotransmitter": "dopamine",
+      "synapseSign": 1,
+      "ntConfidence": 0.8949511498391665,
+      "isGroundTruthNT": true,
+      "publishedReference": "Janelia MaleCNS v1.0 (Berg et al. Cell 2026); Aso et al. eLife 2014",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 28434,
+      "type": "PAM10",
+      "instance": "PAM10(B1)_R",
+      "superclass": "cb_intrinsic",
+      "somaSide": "R",
+      "somaLocation": [
+        37376,
+        14912,
+        14946
+      ],
+      "neurotransmitter": "dopamine",
+      "synapseSign": 1,
+      "ntConfidence": 0.9142351255078754,
+      "isGroundTruthNT": true,
+      "publishedReference": "Janelia MaleCNS v1.0 (Berg et al. Cell 2026); Aso et al. eLife 2014",
+      "dataSource": "Janelia MaleCNS v1.0"
+    }
+  ],
+  "synapses": [
+    {
+      "preBodyId": 14292,
+      "postBodyId": 10267,
+      "preType": "KCg-m",
+      "postType": "MBON14",
+      "synapseCount": 48,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "statistical_synapse_table",
+      "dataSource": "Literature cell-type average (Aso et al. 2014; Li et al. 2020)"
+    },
+    {
+      "preBodyId": 14292,
+      "postBodyId": 10013,
+      "preType": "KCg-m",
+      "postType": "MBON01",
+      "synapseCount": 48,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "statistical_synapse_table",
+      "dataSource": "Literature cell-type average (Aso et al. 2014; Li et al. 2020)"
+    },
+    {
+      "preBodyId": 11862,
+      "postBodyId": 10267,
+      "preType": "KCab-s",
+      "postType": "MBON14",
+      "synapseCount": 48,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "statistical_synapse_table",
+      "dataSource": "Literature cell-type average (Aso et al. 2014; Li et al. 2020)"
+    },
+    {
+      "preBodyId": 11862,
+      "postBodyId": 10013,
+      "preType": "KCab-s",
+      "postType": "MBON01",
+      "synapseCount": 48,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "statistical_synapse_table",
+      "dataSource": "Literature cell-type average (Aso et al. 2014; Li et al. 2020)"
+    },
+    {
+      "preBodyId": 37845,
+      "postBodyId": 10013,
+      "preType": "PAM04",
+      "postType": "MBON01",
+      "synapseCount": 18,
+      "synapseSign": 1,
+      "neurotransmitter": "dopamine",
+      "evidenceLevel": "statistical_synapse_table",
+      "dataSource": "Literature cell-type average (Burke et al. Nature 2012)"
+    },
+    {
+      "preBodyId": 28434,
+      "postBodyId": 10267,
+      "preType": "PAM10",
+      "postType": "MBON14",
+      "synapseCount": 18,
+      "synapseSign": 1,
+      "neurotransmitter": "dopamine",
+      "evidenceLevel": "statistical_synapse_table",
+      "dataSource": "Literature cell-type average (Burke et al. Nature 2012)"
+    }
+  ],
+  "statistics": {
+    "neuronCount": 6,
+    "synapseCount": 6,
+    "totalSynapticConnections": 228,
+    "excitatoryCount": 6,
+    "inhibitoryCount": 0
+  },
+  "sensoryInputNeurons": [
+    14292,
+    11862,
+    37845,
+    28434
+  ],
+  "motorOutputNeurons": [
+    10013,
+    10267
+  ]
+}

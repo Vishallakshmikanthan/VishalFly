@@ -6,6 +6,8 @@ import { FlyActivity } from '../../../types';
 interface FruitFlyProps {
   isMoving?: boolean;
   activity?: FlyActivity;
+  proboscisExtension?: number; // 0.0 (retracted) to 1.0 (fully extended)
+  isFeeding?: boolean;
 }
 
 /**
@@ -14,17 +16,21 @@ interface FruitFlyProps {
  * - WORKOUT, RESTING, LAUNDRY, DRYING_CLOTHES, GAMING, BROWSING, DOZING
  * - Expressive ruby compound eyes with variable glow
  * - Dynamic translucent wings with state-dependent fluttering & folding
+ * - Articulated proboscis with Proboscis Extension Reflex (PER) and labellar tasting pads
  * - Six jointed legs and twitching antennae
  */
 export const FruitFly: React.FC<FruitFlyProps> = ({ 
   isMoving = false, 
-  activity = 'hovering' 
+  activity = 'hovering',
+  proboscisExtension = 0.0,
+  isFeeding = false,
 }) => {
   const bodyRef = useRef<THREE.Group>(null);
   const leftWingRef = useRef<THREE.Group>(null);
   const rightWingRef = useRef<THREE.Group>(null);
   const leftAntennaRef = useRef<THREE.Group>(null);
   const rightAntennaRef = useRef<THREE.Group>(null);
+  const proboscisRef = useRef<THREE.Group>(null);
   const lightRef = useRef<THREE.PointLight>(null);
 
   useFrame((state) => {
@@ -128,7 +134,19 @@ export const FruitFly: React.FC<FruitFlyProps> = ({
       rightAntennaRef.current.rotation.y = -twitch;
     }
 
-    // 4. Dynamic eye luminescence and personal point light
+    // 4. Proboscis extension & rhythmic feeding dipping
+    if (proboscisRef.current) {
+      const ext = proboscisExtension > 0 ? proboscisExtension : (activity === 'eating' || isEating || isFeeding ? 0.95 : 0.0);
+      const extY = -0.04 - ext * 0.055;
+      const extZ = 0.02 + ext * 0.035;
+      const extPitch = ext * 0.25 + ((isEating || isFeeding) ? Math.sin(time * 12) * 0.06 : 0);
+      proboscisRef.current.position.y = extY;
+      proboscisRef.current.position.z = extZ;
+      proboscisRef.current.rotation.x = extPitch;
+      proboscisRef.current.scale.set(1 + ext * 0.15, 1 + ext * 0.75, 1 + ext * 0.15);
+    }
+
+    // 5. Dynamic eye luminescence and personal point light
     if (lightRef.current) {
       if (activity === 'sleeping' || isDozing) {
         lightRef.current.intensity = 0.2;
@@ -247,6 +265,40 @@ export const FruitFly: React.FC<FruitFlyProps> = ({
             <sphereGeometry args={[0.008, 6, 6]} />
             <meshStandardMaterial color="#f59e0b" />
           </mesh>
+        </group>
+
+        {/* Articulated Proboscis with PER Extension & Labellar Tasting Lobes */}
+        <group ref={proboscisRef} position={[0, -0.04, 0.02]}>
+          {/* Basal Rostrum Cone */}
+          <mesh position={[0, -0.012, 0]}>
+            <cylinderGeometry args={[0.014, 0.018, 0.025, 8]} />
+            <meshStandardMaterial color="#78350f" roughness={0.6} />
+          </mesh>
+          {/* Haustellum Shaft */}
+          <mesh position={[0, -0.032, 0.004]} rotation={[0.15, 0, 0]}>
+            <cylinderGeometry args={[0.009, 0.011, 0.03, 8]} />
+            <meshStandardMaterial color="#92400e" roughness={0.5} />
+          </mesh>
+          {/* Labellar Lobes (Tasting pads with sensory hairs) */}
+          <group position={[0, -0.052, 0.008]}>
+            {/* Left Labellar Pad */}
+            <mesh position={[-0.012, 0, 0]} rotation={[0, 0, 0.25]}>
+              <sphereGeometry args={[0.012, 8, 8]} />
+              <meshStandardMaterial color="#b45309" roughness={0.4} />
+            </mesh>
+            {/* Right Labellar Pad */}
+            <mesh position={[0.012, 0, 0]} rotation={[0, 0, -0.25]}>
+              <sphereGeometry args={[0.012, 8, 8]} />
+              <meshStandardMaterial color="#b45309" roughness={0.4} />
+            </mesh>
+            {/* Sugar nutrient glow during active feeding */}
+            {(activity === 'eating' || isFeeding || proboscisExtension > 0.4) && (
+              <mesh position={[0, -0.006, 0]}>
+                <sphereGeometry args={[0.007, 8, 8]} />
+                <meshStandardMaterial color="#fef08a" emissive="#f59e0b" emissiveIntensity={0.7} />
+              </mesh>
+            )}
+          </group>
         </group>
       </group>
 
