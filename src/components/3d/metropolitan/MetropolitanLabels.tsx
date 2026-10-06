@@ -5,16 +5,18 @@ import {
   ShoppingBag,
   Building,
   Train,
-  Store,
   Trees,
   Factory,
   Home,
   Plus,
   Dumbbell,
   Bus,
-  GraduationCap
+  GraduationCap,
+  Plane,
+  Utensils
 } from 'lucide-react';
 import { useGameStore } from '../../../store/useGameStore';
+import { LocationId } from '../../../types';
 
 interface LandmarkBadge {
   id: string;
@@ -24,69 +26,138 @@ interface LandmarkBadge {
   bgClass: string;
   borderClass: string;
   textClass: string;
+  locationId?: LocationId;
 }
 
 /**
  * MetropolitanLabels:
- * 3D pinned floating landmark badges matching the reference image:
- * - Offices, Shopping Mall, Apartments, Metro Station, Shops & Restaurants,
- *   Lake & Park, Industrial Zone, Residential Area, Hospital, PowerFit Gym
- * - Toggled on/off via the "Show Labels" switch in the bottom toolbar
+ * 3D pinned floating landmark badges:
+ * - Airport, Central Railway Station, Central Bus Terminal, Skyscraper Towers,
+ *   Shopping Malls, Apartments, PG Room, Canteen, Gym, Lecture Hall
+ * - Interactive: Clicking room badges instantly opens the Full Room Interface!
  */
 export const MetropolitanLabels: React.FC = () => {
   const showLabels = useGameStore((state) => state.showLabels);
+  const switchLocation = useGameStore((state) => state.switchLocation);
 
   if (!showLabels) return null;
 
   const badges: LandmarkBadge[] = [
     {
-      id: 'offices',
-      name: 'Offices',
-      position: [-38, 28, -12],
+      id: 'airport',
+      name: 'International Airport',
+      position: [125, 26, 135],
+      icon: Plane,
+      bgClass: 'bg-[#0369a1]/90',
+      borderClass: 'border-sky-400/80',
+      textClass: 'text-sky-100',
+    },
+    {
+      id: 'railway_station',
+      name: 'Central Railway Station',
+      position: [-55, 24, -40],
+      icon: Train,
+      bgClass: 'bg-[#1e3a8a]/90',
+      borderClass: 'border-blue-400/80',
+      textClass: 'text-blue-100',
+    },
+    {
+      id: 'bus_terminal',
+      name: 'Central Bus Terminal',
+      position: [-38, 16, 12],
+      icon: Bus,
+      bgClass: 'bg-[#065f46]/90',
+      borderClass: 'border-emerald-400/80',
+      textClass: 'text-emerald-100',
+    },
+    {
+      id: 'apex_tower',
+      name: 'The Apex Skyscraper (78m)',
+      position: [-72, 45, -25],
       icon: Building2,
-      bgClass: 'bg-[#0f172a]/90',
-      borderClass: 'border-cyan-500/50',
+      bgClass: 'bg-[#0f172a]/95',
+      borderClass: 'border-cyan-400/80',
       textClass: 'text-cyan-200',
     },
     {
-      id: 'shopping_mall',
-      name: 'Shopping Mall',
-      position: [-16, 20, 2],
+      id: 'twin_towers',
+      name: 'Twin Towers & Skybridge',
+      position: [-52, 42, 95],
+      icon: Building2,
+      bgClass: 'bg-[#0f172a]/95',
+      borderClass: 'border-indigo-400/80',
+      textClass: 'text-indigo-200',
+    },
+    {
+      id: 'shopping_mall_mega',
+      name: 'Grand Metro Shopping Mall',
+      position: [52, 22, -25],
       icon: ShoppingBag,
-      bgClass: 'bg-[#831843]/90',
-      borderClass: 'border-pink-500/60',
+      bgClass: 'bg-[#831843]/95',
+      borderClass: 'border-pink-500/80',
       textClass: 'text-pink-200',
     },
     {
-      id: 'apartments',
-      name: 'Apartments',
-      position: [18, 38, -24],
+      id: 'luxury_apartments',
+      name: 'Greenwood Sky Residences',
+      position: [15, 32, -68],
       icon: Building,
+      bgClass: 'bg-[#0f172a]/95',
+      borderClass: 'border-amber-500/80',
+      textClass: 'text-amber-200',
+    },
+    {
+      id: 'pg_bedroom',
+      name: "Vishal's PG Bedroom (Room 204)",
+      position: [16, 7.5, 27],
+      icon: Home,
+      bgClass: 'bg-[#0284c7]/95',
+      borderClass: 'border-sky-300 ring-2 ring-sky-400/50',
+      textClass: 'text-white',
+      locationId: 'bedroom',
+    },
+    {
+      id: 'pg_canteen',
+      name: 'PG Mess & Canteen',
+      position: [26, 7.5, 27],
+      icon: Utensils,
+      bgClass: 'bg-[#ea580c]/95',
+      borderClass: 'border-amber-300 ring-2 ring-amber-400/50',
+      textClass: 'text-white',
+      locationId: 'dining',
+    },
+    {
+      id: 'mega_gym',
+      name: 'PowerFit Fitness Gym',
+      position: [20, 8.5, 42],
+      icon: Dumbbell,
+      bgClass: 'bg-[#0284c7]/95',
+      borderClass: 'border-sky-300 ring-2 ring-sky-400/50',
+      textClass: 'text-white',
+      locationId: 'gym',
+    },
+    {
+      id: 'college_campus',
+      name: 'Sairam College • Lecture Hall CS-301',
+      position: [-28, 10.5, 95],
+      icon: GraduationCap,
+      bgClass: 'bg-[#4338ca]/95',
+      borderClass: 'border-indigo-300 ring-2 ring-indigo-400/50',
+      textClass: 'text-white',
+      locationId: 'classroom',
+    },
+    {
+      id: 'hospital',
+      name: 'Kamatchi Multi-Specialty Hospital',
+      position: [36, 16, 72],
+      icon: Plus,
       bgClass: 'bg-[#0f172a]/90',
-      borderClass: 'border-slate-600/80',
-      textClass: 'text-slate-100',
-    },
-    {
-      id: 'metro_station',
-      name: 'Metro Station',
-      position: [-18, 14, 26],
-      icon: Train,
-      bgClass: 'bg-[#1e293b]/90',
-      borderClass: 'border-blue-500/50',
-      textClass: 'text-blue-200',
-    },
-    {
-      id: 'shops_restaurants',
-      name: 'Shops & Restaurants',
-      position: [22, 13, 16],
-      icon: Store,
-      bgClass: 'bg-[#701a75]/90',
-      borderClass: 'border-fuchsia-500/50',
-      textClass: 'text-fuchsia-200',
+      borderClass: 'border-rose-500/60',
+      textClass: 'text-rose-200',
     },
     {
       id: 'lake_park',
-      name: 'Pallavaram Lake',
+      name: 'Pallavaram Waterfront Lake & Pagoda',
       position: [48, 12, 22],
       icon: Trees,
       bgClass: 'bg-[#064e3b]/90',
@@ -94,67 +165,22 @@ export const MetropolitanLabels: React.FC = () => {
       textClass: 'text-emerald-200',
     },
     {
-      id: 'residential_area',
-      name: 'Residential Area',
-      position: [42, 10, 48],
-      icon: Home,
-      bgClass: 'bg-[#451a03]/90',
-      borderClass: 'border-amber-600/60',
-      textClass: 'text-amber-200',
-    },
-    {
-      id: 'hospital',
-      name: 'Kamatchi Hospital',
-      position: [36, 14, 72],
-      icon: Plus,
-      bgClass: 'bg-[#0f172a]/90',
-      borderClass: 'border-rose-500/60',
-      textClass: 'text-rose-200',
-    },
-    {
       id: 'industrial_zone',
-      name: 'Factories',
-      position: [-50, 13, 52],
+      name: 'Logistics Warehouses & Cargo',
+      position: [-50, 14, 52],
       icon: Factory,
       bgClass: 'bg-[#1e293b]/90',
       borderClass: 'border-slate-500/60',
       textClass: 'text-slate-200',
     },
     {
-      id: 'mega_gym',
-      name: 'SLAM Fitness Studio',
-      position: [20, 7.5, 42],
-      icon: Dumbbell,
-      bgClass: 'bg-[#0c4a6e]/90',
-      borderClass: 'border-sky-500/60',
-      textClass: 'text-sky-200',
-    },
-    {
       id: 'under_bridge_park',
       name: 'Sports Turf & Kids Park',
-      position: [-18, 5.5, 52],
+      position: [-18, 6.5, 52],
       icon: Trees,
       bgClass: 'bg-[#064e3b]/90',
       borderClass: 'border-emerald-500/60',
       textClass: 'text-emerald-200',
-    },
-    {
-      id: 'bus_stop',
-      name: 'Vels Bus Stop',
-      position: [9.5, 5.0, -3],
-      icon: Bus,
-      bgClass: 'bg-[#064e3b]/90',
-      borderClass: 'border-emerald-500/60',
-      textClass: 'text-emerald-200',
-    },
-    {
-      id: 'college_campus',
-      name: 'Sairam Engineering College',
-      position: [-28, 9.0, 95],
-      icon: GraduationCap,
-      bgClass: 'bg-[#1e1b4b]/90',
-      borderClass: 'border-indigo-500/60',
-      textClass: 'text-indigo-200',
     },
   ];
 
@@ -162,14 +188,32 @@ export const MetropolitanLabels: React.FC = () => {
     <group name="Metropolitan3DLabels">
       {badges.map((b) => {
         const Icon = b.icon;
+        const isClickable = Boolean(b.locationId);
+
         return (
           <group key={b.id} position={b.position}>
-            <Html center distanceFactor={70} style={{ pointerEvents: 'none' }}>
+            <Html center distanceFactor={75} style={{ pointerEvents: 'auto' }}>
               <div
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-xl shadow-2xl backdrop-blur-md border ${b.bgClass} ${b.borderClass} ${b.textClass} text-xs font-bold whitespace-nowrap cursor-default transition-transform hover:scale-110`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (b.locationId) {
+                    switchLocation(b.locationId);
+                  }
+                }}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl shadow-2xl backdrop-blur-md border ${b.bgClass} ${b.borderClass} ${b.textClass} text-xs font-bold whitespace-nowrap transition-all duration-200 ${
+                  isClickable
+                    ? 'cursor-pointer hover:scale-115 hover:shadow-cyan-500/50 hover:brightness-125 animate-pulse'
+                    : 'cursor-default hover:scale-105'
+                }`}
+                title={isClickable ? `Click to enter ${b.name} Full Room Interface!` : b.name}
               >
                 <Icon className="w-3.5 h-3.5 shrink-0" />
                 <span>{b.name}</span>
+                {isClickable && (
+                  <span className="text-[10px] uppercase font-mono px-1 py-0.2 bg-white/20 rounded text-white ml-1">
+                    Enter
+                  </span>
+                )}
               </div>
             </Html>
           </group>

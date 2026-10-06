@@ -8,6 +8,11 @@ import {
   Play,
   Pause,
   Sun,
+  Moon,
+  Sunset,
+  Cloud,
+  CloudRain,
+  CloudLightning,
   Eye,
   EyeOff,
   MapPin,
@@ -47,6 +52,10 @@ export const MetropolitanHUD: React.FC = () => {
   const togglePauseSimulation = useGameStore((state) => state.togglePauseSimulation);
   const setSimulationSpeed = useGameStore((state) => state.setSimulationSpeed);
   const setTime = useGameStore((state) => state.setTime);
+  const timeOfDay = useGameStore((state) => state.timeOfDay);
+  const setTimeOfDay = useGameStore((state) => state.setTimeOfDay);
+  const weather = useGameStore((state) => state.weather);
+  const setWeather = useGameStore((state) => state.setWeather);
   const currentLocation = useGameStore((state) => state.currentLocation);
   const switchLocation = useGameStore((state) => state.switchLocation);
 
@@ -237,11 +246,41 @@ export const MetropolitanHUD: React.FC = () => {
             })}
           </div>
 
+          {/* Time of Day Quick Presets */}
+          <div className="grid grid-cols-4 gap-1 pt-1 border-t border-slate-800/60">
+            {(
+              [
+                { id: 'morning', label: 'Morning', icon: Sun },
+                { id: 'afternoon', label: 'Noon', icon: Sun },
+                { id: 'evening', label: 'Evening', icon: Sunset },
+                { id: 'night', label: 'Night', icon: Moon },
+              ] as const
+            ).map((t) => {
+              const Icon = t.icon;
+              const isSelected = timeOfDay === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setTimeOfDay(t.id)}
+                  className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-[10px] font-semibold transition-all border ${
+                    isSelected
+                      ? 'bg-amber-500/25 text-amber-300 border-amber-500/60 shadow-sm'
+                      : 'bg-slate-900/60 text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 border-slate-800/80'
+                  }`}
+                  title={`Switch to ${t.label}`}
+                >
+                  <Icon className="w-3.5 h-3.5 mb-0.5" />
+                  <span>{t.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
           {/* Time of Day Slider */}
-          <div className="flex items-center justify-between gap-2.5 pt-1 border-t border-slate-800/60 text-xs">
-            <span className="text-slate-400 shrink-0 flex items-center gap-1.5">
-              <span>Time of Day</span>
-              <Sun className="w-3.5 h-3.5 text-amber-400" />
+          <div className="flex items-center justify-between gap-2 text-xs">
+            <span className="text-slate-400 shrink-0 flex items-center gap-1 text-[11px]">
+              <span>Clock</span>
+              <Sun className="w-3 h-3 text-amber-400" />
             </span>
 
             <input
@@ -254,9 +293,45 @@ export const MetropolitanHUD: React.FC = () => {
               className="w-full accent-amber-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
             />
 
-            <span className="font-mono text-amber-300 font-bold shrink-0">
+            <span className="font-mono text-amber-300 font-bold shrink-0 text-xs">
               {simulatedTime}
             </span>
+          </div>
+
+          {/* Weather Season & Dynamics Controls */}
+          <div className="flex flex-col gap-1 pt-1 border-t border-slate-800/60">
+            <div className="flex items-center justify-between text-[11px] text-slate-400 px-0.5">
+              <span>Weather Dynamics</span>
+              <span className="text-amber-400 capitalize font-medium">{weather}</span>
+            </div>
+            <div className="grid grid-cols-4 gap-1">
+              {(
+                [
+                  { id: 'clear', label: 'Clear', icon: Sun },
+                  { id: 'cloudy', label: 'Cloudy', icon: Cloud },
+                  { id: 'rainy', label: 'Rainy', icon: CloudRain },
+                  { id: 'stormy', label: 'Storm', icon: CloudLightning },
+                ] as const
+              ).map((w) => {
+                const Icon = w.icon;
+                const isSelected = weather === w.id;
+                return (
+                  <button
+                    key={w.id}
+                    onClick={() => setWeather(w.id)}
+                    className={`flex items-center justify-center gap-1 py-1 px-1 rounded-xl text-[10px] font-semibold transition-all border ${
+                      isSelected
+                        ? 'bg-cyan-500/25 text-cyan-300 border-cyan-500/60 shadow-sm'
+                        : 'bg-slate-900/60 text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 border-slate-800/80'
+                    }`}
+                    title={`Set Weather: ${w.label}`}
+                  >
+                    <Icon className="w-3 h-3 shrink-0" />
+                    <span>{w.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 

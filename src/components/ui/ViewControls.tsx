@@ -1,5 +1,5 @@
 import React from 'react';
-import { RotateCcw, Target, Sun, RefreshCw } from 'lucide-react';
+import { RotateCcw, Target, Sun, RefreshCw, CloudRain } from 'lucide-react';
 import { useGameStore } from '../../store/useGameStore';
 
 export const ViewControls: React.FC = () => {
@@ -8,24 +8,46 @@ export const ViewControls: React.FC = () => {
   const toggleFollowFly = useGameStore((state) => state.toggleFollowFly);
   const lightingPreset = useGameStore((state) => state.lightingPreset);
   const cycleLightingPreset = useGameStore((state) => state.cycleLightingPreset);
+  const weather = useGameStore((state) => state.weather);
+  const cycleWeather = useGameStore((state) => state.cycleWeather);
   const resetFlyToCenter = useGameStore((state) => state.resetFlyToCenter);
 
   const presetLabels: Record<string, string> = {
     dawn: 'Dawn 06:00',
+    morning: 'Morning',
     afternoon: 'Afternoon',
+    evening: 'Sunset 18:45',
+    night: 'Night Sky',
     warm_night: 'Night Study',
+  };
+
+  const weatherLabels: Record<string, string> = {
+    clear: 'Clear Sky',
+    cloudy: 'Cloudy',
+    rainy: 'Rainy',
+    stormy: 'Stormy',
   };
 
   return (
     <div className="absolute bottom-5 right-5 z-10 pointer-events-auto flex items-center gap-2">
-      {/* Lighting preset cycle button */}
+      {/* Lighting / Time-of-day preset cycle button */}
       <button
         onClick={cycleLightingPreset}
         className="glass-panel px-3 py-2 rounded-xl flex items-center gap-2 text-xs font-semibold text-slate-300 hover:text-white hover:border-amber-500/40 transition-all shadow-lg active:scale-95"
-        title="Cycle room lighting mode"
+        title="Cycle room lighting & time of day"
       >
         <Sun className="w-3.5 h-3.5 text-amber-400" />
-        <span className="hidden sm:inline font-mono">{presetLabels[lightingPreset]}</span>
+        <span className="hidden sm:inline font-mono">{presetLabels[lightingPreset] || lightingPreset}</span>
+      </button>
+
+      {/* Weather preset cycle button */}
+      <button
+        onClick={cycleWeather}
+        className="glass-panel px-3 py-2 rounded-xl flex items-center gap-2 text-xs font-semibold text-slate-300 hover:text-white hover:border-cyan-500/40 transition-all shadow-lg active:scale-95"
+        title="Cycle weather conditions (Clear, Cloudy, Rainy, Stormy)"
+      >
+        <CloudRain className="w-3.5 h-3.5 text-cyan-400" />
+        <span className="hidden sm:inline font-mono">{weatherLabels[weather] || weather}</span>
       </button>
 
       {/* Follow fly camera toggle */}

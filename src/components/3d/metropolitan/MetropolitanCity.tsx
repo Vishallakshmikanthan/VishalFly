@@ -13,40 +13,49 @@ import { MetropolitanTransit } from './MetropolitanTransit';
 import { MetropolitanTraffic } from './MetropolitanTraffic';
 import { MetropolitanPedestrians } from './MetropolitanPedestrians';
 import { MetropolitanLabels } from './MetropolitanLabels';
+import { MetropolitanSkyAndAtmosphere } from './MetropolitanSkyAndAtmosphere';
+import { MetropolitanWeatherSystem } from './MetropolitanWeatherSystem';
+import { MetropolitanInfiniteHorizon } from './MetropolitanInfiniteHorizon';
+import { MetropolitanAirport } from './MetropolitanAirport';
+import { MetropolitanRailwayStation } from './MetropolitanRailwayStation';
+import { MetropolitanBusStand } from './MetropolitanBusStand';
+import { MetropolitanTowersDistrict } from './MetropolitanTowersDistrict';
+import { useGameStore } from '../../../store/useGameStore';
 
-/**
- * MetropolitanCity:
- * Master 3D scene combining all urban metropolitan systems matching the reference image:
- * - Lakes & landscaped waterfront park with Chinese pavilion
- * - High-rise decorated luxury apartments & suburban residential homes
- * - Massive shopping mall with LED billboards ("MALL", etc.)
- * - Street-level shops, cafes, and outdoor dining
- * - Corporate office towers
- * - Hospital with medical red cross & trauma helipad
- * - Industrial zone with warehouses, tanks, containers, and trucks
- * - Massively expanded PowerFit Mega Gym with extensive equipment
- * - Elevated metro viaduct, modern metro station, and animated metro train
- * - Multi-lane roads with moving traffic (cars, taxis, buses, vans)
- * - Pedestrian agents walking and roaming through the city
- * - 3D pinned floating landmark badges
- */
 export const MetropolitanCity: React.FC = () => {
+  const timeOfDay = useGameStore((state) => state.timeOfDay);
+  const weather = useGameStore((state) => state.weather);
+
+  const ambientColor = React.useMemo(() => {
+    if (weather === 'stormy') return '#334155';
+    if (weather === 'rainy') return '#475569';
+    if (timeOfDay === 'morning') return '#fed7aa';
+    if (timeOfDay === 'afternoon') return '#f8fafc';
+    if (timeOfDay === 'evening') return '#fdba74';
+    return '#1e293b'; // night
+  }, [weather, timeOfDay]);
+
+  const ambientIntensity = React.useMemo(() => {
+    if (weather === 'stormy') return 0.55;
+    if (weather === 'rainy') return 0.75;
+    if (timeOfDay === 'night') return 0.4;
+    if (timeOfDay === 'evening') return 0.95;
+    return 1.2; // morning / afternoon
+  }, [weather, timeOfDay]);
+
   return (
     <group name="MetropolitanCityContainer">
-      {/* 1. Global Environmental Lighting for the Metropolis */}
-      <ambientLight intensity={1.1} color="#f8fafc" />
-      <directionalLight
-        position={[60, 90, 50]}
-        intensity={2.2}
-        color="#fffbeb"
-        castShadow={false}
-      />
-      <directionalLight
-        position={[-50, 40, -40]}
-        intensity={0.9}
-        color="#38bdf8"
-        castShadow={false}
-      />
+      {/* 1. Dynamic Natural Sky, Celestial Sun, Moon, Clouds, Starfield & Birds */}
+      <MetropolitanSkyAndAtmosphere />
+
+      {/* 2. Hollywood Weather Effects: Rain Streaks, Ground Splashes, Lightning Thunder */}
+      <MetropolitanWeatherSystem />
+
+      {/* 3. Infinite Horizon Expanse: 3.2km Terrain, Suburban Houses, Outer Towers & Mountains */}
+      <MetropolitanInfiniteHorizon />
+
+      {/* 4. Dynamic Atmospheric Ambient Lighting */}
+      <ambientLight intensity={ambientIntensity} color={ambientColor} />
 
       {/* 2. Infrastructure & Road Network */}
       <MetropolitanRoadsAndInfrastructure />
@@ -74,6 +83,18 @@ export const MetropolitanCity: React.FC = () => {
 
       {/* 9. Industrial Warehousing Zone */}
       <MetropolitanIndustrialZone />
+
+      {/* 9.1 International Airport Complex (Runway, Terminal, ATC Tower, Airplanes) */}
+      <MetropolitanAirport />
+
+      {/* 9.2 Grand Central Railway Station (Tracks, Platforms, Express & Bullet Trains) */}
+      <MetropolitanRailwayStation />
+
+      {/* 9.3 Central Bus Stand (Depot Canopy, Bus Bays, Volvo & City Buses) */}
+      <MetropolitanBusStand />
+
+      {/* 9.4 Metropolitan Towers & Skyscraper District (Twin Towers, Helipads, Mega Mall II, High-Rise Apts) */}
+      <MetropolitanTowersDistrict />
 
       {/* 10. Under-Bridge Linear Park, Sports Turfs (Cricket, Football) & Flower Gardens */}
       <MetropolitanUnderBridgePark />

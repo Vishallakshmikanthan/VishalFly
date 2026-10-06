@@ -534,12 +534,12 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
  */
 export const LOCATION_WORLD_OFFSETS: Record<LocationId, [number, number, number]> = {
   metropolitan: [0, 0, 0],
-  bedroom: [16, 0, 27],
-  balcony: [17.9, 0, 20.8],
-  dining: [26, 0, 27],
-  grounds: [21, 0, 34.5],
-  gym: [20, 0, 42],
-  classroom: [-28, 0, 95],
-  travel: [0, 0, 25],
+  bedroom: [0, 0, 0],
+  balcony: [0, 0, 0],
+  dining: [0, 0, 0],
+  grounds: [0, 0, 0],
+  gym: [0, 0, 0],
+  classroom: [0, 0, 0],
+  travel: [0, 0, 0],
 };
 

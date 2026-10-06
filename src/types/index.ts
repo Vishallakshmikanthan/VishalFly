@@ -53,7 +53,9 @@ export interface RoomBounds {
   maxZ: number;
 }
 
-export type LightingPreset = 'dawn' | 'afternoon' | 'warm_night';
+export type LightingPreset = 'dawn' | 'morning' | 'afternoon' | 'evening' | 'night' | 'warm_night';
+export type WeatherPreset = 'clear' | 'cloudy' | 'rainy' | 'stormy';
+export type TimeOfDayPreset = 'morning' | 'afternoon' | 'evening' | 'night';
 
 export type LocationId = 
   | 'metropolitan'

@@ -2,9 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Scene } from './components/3d/Scene';
 import { AppHeader } from './components/ui/AppHeader';
 import { SimulationControlBar } from './components/ui/SimulationControlBar';
-import { HUD } from './components/ui/HUD';
-import { ControlsGuide } from './components/ui/ControlsGuide';
-import { ViewControls } from './components/ui/ViewControls';
 import { TransitionOverlay } from './components/ui/TransitionOverlay';
 import { TimelineView } from './components/ui/TimelineView';
 import { AnalyticsView } from './components/ui/AnalyticsView';
@@ -16,6 +13,7 @@ import { CognitiveInspector } from './components/ui/CognitiveInspector';
 import { useGameStore } from './store/useGameStore';
 
 import { MetropolitanHUD } from './components/ui/MetropolitanHUD';
+import { RoomFullInterfaceHUD } from './components/ui/RoomFullInterfaceHUD';
 
 export const App: React.FC = () => {
   const activeView = useGameStore((state) => state.activeView);
@@ -63,11 +61,7 @@ export const App: React.FC = () => {
             {isMetropolitan ? (
               <MetropolitanHUD />
             ) : (
-              <>
-                <HUD />
-                <ControlsGuide />
-                <ViewControls />
-              </>
+              <RoomFullInterfaceHUD />
             )}
           </div>
         )}

@@ -41,9 +41,39 @@ export const LightingRig: React.FC = () => {
       hemiGround: '#020617',
       hemiIntensity: 0.3,
     },
+    evening: {
+      sunColor: '#fb923c',
+      sunIntensity: 1.6,
+      sunPos: [6, 4, -6] as [number, number, number],
+      ambientColor: '#fdba74',
+      ambientIntensity: 0.4,
+      hemiSky: '#f97316',
+      hemiGround: '#0f172a',
+      hemiIntensity: 0.45,
+    },
+    night: {
+      sunColor: '#1e1b4b',
+      sunIntensity: 0.4,
+      sunPos: [4, 6, -5] as [number, number, number],
+      ambientColor: '#0f172a',
+      ambientIntensity: 0.25,
+      hemiSky: '#312e81',
+      hemiGround: '#020617',
+      hemiIntensity: 0.3,
+    },
+    morning: {
+      sunColor: '#fed7aa',
+      sunIntensity: 1.8,
+      sunPos: [6, 7, -6] as [number, number, number],
+      ambientColor: '#38bdf8',
+      ambientIntensity: 0.45,
+      hemiSky: '#fed7aa',
+      hemiGround: '#0f172a',
+      hemiIntensity: 0.5,
+    },
   };
 
-  const current = configs[lightingPreset] || configs.dawn;
+  const current = (configs as Record<string, typeof configs.dawn>)[lightingPreset] || configs.dawn;
 
   return (
     <group name="LightingRig">

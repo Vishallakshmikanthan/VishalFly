@@ -9,6 +9,7 @@ import {
   Box,
   Globe,
   Sun,
+  CloudRain,
   ChevronDown
 } from 'lucide-react';
 import { useGameStore } from '../../store/useGameStore';
@@ -33,6 +34,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   const switchLocation = useGameStore((state) => state.switchLocation);
   const simulationClock = useGameStore((state) => state.simulationClock);
   const cycleLightingPreset = useGameStore((state) => state.cycleLightingPreset);
+  const weather = useGameStore((state) => state.weather);
+  const cycleWeather = useGameStore((state) => state.cycleWeather);
 
   const [showLocationMenu, setShowLocationMenu] = useState(false);
 
@@ -155,13 +158,26 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           </span>
         </div>
 
-        {/* Day / Night Weather Toggle (Sun Icon) */}
+        {/* Day / Night Time Toggle (Sun Icon) */}
         <button
           onClick={cycleLightingPreset}
           className="p-2 rounded-xl text-amber-300 bg-slate-900/70 hover:bg-slate-800 border border-slate-800 transition-all shadow-sm"
-          title="Toggle Day/Night Cycle Lighting"
+          title="Cycle Day/Night/Twilight Time of Day"
         >
           <Sun className="w-4 h-4 text-amber-400" />
+        </button>
+
+        {/* Dynamic Weather Toggle (CloudRain Icon) */}
+        <button
+          onClick={cycleWeather}
+          className={`p-2 rounded-xl border transition-all shadow-sm ${
+            weather !== 'clear'
+              ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50'
+              : 'text-slate-300 bg-slate-900/70 hover:bg-slate-800 border-slate-800'
+          }`}
+          title={`Cycle Weather (Current: ${weather})`}
+        >
+          <CloudRain className="w-4 h-4 text-cyan-400" />
         </button>
 
         {/* Cognitive Architecture Inspector */}

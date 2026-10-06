@@ -28,7 +28,9 @@ import {
   DayOfWeek,
   ActiveDashboardView,
   CameraViewMode,
-  MetropolitanLayers
+  MetropolitanLayers,
+  WeatherPreset,
+  TimeOfDayPreset
 } from '../types';
 import { LOCATIONS, LOCATION_WORLD_OFFSETS } from '../navigation/locationGraph';
 import { SimulationEngine } from '../simulation/engine/SimulationEngine';
@@ -118,6 +120,8 @@ interface GameState {
   followFly: boolean;
   cameraMode: CameraViewMode;
   setCameraMode: (mode: CameraViewMode) => void;
+  customCameraPose: { pos: [number, number, number]; target: [number, number, number] } | null;
+  setCustomCameraPose: (pose: { pos: [number, number, number]; target: [number, number, number] } | null) => void;
   showLabels: boolean;
   setShowLabels: (show: boolean) => void;
   toggleShowLabels: () => void;
@@ -127,8 +131,10 @@ interface GameState {
   toggleMetropolitanLayer: (layer: keyof MetropolitanLayers) => void;
   setMetropolitanLayer: (layer: keyof MetropolitanLayers, enabled: boolean) => void;
   
-  // Visuals
+  // Visuals & Natural Elements
   lightingPreset: LightingPreset;
+  weather: WeatherPreset;
+  timeOfDay: TimeOfDayPreset;
   
   // Actions
   setFlyPosition: (pos: Vector3Tuple) => void;
@@ -140,6 +146,9 @@ interface GameState {
   toggleFollowFly: () => void;
   setLightingPreset: (preset: LightingPreset) => void;
   cycleLightingPreset: () => void;
+  setWeather: (weather: WeatherPreset) => void;
+  cycleWeather: () => void;
+  setTimeOfDay: (tod: TimeOfDayPreset) => void;
   resetFlyToCenter: () => void;
   switchLocation: (targetId: LocationId, travelMessage?: string) => void;
   
@@ -234,6 +243,8 @@ export const useGameStore = create<GameState>((set, get) => {
         followFly: cameraMode === 'follow',
       });
     },
+    customCameraPose: null,
+    setCustomCameraPose: (customCameraPose) => set({ customCameraPose }),
     showLabels: true,
     setShowLabels: (showLabels) => set({ showLabels }),
     toggleShowLabels: () => set((state) => ({ showLabels: !state.showLabels })),
@@ -321,6 +332,8 @@ export const useGameStore = create<GameState>((set, get) => {
     simulationSettings: { ...DEFAULT_SIMULATION_SETTINGS, ...simulationEngine.clock.getSettings() },
     
     lightingPreset: 'dawn',
+    weather: 'clear',
+    timeOfDay: 'morning',
     
     setFlyPosition: (flyPosition) => set({ flyPosition }),
     setFlyRotation: (flyRotation) => set({ flyRotation }),
@@ -332,12 +345,45 @@ export const useGameStore = create<GameState>((set, get) => {
     setFollowFly: (followFly) => set({ followFly }),
     toggleFollowFly: () => set((state) => ({ followFly: !state.followFly })),
     
-    setLightingPreset: (lightingPreset) => set({ lightingPreset }),
+    setLightingPreset: (lightingPreset) => {
+      let tod: TimeOfDayPreset = 'morning';
+      if (lightingPreset === 'afternoon') tod = 'afternoon';
+      else if (lightingPreset === 'evening') tod = 'evening';
+      else if (lightingPreset === 'night' || lightingPreset === 'warm_night') tod = 'night';
+      set({ lightingPreset, timeOfDay: tod });
+    },
     cycleLightingPreset: () => {
       const current = get().lightingPreset;
       const next: LightingPreset = 
-        current === 'dawn' ? 'afternoon' : current === 'afternoon' ? 'warm_night' : 'dawn';
-      set({ lightingPreset: next });
+        current === 'dawn' || current === 'morning' ? 'afternoon' : 
+        current === 'afternoon' ? 'evening' : 
+        current === 'evening' ? 'warm_night' : 'dawn';
+      get().setLightingPreset(next);
+    },
+    
+    setWeather: (weather) => set({ weather }),
+    cycleWeather: () => {
+      const current = get().weather;
+      const weathers: WeatherPreset[] = ['clear', 'cloudy', 'rainy', 'stormy'];
+      const nextIdx = (weathers.indexOf(current) + 1) % weathers.length;
+      set({ weather: weathers[nextIdx] });
+    },
+    
+    setTimeOfDay: (tod) => {
+      let targetTime = '07:30';
+      let preset: LightingPreset = 'dawn';
+      if (tod === 'afternoon') {
+        targetTime = '13:00';
+        preset = 'afternoon';
+      } else if (tod === 'evening') {
+        targetTime = '18:45';
+        preset = 'evening';
+      } else if (tod === 'night') {
+        targetTime = '22:30';
+        preset = 'warm_night';
+      }
+      simulationEngine.setTime(targetTime);
+      set({ timeOfDay: tod, lightingPreset: preset, simulatedTime: targetTime });
     },
     
     resetFlyToCenter: () => {
@@ -396,6 +442,7 @@ export const useGameStore = create<GameState>((set, get) => {
           locationName: targetConfig.name,
           roomSubLocation: targetConfig.subLocation,
           currentSpot: `Arrived at ${targetConfig.name}`,
+          customCameraPose: null,
           resetCameraTrigger: prev.resetCameraTrigger + 1,
         }));
 
@@ -468,9 +515,18 @@ export const useGameStore = create<GameState>((set, get) => {
         current.switchLocation(targetLoc, `Autonomous Travel to ${LOCATIONS[targetLoc].name}`);
       }
 
+      const [h, m] = simState.clock.simulatedTime.split(':').map(Number);
+      const totalMinutes = (h || 0) * 60 + (m || 0);
+      let tod: TimeOfDayPreset = 'morning';
+      if (totalMinutes >= 330 && totalMinutes < 690) tod = 'morning';
+      else if (totalMinutes >= 690 && totalMinutes < 1020) tod = 'afternoon';
+      else if (totalMinutes >= 1020 && totalMinutes < 1230) tod = 'evening';
+      else tod = 'night';
+
       set({
         simulationClock: simState.clock,
         simulatedTime: simState.clock.simulatedTime,
+        timeOfDay: tod,
         currentActivity: simState.currentActivity,
         nextActivity: simState.nextActivity,
         needs: simState.needs,

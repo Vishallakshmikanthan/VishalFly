@@ -2,6 +2,7 @@ import React from 'react';
 import { MetropolitanCity } from './metropolitan/MetropolitanCity';
 import { MetropolitanCommunityZone } from './metropolitan/MetropolitanCommunityZone';
 import { ClassroomEnvironment } from './environments/Classroom/ClassroomEnvironment';
+import { useGameStore } from '../../store/useGameStore';
 
 /**
  * UnifiedOpenWorldEnvironment:
@@ -30,6 +31,9 @@ import { ClassroomEnvironment } from './environments/Classroom/ClassroomEnvironm
  *    - Sairam College Campus Lecture Hall [0, 0, 100]
  */
 export const UnifiedOpenWorldEnvironment: React.FC = () => {
+  const switchLocation = useGameStore((state) => state.switchLocation);
+  const [hoveredCollege, setHoveredCollege] = React.useState(false);
+
   return (
     <group name="UnifiedOpenWorld">
       {/* 1. MASTER METROPOLITAN CITY SYSTEM */}
@@ -38,12 +42,31 @@ export const UnifiedOpenWorldEnvironment: React.FC = () => {
       {/* 2. COMMUNITY ZONE IN MARKED AREA: PG Bedroom, Canteen & Gym (Individual, visible, clickable buildings) */}
       <MetropolitanCommunityZone />
 
-      {/* Sector E: Sairam College Campus Quad & Lecture Hall CS-301 [Relocated off-road to [-28, 0, 95]] */}
-      <group position={[-28, 0, 95]} name="Sector_CollegeClassroom">
+      {/* Sector E: Sairam College Campus Quad & Lecture Hall CS-301 [Clickable to Enter Full Room] */}
+      <group
+        position={[-28, 0, 95]}
+        name="Sector_CollegeClassroom"
+        onClick={(e) => {
+          e.stopPropagation();
+          switchLocation('classroom');
+        }}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setHoveredCollege(true);
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={() => {
+          setHoveredCollege(false);
+          document.body.style.cursor = 'auto';
+        }}
+      >
         {/* Sairam Academic Campus Plaza Base Platform */}
         <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
           <planeGeometry args={[26, 22]} />
-          <meshStandardMaterial color="#1e293b" roughness={0.85} />
+          <meshStandardMaterial
+            color={hoveredCollege ? '#334155' : '#1e293b'}
+            roughness={0.85}
+          />
         </mesh>
 
         {/* Campus Quad Lawn */}

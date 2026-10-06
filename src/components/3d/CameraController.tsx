@@ -52,6 +52,18 @@ export const CameraController: React.FC = () => {
     resetProgress.current = 0;
   }, [currentLocation]);
 
+  const customCameraPose = useGameStore((state) => state.customCameraPose);
+
+  // When custom station perspective is selected from room interface
+  useEffect(() => {
+    if (customCameraPose) {
+      defaultPos.current.set(...customCameraPose.pos);
+      defaultTarget.current.set(...customCameraPose.target);
+      isResetting.current = true;
+      resetProgress.current = 0;
+    }
+  }, [customCameraPose]);
+
   // When manual reset is triggered from HUD or keyboard
   useEffect(() => {
     if (resetCameraTrigger > 0) {
@@ -110,7 +122,7 @@ export const CameraController: React.FC = () => {
       enableDamping
       dampingFactor={0.06}
       minDistance={2.0}
-      maxDistance={250.0}
+      maxDistance={750.0}
       minPolarAngle={0.05}
       maxPolarAngle={Math.PI / 2.02} // Keep above ground
       autoRotate={cameraMode === 'orbit'}
