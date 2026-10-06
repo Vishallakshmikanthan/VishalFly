@@ -12,9 +12,9 @@ export const Scene: React.FC = () => {
         shadows
         camera={{
           position: [7.2, 6.2, 7.2],
-          fov: 38,
+          fov: 42,
           near: 0.1,
-          far: 50,
+          far: 450,
         }}
         gl={{
           antialias: true,
@@ -22,9 +22,9 @@ export const Scene: React.FC = () => {
           toneMappingExposure: 1.15,
         }}
       >
-        {/* Deep dark void color with subtle fog */}
+        {/* Atmospheric sky background with subtle distant fog */}
         <color attach="background" args={['#080a0f']} />
-        <fog attach="fog" args={['#080a0f', 13, 26]} />
+        <fog attach="fog" args={['#080a0f', 50, 320]} />
 
         <Suspense fallback={null}>
           <CameraController />

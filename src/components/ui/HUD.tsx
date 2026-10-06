@@ -52,6 +52,19 @@ export const HUD: React.FC<HUDProps> = () => {
             </div>
           )}
 
+          {/* Active Biological Circadian Routine & Chore Pill */}
+          {connectomeSnapshot?.circadian && (
+            <div className="glass-pill px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 text-xs text-cyan-300 border border-cyan-500/40 bg-cyan-950/40 font-mono">
+              <Sparkles className="w-3 h-3 text-cyan-400 animate-pulse" />
+              <span className="font-semibold text-cyan-200">
+                {connectomeSnapshot.circadian.stateLabel}
+              </span>
+              <span className="text-[10px] text-cyan-400/80 px-1 py-0.2 bg-cyan-900/60 rounded">
+                DA: {(connectomeSnapshot.circadian.dopamineGrind * 100).toFixed(0)}% | OA: {(connectomeSnapshot.circadian.octopamineArousal * 100).toFixed(0)}%
+              </span>
+            </div>
+          )}
+
           {selectedCollegeBehavior && (
             <div className="glass-pill px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 text-xs text-purple-300 border border-purple-500/30">
               <Sparkles className="w-3 h-3 text-purple-400" />

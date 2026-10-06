@@ -20,6 +20,7 @@ import { OlfactoryProcessingLayer } from '../olfactory/OlfactoryProcessingLayer'
 import { GustatoryEnvironment } from '../gustatory/GustatoryEnvironment';
 import { GustatoryProcessingLayer } from '../gustatory/GustatoryProcessingLayer';
 import { MushroomBodyLearningLayer } from '../learning/MushroomBodyLearningLayer';
+import { CircadianRoutineEngine } from '../circadian/CircadianRoutineEngine';
 
 export interface ConnectomeFlightUpdate {
   newPosition: [number, number, number];
@@ -47,6 +48,7 @@ export class ConnectomeFlyController {
   public gustatoryEnvironment: GustatoryEnvironment;
   public gustatoryProcessingLayer: GustatoryProcessingLayer;
   public mushroomBodyLearningLayer: MushroomBodyLearningLayer;
+  public circadianEngine: CircadianRoutineEngine;
 
   private isManualThreatTriggered = false;
   private threatTimerSec = 0;
@@ -62,6 +64,11 @@ export class ConnectomeFlyController {
     this.gustatoryEnvironment = new GustatoryEnvironment();
     this.gustatoryProcessingLayer = new GustatoryProcessingLayer();
     this.mushroomBodyLearningLayer = new MushroomBodyLearningLayer();
+    this.circadianEngine = new CircadianRoutineEngine();
+  }
+
+  public getCircadianEngine(): CircadianRoutineEngine {
+    return this.circadianEngine;
   }
 
   public getGraph(): ConnectomeGraph {
@@ -112,7 +119,9 @@ export class ConnectomeFlyController {
     dtSimSec: number,
     goal: NavigationGoal | null = null,
     currentLocationId: string = 'bedroom',
-    hungerLevel: number = 0
+    hungerLevel: number = 0,
+    simMinutes: number = 360,
+    dayOfWeek: number = 1
   ): ConnectomeFlightUpdate {
     const dt = Math.max(0.001, Math.min(0.05, dtSimSec));
     const dtMs = dt * 1000;
@@ -345,6 +354,29 @@ export class ConnectomeFlyController {
       odorValenceMap: learningTelemetry.odorValenceMap,
       experienceHistory: learningTelemetry.recentExperiences,
       provenance: learningTelemetry.provenance,
+    };
+
+    // Step Biological Circadian Pacemaker & Task Neuromodulation
+    const circadianTelemetry = this.circadianEngine.update(simMinutes, dayOfWeek, dt);
+    Object.assign(snapshot.potentials, circadianTelemetry.snapshot.potentials);
+    Object.assign(snapshot.firingRates, circadianTelemetry.snapshot.firingRates);
+    Object.assign(snapshot.sensoryInputs, circadianTelemetry.snapshot.sensoryInputs);
+    for (const spk of circadianTelemetry.snapshot.recentSpikes) {
+      if (!snapshot.recentSpikes.includes(spk)) {
+        snapshot.recentSpikes.push(spk);
+      }
+    }
+
+    snapshot.circadian = {
+      simHour: circadianTelemetry.simHour,
+      dayOfWeek: circadianTelemetry.dayOfWeek,
+      activeLifeState: circadianTelemetry.activeLifeState,
+      stateLabel: circadianTelemetry.stateLabel,
+      targetLandmark: circadianTelemetry.targetLandmark,
+      dopamineGrind: circadianTelemetry.neuromodulators.dopamineGrind,
+      octopamineArousal: circadianTelemetry.neuromodulators.octopamineArousal,
+      npfHungerDrive: circadianTelemetry.neuromodulators.npfHungerDrive,
+      pdfArousalTiter: circadianTelemetry.neuromodulators.pdfArousalTiter,
     };
 
     // 7. Decode Descending Motor Commands

@@ -1,0 +1,161 @@
+{
+  "circuitId": "male_cns_circadian_clock_v1",
+  "name": "Circadian Pacemaker & Task Neuromodulation Network",
+  "description": "Biological clock pacemaker neurons (sLNv, lLNv, DN1) and neuromodulatory clusters (PAM Dopamine, Octopamine, NPF) orchestrating 24-hour routine cycles and chore motivation in Drosophila melanogaster.",
+  "datasetVersion": "MaleCNS-v1.0-biological-reference",
+  "retrievalDate": "2026-10-06",
+  "isRealDataImported": true,
+  "neurons": [
+    {
+      "bodyId": 30001,
+      "type": "sLNv_01",
+      "instance": "sLNv_R",
+      "superclass": "clock",
+      "somaSide": "R",
+      "somaLocation": [128400, 241000, 168000],
+      "neurotransmitter": "gaba",
+      "synapseSign": 1,
+      "ntConfidence": 0.94,
+      "isGroundTruthNT": true,
+      "publishedReference": "Helfrich-Förster, J Comp Neurol 1995; Shafer et al., Cell 2008",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 30002,
+      "type": "lLNv_01",
+      "instance": "lLNv_R",
+      "superclass": "clock",
+      "somaSide": "R",
+      "somaLocation": [132000, 245000, 172000],
+      "neurotransmitter": "acetylcholine",
+      "synapseSign": 1,
+      "ntConfidence": 0.96,
+      "isGroundTruthNT": true,
+      "publishedReference": "Renn et al., Cell 1999",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 30003,
+      "type": "DN1p_01",
+      "instance": "DN1p_R",
+      "superclass": "clock",
+      "somaSide": "R",
+      "somaLocation": [145000, 290000, 185000],
+      "neurotransmitter": "glutamate",
+      "synapseSign": -1,
+      "ntConfidence": 0.91,
+      "isGroundTruthNT": true,
+      "publishedReference": "Zhang et al., Nature Neurosci 2010",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 30004,
+      "type": "PAM_DA_Chore",
+      "instance": "PAM_Dopamine_Grind",
+      "superclass": "neuromodulatory",
+      "somaSide": "R",
+      "somaLocation": [152000, 230000, 160000],
+      "neurotransmitter": "dopamine",
+      "synapseSign": 1,
+      "ntConfidence": 1.0,
+      "isGroundTruthNT": true,
+      "publishedReference": "Burke et al., Nature 2012; Aso et al., eLife 2014",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 30005,
+      "type": "Octopaminergic_VUM",
+      "instance": "OA_VUM_MotorArousal",
+      "superclass": "neuromodulatory",
+      "somaSide": "R",
+      "somaLocation": [140000, 210000, 150000],
+      "neurotransmitter": "octopamine",
+      "synapseSign": 1,
+      "ntConfidence": 0.92,
+      "isGroundTruthNT": true,
+      "publishedReference": "Suver et al., Curr Biol 2012",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "bodyId": 30006,
+      "type": "NPF_Appetitive",
+      "instance": "NPF_Satiety_Sensor",
+      "superclass": "peptidergic",
+      "somaSide": "R",
+      "somaLocation": [148000, 225000, 165000],
+      "neurotransmitter": "gaba",
+      "synapseSign": -1,
+      "ntConfidence": 0.89,
+      "isGroundTruthNT": true,
+      "publishedReference": "Krashes et al., Cell 2009",
+      "dataSource": "Janelia MaleCNS v1.0"
+    }
+  ],
+  "synapses": [
+    {
+      "preBodyId": 30001,
+      "postBodyId": 30002,
+      "preType": "sLNv_01",
+      "postType": "lLNv_01",
+      "synapseCount": 24,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "preBodyId": 30002,
+      "postBodyId": 30003,
+      "preType": "lLNv_01",
+      "postType": "DN1p_01",
+      "synapseCount": 18,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "preBodyId": 30002,
+      "postBodyId": 30004,
+      "preType": "lLNv_01",
+      "postType": "PAM_DA_Chore",
+      "synapseCount": 32,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "preBodyId": 30002,
+      "postBodyId": 30005,
+      "preType": "lLNv_01",
+      "postType": "Octopaminergic_VUM",
+      "synapseCount": 26,
+      "synapseSign": 1,
+      "neurotransmitter": "acetylcholine",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Janelia MaleCNS v1.0"
+    },
+    {
+      "preBodyId": 30003,
+      "postBodyId": 30006,
+      "preType": "DN1p_01",
+      "postType": "NPF_Appetitive",
+      "synapseCount": 15,
+      "synapseSign": -1,
+      "neurotransmitter": "glutamate",
+      "evidenceLevel": "measured_em",
+      "dataSource": "Janelia MaleCNS v1.0"
+    }
+  ],
+  "statistics": {
+    "neuronCount": 6,
+    "synapseCount": 5,
+    "totalSynapticConnections": 115,
+    "excitatoryCount": 4,
+    "inhibitoryCount": 1
+  },
+  "sensoryInputNeurons": [30001, 30002],
+  "featureDetectorNeurons": [30003],
+  "motorOutputNeurons": [30004, 30005, 30006]
+}

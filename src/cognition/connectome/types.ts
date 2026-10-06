@@ -198,6 +198,17 @@ export interface NeuralStateSnapshot {
     experienceHistory?: any[];
     provenance: string;
   };
+  circadian?: {
+    simHour: number;
+    dayOfWeek: number;
+    activeLifeState: string;
+    stateLabel: string;
+    targetLandmark: string;
+    dopamineGrind: number;
+    octopamineArousal: number;
+    npfHungerDrive: number;
+    pdfArousalTiter: number;
+  };
 }
 
 export type ControllerMode = 'schedule' | 'cognitive' | 'connectome' | 'manual';

@@ -90,10 +90,10 @@ export const CameraController: React.FC = () => {
       makeDefault
       enableDamping
       dampingFactor={0.06}
-      minDistance={2.8}
-      maxDistance={18.0}
-      minPolarAngle={0.1}
-      maxPolarAngle={Math.PI / 2.06} // Keep above floor
+      minDistance={2.0}
+      maxDistance={120.0}
+      minPolarAngle={0.05}
+      maxPolarAngle={Math.PI / 2.02} // Keep above ground
       target={locConfig.camera.target}
     />
   );

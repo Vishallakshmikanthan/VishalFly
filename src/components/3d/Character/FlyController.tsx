@@ -68,6 +68,7 @@ export const FlyController: React.FC = () => {
   const setConnectomeSnapshot = useGameStore((state) => state.setConnectomeSnapshot);
   const currentActivity = useGameStore((state) => state.currentActivity);
   const needs = useGameStore((state) => state.needs);
+  const simulationClock = useGameStore((state) => state.simulationClock);
 
   // Flight vectors
   const position = useRef(new THREE.Vector3(...flyPosition));
@@ -225,6 +226,17 @@ export const FlyController: React.FC = () => {
         targetRotation.current
       );
 
+      const dayMap: Record<string, number> = {
+        Sunday: 0,
+        Monday: 1,
+        Tuesday: 2,
+        Wednesday: 3,
+        Thursday: 4,
+        Friday: 5,
+        Saturday: 6,
+      };
+      const dayIndex = simulationClock?.dayOfWeek ? dayMap[simulationClock.dayOfWeek] ?? 1 : 1;
+
       const result = connectomeFlyController.update(
         [position.current.x, position.current.y, position.current.z],
         [velocity.current.x, velocity.current.y, velocity.current.z],
@@ -233,7 +245,9 @@ export const FlyController: React.FC = () => {
         dt,
         currentGoal,
         currentLocation,
-        needs?.hunger ?? 0
+        needs?.hunger ?? 0,
+        simulationClock?.currentMinutes ?? 360,
+        dayIndex
       );
 
       position.current.set(...result.newPosition);
@@ -377,8 +391,12 @@ export const FlyController: React.FC = () => {
     // Update position
     position.current.addScaledVector(velocity.current, dt);
 
-    // Enforce active room boundaries
-    const { minX, maxX, minY, maxY, minZ, maxZ } = roomBounds;
+    // Enforce active room boundaries (or vast open-world boundary bounds)
+    const effectiveBounds = isAutonomous && controllerMode === 'connectome'
+      ? { minX: -55, maxX: 45, minY: 0.15, maxY: 12.0, minZ: -15, maxZ: 125 }
+      : roomBounds;
+
+    const { minX, maxX, minY, maxY, minZ, maxZ } = effectiveBounds;
 
     if (position.current.x < minX) {
       position.current.x = minX;
@@ -422,26 +440,42 @@ export const FlyController: React.FC = () => {
     // Update global store coordinates
     setFlyPosition([position.current.x, position.current.y, position.current.z]);
 
-    // Dynamic landmark location detection based on active location
+    // Dynamic landmark location detection based on active location and open world
     const px = position.current.x;
     const py = position.current.y;
     const pz = position.current.z;
 
-    const currentLocConfig = LOCATIONS[currentLocation];
-    const activeLandmarks = currentLocConfig ? currentLocConfig.landmarks : [];
-    let spot = `Airspace • ${currentLocConfig ? currentLocConfig.name : 'Room'}`;
+    let spot = `Airspace • ${LOCATIONS[currentLocation]?.name || 'Chennai World'}`;
 
-    for (const lm of activeLandmarks) {
-      if (
-        px >= lm.minX && px <= lm.maxX &&
-        pz >= lm.minZ && pz <= lm.maxZ &&
-        (lm.minY === undefined || py >= lm.minY) &&
-        (lm.maxY === undefined || py <= lm.maxY)
-      ) {
-        spot = lm.name;
-        break;
+    // Sector-based open world spot identification
+    if (pz > 70 && pz < 120) {
+      spot = 'Sairam College Campus & Lecture Hall CS-301';
+    } else if (pz > 20 && pz <= 70 && px < -18) {
+      spot = 'Mega Fitness Gym & Workout Center';
+    } else if (pz > 12 && pz <= 70) {
+      spot = '1 km Commute Thoroughfare & Chennai Bus Transit';
+    } else if (px > 10 && pz < 10) {
+      spot = 'PG Dining Mess & Meal Area';
+    } else if (px < -10 && pz < 10) {
+      spot = 'Apartment Grounds Courtyard & Security Gate';
+    } else if (pz < -4) {
+      spot = 'Balcony Laundry & Clothes Drying Railing';
+    } else {
+      const currentLocConfig = LOCATIONS[currentLocation];
+      const activeLandmarks = currentLocConfig ? currentLocConfig.landmarks : [];
+      for (const lm of activeLandmarks) {
+        if (
+          px >= lm.minX && px <= lm.maxX &&
+          pz >= lm.minZ && pz <= lm.maxZ &&
+          (lm.minY === undefined || py >= lm.minY) &&
+          (lm.maxY === undefined || py <= lm.maxY)
+        ) {
+          spot = lm.name;
+          break;
+        }
       }
     }
+
     setCurrentSpot(spot);
   });
 
