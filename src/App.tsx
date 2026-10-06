@@ -15,8 +15,11 @@ import { DevPanel } from './components/ui/DevPanel';
 import { CognitiveInspector } from './components/ui/CognitiveInspector';
 import { useGameStore } from './store/useGameStore';
 
+import { MetropolitanHUD } from './components/ui/MetropolitanHUD';
+
 export const App: React.FC = () => {
   const activeView = useGameStore((state) => state.activeView);
+  const currentLocation = useGameStore((state) => state.currentLocation);
 
   const [isDevOpen, setIsDevOpen] = useState(false);
   const [isCognitiveOpen, setIsCognitiveOpen] = useState(false);
@@ -37,6 +40,8 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  const isMetropolitan = currentLocation === 'metropolitan';
+
   return (
     <main className="relative w-screen h-screen overflow-hidden bg-[#080a0f] font-sans flex flex-col">
       {/* 1. 3D WebGL Canvas Layer (Active in background) */}
@@ -55,9 +60,15 @@ export const App: React.FC = () => {
         {/* View 1: 3D Simulation World */}
         {activeView === 'simulation' && (
           <div className="w-full h-full relative">
-            <HUD />
-            <ControlsGuide />
-            <ViewControls />
+            {isMetropolitan ? (
+              <MetropolitanHUD />
+            ) : (
+              <>
+                <HUD />
+                <ControlsGuide />
+                <ViewControls />
+              </>
+            )}
           </div>
         )}
 
@@ -97,12 +108,14 @@ export const App: React.FC = () => {
         )}
       </div>
 
-      {/* 4. Docked Bottom Simulation Control Bar */}
-      <div className="relative z-20 px-4 pb-3 pointer-events-none">
-        <div className="max-w-6xl mx-auto pointer-events-auto">
-          <SimulationControlBar />
+      {/* 4. Docked Bottom Simulation Control Bar (Only for Room interiors; Metropolitan HUD has its own integrated bottom bar) */}
+      {!isMetropolitan && (
+        <div className="relative z-20 px-4 pb-3 pointer-events-none">
+          <div className="max-w-6xl mx-auto pointer-events-auto">
+            <SimulationControlBar />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 5. Location Transition Overlay */}
       <TransitionOverlay />

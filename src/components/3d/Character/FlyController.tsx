@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useGameStore, simulationEngine, connectomeFlyController } from '../../../store/useGameStore';
-import { LOCATIONS } from '../../../navigation/locationGraph';
+import { LOCATIONS, LOCATION_WORLD_OFFSETS } from '../../../navigation/locationGraph';
 import { FruitFly } from './FruitFly';
 import { createNavigationGoal, NavigationGoal } from '../../../cognition/connectome/navigation/NavigationGoalTypes';
 
@@ -16,6 +16,7 @@ function resolveActiveNavigationTarget(
   const currentLocConfig = LOCATIONS[locationId as keyof typeof LOCATIONS];
   if (!currentLocConfig) return null;
 
+  const offset = LOCATION_WORLD_OFFSETS[locationId as keyof typeof LOCATION_WORLD_OFFSETS] || [0, 0, 0];
   const waypointCoords = currentLocConfig?.waypoints?.[activeWaypointKey];
   let targetX = 0;
   let targetY = 1.6;
@@ -23,17 +24,17 @@ function resolveActiveNavigationTarget(
   let goalId = activeWaypointKey || 'destination';
 
   if (waypointCoords) {
-    targetX = waypointCoords[0];
-    targetY = waypointCoords[1];
-    targetZ = waypointCoords[2];
+    targetX = waypointCoords[0] + offset[0];
+    targetY = waypointCoords[1] + offset[1];
+    targetZ = waypointCoords[2] + offset[2];
   } else {
     const targetLandmarkName = currentActivity?.definition.targetLandmarkName;
     const targetLm = currentLocConfig?.landmarks.find((lm) => lm.name === targetLandmarkName) ||
       currentLocConfig?.landmarks[0];
     if (targetLm) {
-      targetX = (targetLm.minX + targetLm.maxX) / 2;
-      targetZ = (targetLm.minZ + targetLm.maxZ) / 2;
-      targetY = targetLm.minY !== undefined ? (targetLm.minY + (targetLm.maxY || targetLm.minY + 1.2)) / 2 : 1.6;
+      targetX = (targetLm.minX + targetLm.maxX) / 2 + offset[0];
+      targetZ = (targetLm.minZ + targetLm.maxZ) / 2 + offset[2];
+      targetY = (targetLm.minY !== undefined ? (targetLm.minY + (targetLm.maxY || targetLm.minY + 1.2)) / 2 : 1.6) + offset[1];
       goalId = targetLm.name;
     } else {
       return null;

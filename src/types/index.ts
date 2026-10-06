@@ -56,6 +56,7 @@ export interface RoomBounds {
 export type LightingPreset = 'dawn' | 'afternoon' | 'warm_night';
 
 export type LocationId = 
+  | 'metropolitan'
   | 'bedroom' 
   | 'classroom' 
   | 'dining' 
@@ -63,6 +64,22 @@ export type LocationId =
   | 'grounds' 
   | 'balcony' 
   | 'travel';
+
+export type CameraViewMode = 'free' | 'follow' | 'orbit';
+
+export interface MetropolitanLayers {
+  roads: boolean;
+  buildings: boolean;
+  residential: boolean;
+  commercial: boolean;
+  industrial: boolean;
+  parks: boolean;
+  water: boolean;
+  publicServices: boolean;
+  people: boolean;
+  vehicles: boolean;
+  transit: boolean;
+}
 
 export type ActiveDashboardView = 
   | 'simulation' 

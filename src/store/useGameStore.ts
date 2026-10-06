@@ -26,9 +26,11 @@ import {
   WorkoutType,
   MealType,
   DayOfWeek,
-  ActiveDashboardView
+  ActiveDashboardView,
+  CameraViewMode,
+  MetropolitanLayers
 } from '../types';
-import { LOCATIONS } from '../navigation/locationGraph';
+import { LOCATIONS, LOCATION_WORLD_OFFSETS } from '../navigation/locationGraph';
 import { SimulationEngine } from '../simulation/engine/SimulationEngine';
 import { INITIAL_NEEDS_STATE, DEFAULT_SIMULATION_SETTINGS } from '../simulation/config/defaults';
 import { CognitiveInspectorData } from '../cognition/debug/CognitiveInspectorState';
@@ -114,6 +116,16 @@ interface GameState {
   // Camera & view controls
   resetCameraTrigger: number;
   followFly: boolean;
+  cameraMode: CameraViewMode;
+  setCameraMode: (mode: CameraViewMode) => void;
+  showLabels: boolean;
+  setShowLabels: (show: boolean) => void;
+  toggleShowLabels: () => void;
+
+  // Metropolitan City Layers
+  metropolitanLayers: MetropolitanLayers;
+  toggleMetropolitanLayer: (layer: keyof MetropolitanLayers) => void;
+  setMetropolitanLayer: (layer: keyof MetropolitanLayers, enabled: boolean) => void;
   
   // Visuals
   lightingPreset: LightingPreset;
@@ -183,7 +195,7 @@ interface GameState {
   resetSimulationSettings: () => void;
 }
 
-const initialLoc = LOCATIONS.bedroom;
+const initialLoc = LOCATIONS.metropolitan;
 
 // Create singleton simulation engine
 export const simulationEngine = new SimulationEngine();
@@ -192,7 +204,7 @@ export const useGameStore = create<GameState>((set, get) => {
   const initialClock = simulationEngine.clock.getState();
 
   return {
-    currentLocation: 'bedroom',
+    currentLocation: 'metropolitan',
     transitionState: {
       isTransitioning: false,
       targetLocation: null,
@@ -202,7 +214,7 @@ export const useGameStore = create<GameState>((set, get) => {
     flyPosition: [...initialLoc.spawnPosition] as Vector3Tuple,
     flyRotation: [0, 0, 0],
     flyActivity: 'hovering',
-    currentSpot: 'Center Room Airspace',
+    currentSpot: 'Metropolitan City Airspace',
     isAutonomous: true,
     
     roomBounds: { ...initialLoc.bounds },
@@ -211,6 +223,51 @@ export const useGameStore = create<GameState>((set, get) => {
     locationName: initialLoc.name,
     roomSubLocation: initialLoc.subLocation,
     simulationClock: initialClock,
+
+    // Camera & Visual controls
+    resetCameraTrigger: 0,
+    followFly: false,
+    cameraMode: 'free',
+    setCameraMode: (cameraMode) => {
+      set({ 
+        cameraMode,
+        followFly: cameraMode === 'follow',
+      });
+    },
+    showLabels: true,
+    setShowLabels: (showLabels) => set({ showLabels }),
+    toggleShowLabels: () => set((state) => ({ showLabels: !state.showLabels })),
+
+    // Metropolitan Layers
+    metropolitanLayers: {
+      roads: true,
+      buildings: true,
+      residential: true,
+      commercial: true,
+      industrial: true,
+      parks: true,
+      water: true,
+      publicServices: true,
+      people: true,
+      vehicles: true,
+      transit: true,
+    },
+    toggleMetropolitanLayer: (layer) => {
+      set((state) => ({
+        metropolitanLayers: {
+          ...state.metropolitanLayers,
+          [layer]: !state.metropolitanLayers[layer],
+        },
+      }));
+    },
+    setMetropolitanLayer: (layer, enabled) => {
+      set((state) => ({
+        metropolitanLayers: {
+          ...state.metropolitanLayers,
+          [layer]: enabled,
+        },
+      }));
+    },
 
     currentActivity: null,
     nextActivity: null,
@@ -263,9 +320,6 @@ export const useGameStore = create<GameState>((set, get) => {
     analyticsReport: simulationEngine.getAnalyticsReport(),
     simulationSettings: { ...DEFAULT_SIMULATION_SETTINGS, ...simulationEngine.clock.getSettings() },
     
-    resetCameraTrigger: 0,
-    followFly: false,
-    
     lightingPreset: 'dawn',
     
     setFlyPosition: (flyPosition) => set({ flyPosition }),
@@ -287,9 +341,15 @@ export const useGameStore = create<GameState>((set, get) => {
     },
     
     resetFlyToCenter: () => {
-      const currentLoc = LOCATIONS[get().currentLocation] || LOCATIONS.bedroom;
+      const currentLocId = get().currentLocation;
+      const currentLoc = LOCATIONS[currentLocId] || LOCATIONS.bedroom;
+      const offset = LOCATION_WORLD_OFFSETS[currentLocId] || [0, 0, 0];
       set({
-        flyPosition: [...currentLoc.spawnPosition] as Vector3Tuple,
+        flyPosition: [
+          currentLoc.spawnPosition[0] + offset[0],
+          currentLoc.spawnPosition[1] + offset[1],
+          currentLoc.spawnPosition[2] + offset[2],
+        ] as Vector3Tuple,
         flyRotation: [0, 0, 0],
         flyActivity: 'hovering',
         currentSpot: 'Spawning at ' + currentLoc.name,
@@ -315,10 +375,22 @@ export const useGameStore = create<GameState>((set, get) => {
 
       // 2. Midpoint of transition: swap environment, bounds, spawn position, metadata
       setTimeout(() => {
+        const offset = LOCATION_WORLD_OFFSETS[targetId] || [0, 0, 0];
         set((prev) => ({
           currentLocation: targetId,
-          roomBounds: { ...targetConfig.bounds },
-          flyPosition: [...targetConfig.spawnPosition] as Vector3Tuple,
+          roomBounds: {
+            minX: targetConfig.bounds.minX + offset[0],
+            maxX: targetConfig.bounds.maxX + offset[0],
+            minY: targetConfig.bounds.minY + offset[1],
+            maxY: targetConfig.bounds.maxY + offset[1],
+            minZ: targetConfig.bounds.minZ + offset[2],
+            maxZ: targetConfig.bounds.maxZ + offset[2],
+          },
+          flyPosition: [
+            targetConfig.spawnPosition[0] + offset[0],
+            targetConfig.spawnPosition[1] + offset[1],
+            targetConfig.spawnPosition[2] + offset[2],
+          ] as Vector3Tuple,
           flyRotation: [0, 0, 0],
           flyActivity: 'hovering',
           locationName: targetConfig.name,

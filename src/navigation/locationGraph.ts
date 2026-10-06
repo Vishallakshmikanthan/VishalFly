@@ -1,6 +1,59 @@
 import { LocationConfig, LocationId } from '../types';
 
 export const LOCATIONS: Record<LocationId, LocationConfig> = {
+  metropolitan: {
+    id: 'metropolitan',
+    name: 'Metropolitan City',
+    subLocation: 'Central District • 6 km × 6 km',
+    initialTime: '07:49',
+    timeLabel: 'Morning Rush',
+    description: 'Thriving modern metropolis featuring lakes, luxury apartments, mega shopping malls, elevated metro transit, industrial zones, and bustling boulevards.',
+    spawnPosition: [0, 15, 30],
+    bounds: {
+      minX: -120,
+      maxX: 120,
+      minY: 0.2,
+      maxY: 80,
+      minZ: -120,
+      maxZ: 120,
+    },
+    camera: {
+      position: [110, 85, 110],
+      target: [0, 4, 25],
+      fov: 36,
+    },
+    landmarks: [
+      { name: 'Shopping Mall', minX: -24, maxX: 6, minZ: -15, maxZ: 15, minY: 0, maxY: 25 },
+      { name: 'Metro Station & Viaduct', minX: -30, maxX: -6, minZ: 15, maxZ: 38, minY: 0, maxY: 18 },
+      { name: 'Luxury Apartments Cluster', minX: -5, maxX: 35, minZ: -35, maxZ: -5, minY: 0, maxY: 45 },
+      { name: 'Lake & Waterfront Park', minX: 25, maxX: 75, minZ: 0, maxZ: 50, minY: 0, maxY: 15 },
+      { name: 'Commercial Offices', minX: -50, maxX: -25, minZ: -25, maxZ: 5, minY: 0, maxY: 35 },
+      { name: 'Shops & Restaurants', minX: 5, maxX: 35, minZ: 10, maxZ: 35, minY: 0, maxY: 15 },
+      { name: 'Hospital Complex', minX: 20, maxX: 50, minZ: 55, maxZ: 85, minY: 0, maxY: 20 },
+      { name: 'Industrial Warehouse Zone', minX: -65, maxX: -25, minZ: 35, maxZ: 75, minY: 0, maxY: 15 },
+      { name: 'Residential Suburb', minX: 25, maxX: 60, minZ: 35, maxZ: 60, minY: 0, maxY: 12 },
+      { name: 'Vishal\'s PG Bedroom Building', minX: 12, maxX: 20, minZ: 23, maxZ: 31, minY: 0, maxY: 12 },
+      { name: 'PG Mess & Canteen Building', minX: 22, maxX: 30, minZ: 23, maxZ: 31, minY: 0, maxY: 12 },
+      { name: 'PowerFit Fitness Gym', minX: 15, maxX: 25, minZ: 38, maxZ: 46, minY: 0, maxY: 12 },
+      { name: 'Under-Bridge Sports & Flower Park', minX: -24, maxX: -12, minZ: 24, maxZ: 90, minY: 0, maxY: 8 },
+      { name: 'Sairam College Campus Quad', minX: -42, maxX: -14, minZ: 82, maxZ: 108, minY: 0, maxY: 18 },
+      { name: 'Metro Bus Stop & Roadside Shops', minX: 8, maxX: 14, minZ: -14, maxZ: 2, minY: 0, maxY: 6 },
+    ],
+    waypoints: {
+      center: [0, 8, 25],
+      mall: [-10, 4, 2],
+      metro: [-18, 5, 28],
+      lake: [45, 1, 25],
+      apartments: [15, 6, -20],
+      gym: [20, 2, 42],
+      hospital: [35, 4, 68],
+      bus_stop: [9.5, 2, -3],
+      college: [-28, 2, 95],
+      canteen: [26, 2, 27],
+      bedroom: [16, 2, 27],
+      under_bridge_park: [-18, 2, 50],
+    },
+  },
   bedroom: {
     id: 'bedroom',
     name: "Vishal's PG Bedroom",
@@ -468,3 +521,25 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
     },
   },
 };
+
+/**
+ * World coordinate offsets for placing individual interior routine sectors
+ * into the Unified Metropolitan Open-World continuous space:
+ * - Bedroom: Nested in Greenwood Residency & PG Complex at [20, 0, -8]
+ * - Balcony: Attached behind Bedroom at [21.9, 0, -14.2]
+ * - Dining: In adjacent Canteen Wing at [34, 0, -8]
+ * - Grounds: Complex walking courtyard plaza at [27, 0, 1]
+ * - Gym: PowerFit Mega Gym at [26, 0, 10]
+ * - Classroom: Sairam College Campus Quad at [-28, 0, 95]
+ */
+export const LOCATION_WORLD_OFFSETS: Record<LocationId, [number, number, number]> = {
+  metropolitan: [0, 0, 0],
+  bedroom: [16, 0, 27],
+  balcony: [17.9, 0, 20.8],
+  dining: [26, 0, 27],
+  grounds: [21, 0, 34.5],
+  gym: [20, 0, 42],
+  classroom: [-28, 0, 95],
+  travel: [0, 0, 25],
+};
+

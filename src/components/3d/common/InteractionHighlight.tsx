@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useGameStore, simulationEngine } from '../../../store/useGameStore';
-import { LOCATIONS } from '../../../navigation/locationGraph';
+import { LOCATIONS, LOCATION_WORLD_OFFSETS } from '../../../navigation/locationGraph';
 
 interface InteractionHighlightProps {
   /** Override specific waypoint if desired, otherwise automatically determined */
@@ -58,6 +58,7 @@ export const InteractionHighlight: React.FC<InteractionHighlightProps> = ({
   }
 
   const locConfig = LOCATIONS[currentLocation];
+  const offset = LOCATION_WORLD_OFFSETS[currentLocation] || [0, 0, 0];
   const coords = activeKey && locConfig?.waypoints ? locConfig.waypoints[activeKey] : null;
 
   useFrame((state, delta) => {
@@ -66,8 +67,8 @@ export const InteractionHighlight: React.FC<InteractionHighlightProps> = ({
     const time = state.clock.getElapsedTime();
 
     // Smooth position lerp towards active target
-    const targetY = Math.max(0.04, Math.min(coords[1] * 0.4, 0.2));
-    const targetVec = new THREE.Vector3(coords[0], targetY, coords[2]);
+    const targetY = Math.max(0.04, Math.min(coords[1] * 0.4, 0.2)) + offset[1];
+    const targetVec = new THREE.Vector3(coords[0] + offset[0], targetY, coords[2] + offset[2]);
     currentPos.current.lerp(targetVec, Math.min(delta * 8, 1));
     beaconRef.current.position.copy(currentPos.current);
 
