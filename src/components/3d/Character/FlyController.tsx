@@ -78,6 +78,11 @@ export const FlyController: React.FC = () => {
   const pitch = useRef(0);
   const roll = useRef(0);
 
+  // Performance: Throttle UI/Zustand store dispatches so React doesn't re-render 60 times a second
+  const lastStoreSyncTime = useRef(0);
+  const lastSnapshotSyncTime = useRef(0);
+  const lastSpotSyncTime = useRef(0);
+
   const [isMoving, setIsMoving] = useState(false);
   const [proboscisExt, setProboscisExt] = useState(0);
   const [isFeedingActive, setIsFeedingActive] = useState(false);
@@ -286,7 +291,12 @@ export const FlyController: React.FC = () => {
         setFlyActivity(result.activityPose);
       }
 
-      setConnectomeSnapshot(result.snapshot);
+      // Throttle snapshot dispatch to Zustand store at 15 Hz (~66ms) instead of 60Hz/120Hz
+      const now = performance.now();
+      if (now - lastSnapshotSyncTime.current > 65) {
+        setConnectomeSnapshot(result.snapshot);
+        lastSnapshotSyncTime.current = now;
+      }
     } else if (isAutonomous) {
       // 2. Schedule-Driven & Cognitive Utility Waypoint Navigation
       const currentLocConfig = LOCATIONS[currentLocation];
@@ -429,7 +439,7 @@ export const FlyController: React.FC = () => {
       dt * 12
     );
 
-    // Apply to group
+    // Apply to Three.js Object3D directly (instant 60fps GPU transform, zero React overhead)
     if (groupRef.current) {
       groupRef.current.position.copy(position.current);
       groupRef.current.rotation.y = currentRotation.current;
@@ -437,46 +447,53 @@ export const FlyController: React.FC = () => {
       groupRef.current.rotation.z = roll.current;
     }
 
-    // Update global store coordinates
-    setFlyPosition([position.current.x, position.current.y, position.current.z]);
-
-    // Dynamic landmark location detection based on active location and open world
-    const px = position.current.x;
-    const py = position.current.y;
-    const pz = position.current.z;
-
-    let spot = `Airspace • ${LOCATIONS[currentLocation]?.name || 'Chennai World'}`;
-
-    // Sector-based open world spot identification
-    if (pz > 70 && pz < 120) {
-      spot = 'Sairam College Campus & Lecture Hall CS-301';
-    } else if (pz > 20 && pz <= 70 && px < -18) {
-      spot = 'Mega Fitness Gym & Workout Center';
-    } else if (pz > 12 && pz <= 70) {
-      spot = '1 km Commute Thoroughfare & Chennai Bus Transit';
-    } else if (px > 10 && pz < 10) {
-      spot = 'PG Dining Mess & Meal Area';
-    } else if (px < -10 && pz < 10) {
-      spot = 'Apartment Grounds Courtyard & Security Gate';
-    } else if (pz < -4) {
-      spot = 'Balcony Laundry & Clothes Drying Railing';
-    } else {
-      const currentLocConfig = LOCATIONS[currentLocation];
-      const activeLandmarks = currentLocConfig ? currentLocConfig.landmarks : [];
-      for (const lm of activeLandmarks) {
-        if (
-          px >= lm.minX && px <= lm.maxX &&
-          pz >= lm.minZ && pz <= lm.maxZ &&
-          (lm.minY === undefined || py >= lm.minY) &&
-          (lm.maxY === undefined || py <= lm.maxY)
-        ) {
-          spot = lm.name;
-          break;
-        }
-      }
+    // Performance: Throttle React global store coordinate updates to 20 Hz (~50ms)
+    const nowTime = performance.now();
+    if (nowTime - lastStoreSyncTime.current > 50) {
+      setFlyPosition([position.current.x, position.current.y, position.current.z]);
+      lastStoreSyncTime.current = nowTime;
     }
 
-    setCurrentSpot(spot);
+    // Dynamic landmark location detection (throttled to 5 Hz / 200ms)
+    if (nowTime - lastSpotSyncTime.current > 200) {
+      lastSpotSyncTime.current = nowTime;
+      const px = position.current.x;
+      const py = position.current.y;
+      const pz = position.current.z;
+
+      let spot = `Airspace • ${LOCATIONS[currentLocation]?.name || 'Chennai World'}`;
+
+      // Sector-based open world spot identification
+      if (pz > 70 && pz < 120) {
+        spot = 'Sairam College Campus & Lecture Hall CS-301';
+      } else if (pz > 20 && pz <= 70 && px < -18) {
+        spot = 'Mega Fitness Gym & Workout Center';
+      } else if (pz > 12 && pz <= 70) {
+        spot = '1 km Commute Thoroughfare & Chennai Bus Transit';
+      } else if (px > 10 && pz < 10) {
+        spot = 'PG Dining Mess & Meal Area';
+      } else if (px < -10 && pz < 10) {
+        spot = 'Apartment Grounds Courtyard & Security Gate';
+      } else if (pz < -4) {
+        spot = 'Balcony Laundry & Clothes Drying Railing';
+      } else {
+        const currentLocConfig = LOCATIONS[currentLocation];
+        const activeLandmarks = currentLocConfig ? currentLocConfig.landmarks : [];
+        for (const lm of activeLandmarks) {
+          if (
+            px >= lm.minX && px <= lm.maxX &&
+            pz >= lm.minZ && pz <= lm.maxZ &&
+            (lm.minY === undefined || py >= lm.minY) &&
+            (lm.maxY === undefined || py <= lm.maxY)
+          ) {
+            spot = lm.name;
+            break;
+          }
+        }
+      }
+
+      setCurrentSpot(spot);
+    }
   });
 
   return (

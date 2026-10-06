@@ -98,14 +98,14 @@ export const UnifiedOpenWorldEnvironment: React.FC = () => {
           </group>
         ))}
 
-        {/* Streetlamp Posts along the 1km Highway */}
+        {/* Streetlamp Posts along the 1km Highway (Optimized with Emissive Glow) */}
         {Array.from({ length: 8 }).map((_, idx) => {
           const zPos = -48 + idx * 14;
           return (
             <React.Fragment key={`highway-lamps-${idx}`}>
               {/* Left Side Lamp */}
               <group position={[-7.8, 0, zPos]}>
-                <mesh position={[0, 2.5, 0]} castShadow>
+                <mesh position={[0, 2.5, 0]}>
                   <cylinderGeometry args={[0.06, 0.08, 5.0, 8]} />
                   <meshStandardMaterial color="#334155" metalness={0.8} />
                 </mesh>
@@ -113,11 +113,20 @@ export const UnifiedOpenWorldEnvironment: React.FC = () => {
                   <cylinderGeometry args={[0.04, 0.04, 1.4, 8]} />
                   <meshStandardMaterial color="#334155" metalness={0.8} />
                 </mesh>
-                <pointLight position={[1.2, 4.8, 0]} intensity={1.1} color="#fef08a" distance={16} decay={2} />
+                {/* Glowing Luminaire Fixture */}
+                <mesh position={[1.2, 4.8, 0]}>
+                  <sphereGeometry args={[0.18, 12, 12]} />
+                  <meshStandardMaterial
+                    color="#fef08a"
+                    emissive="#fde047"
+                    emissiveIntensity={2.5}
+                    roughness={0.1}
+                  />
+                </mesh>
               </group>
               {/* Right Side Lamp */}
               <group position={[7.8, 0, zPos]}>
-                <mesh position={[0, 2.5, 0]} castShadow>
+                <mesh position={[0, 2.5, 0]}>
                   <cylinderGeometry args={[0.06, 0.08, 5.0, 8]} />
                   <meshStandardMaterial color="#334155" metalness={0.8} />
                 </mesh>
@@ -125,7 +134,16 @@ export const UnifiedOpenWorldEnvironment: React.FC = () => {
                   <cylinderGeometry args={[0.04, 0.04, 1.4, 8]} />
                   <meshStandardMaterial color="#334155" metalness={0.8} />
                 </mesh>
-                <pointLight position={[-1.2, 4.8, 0]} intensity={1.1} color="#fef08a" distance={16} decay={2} />
+                {/* Glowing Luminaire Fixture */}
+                <mesh position={[-1.2, 4.8, 0]}>
+                  <sphereGeometry args={[0.18, 12, 12]} />
+                  <meshStandardMaterial
+                    color="#fef08a"
+                    emissive="#fde047"
+                    emissiveIntensity={2.5}
+                    roughness={0.1}
+                  />
+                </mesh>
               </group>
             </React.Fragment>
           );
