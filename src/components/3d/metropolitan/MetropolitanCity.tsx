@@ -26,6 +26,9 @@ import { ChennaiTNagarCommercial } from './ChennaiTNagarCommercial';
 import { ChennaiTidelParkOMR } from './ChennaiTidelParkOMR';
 import { ChennaiTownshipApartments } from './ChennaiTownshipApartments';
 import { ChennaiEducationalCampus } from './ChennaiEducationalCampus';
+import { ChennaiBaseMapAndWaterBodies } from './ChennaiBaseMapAndWaterBodies';
+import { ChennaiKapaleeswararTemple } from './ChennaiKapaleeswararTemple';
+import { ChennaiZonedTownshipDistricts } from './ChennaiZonedTownshipDistricts';
 import { useGameStore } from '../../../store/useGameStore';
 
 export const MetropolitanCity: React.FC = () => {
@@ -57,8 +60,11 @@ export const MetropolitanCity: React.FC = () => {
       {/* 2. Hollywood Weather Effects: Rain Streaks, Ground Splashes, Lightning Thunder */}
       <MetropolitanWeatherSystem />
 
-      {/* 3. Infinite Horizon Expanse: 3.2km Terrain, Suburban Houses, Outer Towers & Mountains */}
+      {/* 3. Infinite Horizon Expanse: Endless coastal terrain and distant hills */}
       <MetropolitanInfiniteHorizon />
+
+      {/* 3.1 Chennai Base Geography & Water Bodies: Bay of Bengal, Marina Coast, Adyar River & Bridges */}
+      <ChennaiBaseMapAndWaterBodies />
 
       {/* 4. Dynamic Atmospheric Ambient Lighting */}
       <ambientLight intensity={ambientIntensity} color={ambientColor} />
@@ -119,6 +125,12 @@ export const MetropolitanCity: React.FC = () => {
 
       {/* 9.10 Chennai Educational Campus (Engineering College Clock Tower, Schools, Sports Courts, Buses) */}
       <ChennaiEducationalCampus />
+
+      {/* 9.11 Kapaleeswarar Dravidian Temple & Sacred Tank (Mylapore) */}
+      <ChennaiKapaleeswararTemple />
+
+      {/* 9.12 Zoned Township Districts (Anna Nagar, Porur, Velachery, Besant Nagar, Madhavaram) */}
+      <ChennaiZonedTownshipDistricts />
 
       {/* 10. Under-Bridge Linear Park, Sports Turfs (Cricket, Football) & Flower Gardens */}
       <MetropolitanUnderBridgePark />

@@ -5,173 +5,41 @@ import { useGameStore } from '../../../store/useGameStore';
 
 /**
  * MetropolitanInfiniteHorizon:
- * Procedural infinite urban expanse ensuring zero blank spaces when zooming out:
- * 1. Massive 3,200 x 3,200 Continuous Terrain Foundation
- * 2. 600+ Procedural Suburban Residential Houses with gabled roofs & chimneys (InstancedMesh)
- * 3. 200+ Distant Metropolitan Skyscrapers ringing outer skyline districts (InstancedMesh)
- * 4. Arterial Highway Web radiating 1.5 km to the horizon
- * 5. Animated distant traffic light streams (headlights & taillights)
- * 6. Low-poly Mountain Ranges bounding the horizon basin
+ * Natural, sprawling horizon landscape framing Chennai City:
+ * 1. Massive 3,200 x 3,200 Ground Landscape Foundation
+ * 2. Eastern Coastal Waters of the Bay of Bengal meeting the sea horizon
+ * 3. Western & Southern gentle rolling hills far in the distance
+ * 4. Animated distant arterial highway light streams (headlights & taillights)
+ * NO intrusive white or grey monolithic box rings!
  */
-
 export const MetropolitanInfiniteHorizon: React.FC = () => {
   const timeOfDay = useGameStore((state) => state.timeOfDay);
   const isNightOrEvening = timeOfDay === 'night' || timeOfDay === 'evening';
 
   // -------------------------------------------------------------
-  // 1. URBAN MULTI-STORY APARTMENTS & RESIDENTIAL BLOCKS (INSTANCED MESH)
-  // -------------------------------------------------------------
-  const urbanBlockCount = 420;
-  const urbanBlocksRef = useRef<THREE.InstancedMesh>(null);
-  const urbanTopsRef = useRef<THREE.InstancedMesh>(null);
-
-  // Generate metropolitan residential & commercial blocks between radius 80 and 480
-  const urbanBlockTransforms = useMemo(() => {
-    const list: { pos: [number, number, number]; rotY: number; scale: [number, number, number] }[] = [];
-
-    let count = 0;
-    for (let ring = 0; ring < 6; ring++) {
-      const radius = 85 + ring * 65;
-      const blocksInRing = 35 + ring * 20;
-      for (let i = 0; i < blocksInRing; i++) {
-        if (count >= urbanBlockCount) break;
-        const angle = (i / blocksInRing) * Math.PI * 2 + (ring * 0.2);
-        const jitterX = Math.sin(i * 13) * 14;
-        const jitterZ = Math.cos(i * 17) * 14;
-        const x = Math.cos(angle) * radius + jitterX;
-        const z = Math.sin(angle) * (radius * 0.95) + 25 + jitterZ;
-
-        // Skip central highway & airport corridors
-        if (Math.abs(x) < 22 && z > -70 && z < 110) continue;
-        if (x > 80 && x < 180 && z > 90 && z < 210) continue; // Airport zone
-
-        // Height: 4 to 12 stories (14m to 38m)
-        const height = 14 + (i % 5) * 5 + (ring % 3) * 4;
-        const width = 12 + (i % 4) * 3;
-        const depth = 10 + (i % 3) * 3;
-
-        list.push({
-          pos: [x, height / 2, z],
-          rotY: angle + Math.PI / 2 + (Math.sin(i) * 0.25),
-          scale: [width, height, depth],
-        });
-        count++;
-      }
-    }
-    return list;
-  }, [urbanBlockCount]);
-
-  useMemo(() => {
-    const dummy = new THREE.Object3D();
-    setTimeout(() => {
-      if (urbanBlocksRef.current && urbanTopsRef.current) {
-        urbanBlockTransforms.forEach((b, idx) => {
-          // Main Building Block
-          dummy.position.set(b.pos[0], b.pos[1], b.pos[2]);
-          dummy.rotation.set(0, b.rotY, 0);
-          dummy.scale.set(b.scale[0], b.scale[1], b.scale[2]);
-          dummy.updateMatrix();
-          urbanBlocksRef.current?.setMatrixAt(idx, dummy.matrix);
-
-          // Rooftop Utility / Elevator Penthouse
-          dummy.position.set(b.pos[0], b.pos[1] + b.scale[1] * 0.5 + 1.2, b.pos[2]);
-          dummy.rotation.set(0, b.rotY, 0);
-          dummy.scale.set(b.scale[0] * 0.4, 2.4, b.scale[2] * 0.4);
-          dummy.updateMatrix();
-          urbanTopsRef.current?.setMatrixAt(idx, dummy.matrix);
-        });
-        urbanBlocksRef.current.instanceMatrix.needsUpdate = true;
-        urbanTopsRef.current.instanceMatrix.needsUpdate = true;
-      }
-    }, 50);
-  }, [urbanBlockTransforms]);
-
-  // -------------------------------------------------------------
-  // 2. OUTER SKYLINE SKYSCRAPERS & HIGH-RISE TOWERS (INSTANCED MESH)
-  // -------------------------------------------------------------
-  const towerCount = 380;
-  const towersRef = useRef<THREE.InstancedMesh>(null);
-
-  const towerTransforms = useMemo(() => {
-    const list: { pos: [number, number, number]; scale: [number, number, number] }[] = [];
-    // 8 Surrounding Skyline Business & Financial Districts
-    const districtCenters = [
-      [-260, 180], // West Financial Zone
-      [280, 200],  // East Waterfront Towers
-      [-220, -180],// North Uptown Tech Center
-      [240, -160], // South Gateway
-      [-320, 20],  // Far West Tech City
-      [310, -20],  // Far East Marina Towers
-      [0, -280],   // North Meridian Center
-      [-120, 280], // South-West Cyber Towers
-    ];
-
-    let count = 0;
-    districtCenters.forEach(([dcx, dcz]) => {
-      for (let i = 0; i < 50; i++) {
-        if (count >= towerCount) break;
-        const angle = Math.random() * Math.PI * 2;
-        const dist = 15 + Math.random() * 110;
-        const x = dcx + Math.cos(angle) * dist;
-        const z = dcz + Math.sin(angle) * dist;
-        const height = 45 + Math.random() * 95;
-        const width = 12 + Math.random() * 10;
-        const depth = 12 + Math.random() * 10;
-
-        list.push({
-          pos: [x, height / 2, z],
-          scale: [width, height, depth],
-        });
-        count++;
-      }
-    });
-    return list;
-  }, [towerCount]);
-
-  useMemo(() => {
-    const dummy = new THREE.Object3D();
-    setTimeout(() => {
-      if (towersRef.current) {
-        towerTransforms.forEach((t, idx) => {
-          dummy.position.set(t.pos[0], t.pos[1], t.pos[2]);
-          dummy.rotation.set(0, (idx % 4) * (Math.PI / 4), 0);
-          dummy.scale.set(t.scale[0], t.scale[1], t.scale[2]);
-          dummy.updateMatrix();
-          towersRef.current?.setMatrixAt(idx, dummy.matrix);
-        });
-        towersRef.current.instanceMatrix.needsUpdate = true;
-      }
-    }, 50);
-  }, [towerTransforms]);
-
-  // -------------------------------------------------------------
-  // 3. ANIMATED DISTANT HIGHWAY TRAFFIC TRAILS
+  // ANIMATED DISTANT ARTERIAL HIGHWAY TRAFFIC TRAILS
   // -------------------------------------------------------------
   const trafficHeadlightsRef = useRef<THREE.Points>(null);
   const trafficTaillightsRef = useRef<THREE.Points>(null);
 
   const { headPositions, tailPositions } = useMemo(() => {
-    const lightCount = 300;
+    const lightCount = 240;
     const hPos = new Float32Array(lightCount * 3);
     const tPos = new Float32Array(lightCount * 3);
 
     for (let i = 0; i < lightCount; i++) {
-      // 4 major radial highways
-      const highwayId = i % 4;
-      const progress = (i / lightCount) * 850 + 60;
+      const highwayId = i % 3;
+      const progress = (i / lightCount) * 800 + 120;
 
-      if (highwayId === 0) { // North
+      if (highwayId === 0) { // North (Towards Nellore / Madhavaram)
         hPos[i * 3] = -2.5; hPos[i * 3 + 1] = 0.5; hPos[i * 3 + 2] = -progress;
         tPos[i * 3] = 2.5; tPos[i * 3 + 1] = 0.5; tPos[i * 3 + 2] = -progress;
-      } else if (highwayId === 1) { // South
+      } else if (highwayId === 1) { // South (GST Road towards Chengalpattu)
         hPos[i * 3] = 2.5; hPos[i * 3 + 1] = 0.5; hPos[i * 3 + 2] = progress + 25;
         tPos[i * 3] = -2.5; tPos[i * 3 + 1] = 0.5; tPos[i * 3 + 2] = progress + 25;
-      } else if (highwayId === 2) { // East
-        hPos[i * 3] = progress; hPos[i * 3 + 1] = 0.5; hPos[i * 3 + 2] = 22.5;
-        tPos[i * 3] = progress; tPos[i * 3 + 1] = 0.5; tPos[i * 3 + 2] = 27.5;
-      } else { // West
-        hPos[i * 3] = -progress; hPos[i * 3 + 1] = 0.5; hPos[i * 3 + 2] = 27.5;
-        tPos[i * 3] = -progress; tPos[i * 3 + 1] = 0.5; tPos[i * 3 + 2] = 22.5;
+      } else { // West (Bengaluru Highway / NH48)
+        hPos[i * 3] = -progress; hPos[i * 3 + 1] = 0.5; hPos[i * 3 + 2] = 25;
+        tPos[i * 3] = -progress; tPos[i * 3 + 1] = 0.5; tPos[i * 3 + 2] = 20;
       }
     }
     return { headPositions: hPos, tailPositions: tPos };
@@ -179,7 +47,6 @@ export const MetropolitanInfiniteHorizon: React.FC = () => {
 
   useFrame((_, delta) => {
     if (trafficHeadlightsRef.current && isNightOrEvening) {
-      // Stream lights along highway lines
       const hAttr = trafficHeadlightsRef.current.geometry.attributes.position as THREE.BufferAttribute;
       const tAttr = trafficTaillightsRef.current?.geometry.attributes.position as THREE.BufferAttribute;
       if (!hAttr || !tAttr) return;
@@ -187,30 +54,25 @@ export const MetropolitanInfiniteHorizon: React.FC = () => {
       const hArr = hAttr.array as Float32Array;
       const tArr = tAttr.array as Float32Array;
 
-      for (let i = 0; i < 300; i++) {
-        const highwayId = i % 4;
-        const speed = (28 + (i % 5) * 8) * delta;
+      for (let i = 0; i < 240; i++) {
+        const highwayId = i % 3;
+        const speed = (32 + (i % 4) * 8) * delta;
 
-        if (highwayId === 0) { // Moving North
+        if (highwayId === 0) {
           hArr[i * 3 + 2] -= speed;
-          if (hArr[i * 3 + 2] < -900) hArr[i * 3 + 2] = -80;
+          if (hArr[i * 3 + 2] < -920) hArr[i * 3 + 2] = -120;
           tArr[i * 3 + 2] += speed;
-          if (tArr[i * 3 + 2] > -80) tArr[i * 3 + 2] = -900;
-        } else if (highwayId === 1) { // Moving South
+          if (tArr[i * 3 + 2] > -120) tArr[i * 3 + 2] = -920;
+        } else if (highwayId === 1) {
           hArr[i * 3 + 2] += speed;
-          if (hArr[i * 3 + 2] > 900) hArr[i * 3 + 2] = 90;
+          if (hArr[i * 3 + 2] > 920) hArr[i * 3 + 2] = 120;
           tArr[i * 3 + 2] -= speed;
-          if (tArr[i * 3 + 2] < 90) tArr[i * 3 + 2] = 900;
-        } else if (highwayId === 2) { // Moving East
-          hArr[i * 3] += speed;
-          if (hArr[i * 3] > 900) hArr[i * 3] = 70;
-          tArr[i * 3] -= speed;
-          if (tArr[i * 3] < 70) tArr[i * 3] = 900;
-        } else { // Moving West
+          if (tArr[i * 3 + 2] < 120) tArr[i * 3 + 2] = 920;
+        } else {
           hArr[i * 3] -= speed;
-          if (hArr[i * 3] < -900) hArr[i * 3] = -70;
+          if (hArr[i * 3] < -920) hArr[i * 3] = -120;
           tArr[i * 3] += speed;
-          if (tArr[i * 3] > -70) tArr[i * 3] = -900;
+          if (tArr[i * 3] > -120) tArr[i * 3] = -920;
         }
       }
       hAttr.needsUpdate = true;
@@ -219,25 +81,26 @@ export const MetropolitanInfiniteHorizon: React.FC = () => {
   });
 
   // -------------------------------------------------------------
-  // 4. LOW-POLY HORIZON MOUNTAIN RANGE (BASIN RIM)
+  // DISTANT GENTLE HILLS ON FAR HORIZON (WEST & NORTH-WEST ONLY)
   // -------------------------------------------------------------
   const mountainSegments = useMemo(() => {
     const list: { pos: [number, number, number]; rotY: number; scale: [number, number, number]; color: string }[] = [];
-    const count = 36;
+    const count = 14;
     for (let i = 0; i < count; i++) {
-      const angle = (i / count) * Math.PI * 2;
-      const radius = 1250 + (i % 3) * 120;
+      // Semi-circle on the West side only (angle from Math.PI * 0.6 to Math.PI * 1.4)
+      const angle = Math.PI * 0.6 + (i / count) * (Math.PI * 0.8);
+      const radius = 1100 + (i % 3) * 80;
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
-      const height = 180 + (Math.sin(i * 2.3) * 60) + 70;
-      const width = 280 + (i % 4) * 60;
-      const depth = 220 + (i % 3) * 50;
+      const height = 120 + (Math.sin(i * 2.3) * 40) + 40;
+      const width = 240 + (i % 3) * 50;
+      const depth = 180 + (i % 2) * 40;
 
       list.push({
-        pos: [x, height / 2 - 20, z],
+        pos: [x, height / 2 - 15, z],
         rotY: angle + Math.PI / 2,
         scale: [width, height, depth],
-        color: i % 2 === 0 ? '#1e293b' : '#334155',
+        color: '#1e293b',
       });
     }
     return list;
@@ -251,64 +114,22 @@ export const MetropolitanInfiniteHorizon: React.FC = () => {
         <meshStandardMaterial color="#090d16" roughness={0.96} metalness={0.04} />
       </mesh>
 
-      {/* 2. Concentric Suburban Ring Roads & Arterial Highways */}
+      {/* 2. Extended Arterial Highways (North, South, West) */}
       <group position={[0, 0.005, 25]}>
-        {/* Extended North-South Trans-City Super Highway (2 km long) */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[14, 1900]} />
+        {/* Extended North-South Highway (GST / NH16) */}
+        <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[14, 1800]} />
           <meshStandardMaterial color="#0f172a" roughness={0.85} />
         </mesh>
 
-        {/* Extended East-West Trans-City Super Highway (2 km long) */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[1900, 14]} />
+        {/* Extended Westbound Super Highway (NH48 to Bengaluru) */}
+        <mesh position={[-650, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[1300, 14]} />
           <meshStandardMaterial color="#0f172a" roughness={0.85} />
-        </mesh>
-
-        {/* Outer Ring Boulevard Beltway 1 (Radius 220) */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[215, 225, 48]} />
-          <meshStandardMaterial color="#1e293b" roughness={0.9} />
-        </mesh>
-
-        {/* Outer Ring Boulevard Beltway 2 (Radius 420) */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[415, 425, 64]} />
-          <meshStandardMaterial color="#1e293b" roughness={0.9} />
         </mesh>
       </group>
 
-      {/* 3. 420+ Instanced Urban Multi-story Apartment & Commercial Blocks */}
-      <instancedMesh
-        ref={urbanBlocksRef}
-        args={[undefined, undefined, urbanBlockCount]}
-      >
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#cbd5e1" roughness={0.6} metalness={0.2} />
-      </instancedMesh>
-
-      <instancedMesh
-        ref={urbanTopsRef}
-        args={[undefined, undefined, urbanBlockCount]}
-      >
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#1e293b" roughness={0.7} />
-      </instancedMesh>
-
-      {/* 4. 180+ Instanced Outer Skyline Corporate & Residential Skyscrapers */}
-      <instancedMesh
-        ref={towersRef}
-        args={[undefined, undefined, towerCount]}
-      >
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial
-          color="#334155"
-          metalness={0.65}
-          roughness={0.35}
-        />
-      </instancedMesh>
-
-      {/* 5. Animated Highway Headlights & Taillights (Visible Dusk/Night) */}
+      {/* 3. Animated Highway Headlights & Taillights (Visible Dusk/Night) */}
       {isNightOrEvening && (
         <group>
           {/* Headlights (Warm White / Golden) */}
@@ -347,8 +168,8 @@ export const MetropolitanInfiniteHorizon: React.FC = () => {
         </group>
       )}
 
-      {/* 6. Distant Low-Poly Mountain Basin Rim (Radius 1200 - 1400) */}
-      <group name="HorizonMountainBasin">
+      {/* 4. Distant Low-Poly Western Hills Rim (Far Horizon) */}
+      <group name="HorizonWesternHills">
         {mountainSegments.map((m, idx) => (
           <mesh
             key={`mountain-${idx}`}

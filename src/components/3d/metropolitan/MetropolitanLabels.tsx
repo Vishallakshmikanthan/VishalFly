@@ -2,11 +2,9 @@ import React from 'react';
 import { Html } from '@react-three/drei';
 import {
   Building2,
-  ShoppingBag,
   Building,
   Train,
   Trees,
-  Factory,
   Home,
   Plus,
   Dumbbell,
@@ -19,6 +17,7 @@ import {
   Store,
   School,
   Landmark,
+  Compass,
 } from 'lucide-react';
 import { useGameStore } from '../../../store/useGameStore';
 import { LocationId } from '../../../types';
@@ -36,10 +35,19 @@ interface LandmarkBadge {
 
 /**
  * MetropolitanLabels:
- * 3D pinned floating landmark badges:
- * - Chennai Landmarks: Kathipara Junction, Chennai Central, CMBT, Marina Beach & Lighthouse,
- *   T. Nagar Commercial & Theatres, Tidel Park & OMR, Educational Campus, Airport
- * - Interactive: Clicking room badges instantly opens the Full Room Interface!
+ * 3D pinned floating landmark badges directly matching the Chennai City Master Map:
+ * - Chennai Central & Egmore Railway Stations
+ * - Marina Beach & Chennai Lighthouse
+ * - Kapaleeswarar Temple (Mylapore)
+ * - T. Nagar (Shopping & Commercial)
+ * - Anna Salai (Offices & Malls)
+ * - OMR - IT Corridor (Tech Parks & Tidel Park)
+ * - Kathipara Junction & Guindy IT Hub
+ * - Guindy National Park
+ * - Chennai International Airport (MAA)
+ * - Planned Residential Township & Anna Nagar
+ * - Adyar River & Bridges, Besant Nagar Beach
+ * - Interactive Room Badges: Vishal's PG Bedroom, Canteen, Gym, Lecture Hall CS-301
  */
 export const MetropolitanLabels: React.FC = () => {
   const showLabels = useGameStore((state) => state.showLabels);
@@ -48,6 +56,17 @@ export const MetropolitanLabels: React.FC = () => {
   if (!showLabels) return null;
 
   const badges: LandmarkBadge[] = [
+    // 1. Chennai International Airport
+    {
+      id: 'airport',
+      name: 'Chennai International Airport (MAA)',
+      position: [125, 26, 135],
+      icon: Plane,
+      bgClass: 'bg-[#0369a1]/95',
+      borderClass: 'border-sky-400/80 ring-1 ring-sky-400/50',
+      textClass: 'text-sky-100',
+    },
+    // 2. Kathipara Junction & Guindy
     {
       id: 'kathipara_junction',
       name: 'Kathipara Cloverleaf Flyover (Guindy)',
@@ -57,6 +76,17 @@ export const MetropolitanLabels: React.FC = () => {
       borderClass: 'border-emerald-400/80 ring-1 ring-emerald-400/50',
       textClass: 'text-emerald-100',
     },
+    // 3. Guindy National Park
+    {
+      id: 'guindy_park',
+      name: 'Guindy National Park (Forest Reserve)',
+      position: [-52, 14, 8],
+      icon: Trees,
+      bgClass: 'bg-[#14532d]/95',
+      borderClass: 'border-emerald-500/80',
+      textClass: 'text-emerald-200',
+    },
+    // 4. Chennai Central Railway Station
     {
       id: 'chennai_central',
       name: 'Puratchi Thalaivar Dr. M.G.R Chennai Central',
@@ -66,6 +96,7 @@ export const MetropolitanLabels: React.FC = () => {
       borderClass: 'border-rose-400/80 ring-1 ring-rose-400/50',
       textClass: 'text-rose-100',
     },
+    // 5. CMBT Koyambedu Bus Terminus
     {
       id: 'cmbt_bus',
       name: 'CMBT Koyambedu Bus Terminus',
@@ -75,6 +106,7 @@ export const MetropolitanLabels: React.FC = () => {
       borderClass: 'border-teal-400/80',
       textClass: 'text-teal-100',
     },
+    // 6. Marina Beach & Lighthouse
     {
       id: 'marina_lighthouse',
       name: 'Marina Beach & Chennai Lighthouse',
@@ -84,6 +116,17 @@ export const MetropolitanLabels: React.FC = () => {
       borderClass: 'border-cyan-400/80 ring-1 ring-cyan-400/50',
       textClass: 'text-cyan-100',
     },
+    // 7. Kapaleeswarar Temple (Mylapore)
+    {
+      id: 'kapaleeswarar_temple',
+      name: 'Kapaleeswarar Temple (Mylapore)',
+      position: [58, 22, 15],
+      icon: Landmark,
+      bgClass: 'bg-[#c2410c]/95',
+      borderClass: 'border-amber-400/80 ring-1 ring-amber-400/50',
+      textClass: 'text-amber-100',
+    },
+    // 8. T. Nagar (Shopping & Commercial)
     {
       id: 'tnagar_commercial',
       name: 'T. Nagar • Pondy Bazaar & Theatres',
@@ -93,69 +136,110 @@ export const MetropolitanLabels: React.FC = () => {
       borderClass: 'border-pink-400/80 ring-1 ring-pink-400/50',
       textClass: 'text-pink-100',
     },
+    // 9. Anna Salai (Offices & Malls)
+    {
+      id: 'anna_salai',
+      name: 'Anna Salai (Commercial Expressway & Malls)',
+      position: [-15, 26, -10],
+      icon: Building2,
+      bgClass: 'bg-[#0f172a]/95',
+      borderClass: 'border-blue-400/80',
+      textClass: 'text-blue-100',
+    },
+    // 10. OMR - IT Corridor (Offices & Tech Parks)
     {
       id: 'tidel_park',
-      name: 'Tidel Park • OMR IT Expressway',
+      name: 'OMR - IT Corridor • Tidel Park',
       position: [-65, 26, 48],
       icon: Landmark,
       bgClass: 'bg-[#0f172a]/95',
-      borderClass: 'border-blue-400/80 ring-1 ring-blue-400/50',
-      textClass: 'text-blue-200',
+      borderClass: 'border-cyan-400/80 ring-1 ring-cyan-400/50',
+      textClass: 'text-cyan-200',
     },
+    // 11. Residential Township (Apartments / Villas)
     {
       id: 'township_residences',
-      name: 'Planned Township Residences',
+      name: 'Planned Residential Township',
       position: [45, 22, -65],
       icon: Building,
       bgClass: 'bg-[#1e293b]/95',
       borderClass: 'border-amber-400/80 ring-1 ring-amber-400/50',
       textClass: 'text-amber-200',
     },
+    // 12. Anna Nagar (Residential + Shops)
+    {
+      id: 'anna_nagar',
+      name: 'Anna Nagar (Tower Park & Residences)',
+      position: [-12, 28, -85],
+      icon: Compass,
+      bgClass: 'bg-[#15803d]/95',
+      borderClass: 'border-emerald-400/80 ring-1 ring-emerald-400/50',
+      textClass: 'text-emerald-100',
+    },
+    // 13. Adyar River & Bridges
+    {
+      id: 'adyar_river',
+      name: 'Adyar River & Road Bridges',
+      position: [15, 10, 65],
+      icon: Waves,
+      bgClass: 'bg-[#0369a1]/95',
+      borderClass: 'border-sky-400/80',
+      textClass: 'text-sky-100',
+    },
+    // 14. Besant Nagar (Residential + Beach)
+    {
+      id: 'besant_nagar',
+      name: "Besant Nagar & Elliot's Beach",
+      position: [68, 16, 80],
+      icon: Waves,
+      bgClass: 'bg-[#0f172a]/95',
+      borderClass: 'border-cyan-400/80',
+      textClass: 'text-cyan-200',
+    },
+    // 15. Red Hills Lake
+    {
+      id: 'red_hills_lake',
+      name: 'Red Hills Lake (Freshwater Reservoir)',
+      position: [45, 14, -115],
+      icon: Waves,
+      bgClass: 'bg-[#0284c7]/95',
+      borderClass: 'border-blue-400/80',
+      textClass: 'text-blue-100',
+    },
+    // 16. Porur (Residential + Malls)
+    {
+      id: 'porur_district',
+      name: 'Porur (Residential Township & Malls)',
+      position: [-85, 22, -20],
+      icon: Building,
+      bgClass: 'bg-[#1e293b]/95',
+      borderClass: 'border-indigo-400/80',
+      textClass: 'text-indigo-200',
+    },
+    // 17. Chennai Engineering College & Campus
     {
       id: 'educational_campus',
-      name: 'Chennai Engineering College & Public School',
+      name: 'Chennai Engineering College & School',
       position: [-78, 24, 92],
       icon: School,
       bgClass: 'bg-[#991b1b]/95',
       borderClass: 'border-amber-400/80 ring-1 ring-amber-400/50',
       textClass: 'text-amber-100',
     },
+    // 18. Hospital
     {
-      id: 'airport',
-      name: 'Chennai Meenambakkam Airport (MAA)',
-      position: [125, 26, 135],
-      icon: Plane,
-      bgClass: 'bg-[#0369a1]/90',
-      borderClass: 'border-sky-400/80',
-      textClass: 'text-sky-100',
+      id: 'hospital',
+      name: 'Kamatchi Multi-Specialty Hospital',
+      position: [36, 16, 72],
+      icon: Plus,
+      bgClass: 'bg-[#0f172a]/90',
+      borderClass: 'border-rose-500/60',
+      textClass: 'text-rose-200',
     },
-    {
-      id: 'apex_tower',
-      name: 'The Apex Skyscraper (78m)',
-      position: [-72, 45, -25],
-      icon: Building2,
-      bgClass: 'bg-[#0f172a]/95',
-      borderClass: 'border-cyan-400/80',
-      textClass: 'text-cyan-200',
-    },
-    {
-      id: 'twin_towers',
-      name: 'Twin Towers & Skybridge',
-      position: [-52, 42, 95],
-      icon: Building2,
-      bgClass: 'bg-[#0f172a]/95',
-      borderClass: 'border-indigo-400/80',
-      textClass: 'text-indigo-200',
-    },
-    {
-      id: 'shopping_mall_mega',
-      name: 'Grand Metro Shopping Mall',
-      position: [52, 22, -25],
-      icon: ShoppingBag,
-      bgClass: 'bg-[#831843]/95',
-      borderClass: 'border-pink-500/80',
-      textClass: 'text-pink-200',
-    },
+
+    // -----------------------------------------------------------
+    // INTERACTIVE FULL ROOM INTERFACE ENTRANCES
+    // -----------------------------------------------------------
     {
       id: 'pg_bedroom',
       name: "Vishal's PG Bedroom (Room 204)",
@@ -196,42 +280,6 @@ export const MetropolitanLabels: React.FC = () => {
       textClass: 'text-white',
       locationId: 'classroom',
     },
-    {
-      id: 'hospital',
-      name: 'Kamatchi Multi-Specialty Hospital',
-      position: [36, 16, 72],
-      icon: Plus,
-      bgClass: 'bg-[#0f172a]/90',
-      borderClass: 'border-rose-500/60',
-      textClass: 'text-rose-200',
-    },
-    {
-      id: 'lake_park',
-      name: 'Pallavaram Waterfront Lake & Pagoda',
-      position: [48, 12, 22],
-      icon: Trees,
-      bgClass: 'bg-[#064e3b]/90',
-      borderClass: 'border-emerald-500/60',
-      textClass: 'text-emerald-200',
-    },
-    {
-      id: 'industrial_zone',
-      name: 'Logistics Warehouses & Cargo',
-      position: [-50, 14, 52],
-      icon: Factory,
-      bgClass: 'bg-[#1e293b]/90',
-      borderClass: 'border-slate-500/60',
-      textClass: 'text-slate-200',
-    },
-    {
-      id: 'under_bridge_park',
-      name: 'Sports Turf & Kids Park',
-      position: [-18, 6.5, 52],
-      icon: Trees,
-      bgClass: 'bg-[#064e3b]/90',
-      borderClass: 'border-emerald-500/60',
-      textClass: 'text-emerald-200',
-    },
   ];
 
   return (
@@ -242,7 +290,7 @@ export const MetropolitanLabels: React.FC = () => {
 
         return (
           <group key={b.id} position={b.position}>
-            <Html center distanceFactor={75} style={{ pointerEvents: 'auto' }}>
+            <Html center distanceFactor={85} style={{ pointerEvents: 'auto' }}>
               <div
                 onClick={(e) => {
                   e.stopPropagation();
