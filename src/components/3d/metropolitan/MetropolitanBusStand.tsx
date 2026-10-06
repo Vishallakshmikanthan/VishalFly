@@ -172,14 +172,22 @@ export const MetropolitanBusStand: React.FC = () => {
           />
         </mesh>
 
-        {/* Illuminated Signboard */}
+        {/* Illuminated CMBT Tamil/English Signboard */}
         <group position={[-5.2, 11.5, 0]}>
           <mesh>
-            <boxGeometry args={[0.3, 1.8, 38]} />
+            <boxGeometry args={[0.3, 2.2, 44]} />
             <meshStandardMaterial
-              color="#0284c7"
-              emissive="#0284c7"
+              color="#065f46"
+              emissive="#047857"
               emissiveIntensity={isNightOrEvening ? 2.5 : 1.2}
+            />
+          </mesh>
+          <mesh position={[-0.18, 0, 0]} rotation={[0, -Math.PI / 2, 0]}>
+            <planeGeometry args={[42, 1.6]} />
+            <meshStandardMaterial
+              color="#fef08a"
+              emissive="#facc15"
+              emissiveIntensity={isNightOrEvening ? 2.0 : 1.0}
             />
           </mesh>
         </group>
@@ -244,83 +252,102 @@ export const MetropolitanBusStand: React.FC = () => {
             </mesh>
             <mesh position={[0, 1.1, 0]}>
               <boxGeometry args={[0.8, 0.5, 0.1]} />
-              <meshStandardMaterial color="#1d4ed8" emissive="#1d4ed8" emissiveIntensity={0.8} />
+              <meshStandardMaterial color="#047857" emissive="#059669" emissiveIntensity={0.8} />
             </mesh>
           </group>
         </group>
       ))}
 
       {/* ------------------------------------------------------------- */}
-      {/* 5. PARKED & BOARDING BUSES                                    */}
+      {/* 5. PARKED & BOARDING BUSES (AUTHENTIC TAMIL NADU LIVERIES)     */}
       {/* ------------------------------------------------------------- */}
-      {/* Bus 1 at Bay 1: Red Deluxe Intercity Express */}
+      {/* Bus 1 at Bay 1: SETC Ultra-Deluxe Crimson Red */}
       <CityBus
         position={[-3, 0, -24]}
         rotation={[0, -Math.PI / 2, 0]}
-        bodyColor="#dc2626"
-        routeNumber="EXP-1"
-        isMultiAxle={false}
+        bodyColor="#991b1b"
+        roofColor="#f8fafc"
+        isMultiAxle={true}
       />
 
-      {/* Bus 2 at Bay 2: Blue Volvo Multi-axle AC Sleeper Coach */}
+      {/* Bus 2 at Bay 2: TNSTC Villupuram Green & Cream */}
       <CityBus
         position={[-4.5, 0, -14]}
         rotation={[0, -Math.PI / 2, 0]}
-        bodyColor="#1d4ed8"
-        roofColor="#e2e8f0"
-        routeNumber="VOLVO-AC"
-        isMultiAxle={true}
+        bodyColor="#15803d"
+        roofColor="#fef08a"
+        isMultiAxle={false}
       />
 
-      {/* Bus 3 at Bay 3: Green City Transport Low-Floor */}
+      {/* Bus 3 at Bay 3: MTC Chennai Red City Bus */}
       <CityBus
         position={[-3, 0, -4]}
         rotation={[0, -Math.PI / 2, 0]}
-        bodyColor="#15803d"
-        routeNumber="21G"
+        bodyColor="#dc2626"
+        roofColor="#ffffff"
         isMultiAxle={false}
       />
 
-      {/* Bus 4 at Bay 4: Orange Metro Feeder Transit */}
+      {/* Bus 4 at Bay 4: TNSTC Salem Deep Green Deluxe */}
       <CityBus
         position={[-3, 0, 6]}
         rotation={[0, -Math.PI / 2, 0]}
-        bodyColor="#ea580c"
-        routeNumber="M-40"
+        bodyColor="#166534"
+        roofColor="#fef08a"
         isMultiAxle={false}
       />
 
-      {/* Bus 5 at Bay 5: White & Blue Superfast State Coach */}
+      {/* Bus 5 at Bay 5: Blue Volvo Multi-axle AC Sleeper Coach */}
       <CityBus
         position={[-4.5, 0, 16]}
         rotation={[0, -Math.PI / 2, 0]}
-        bodyColor="#0284c7"
+        bodyColor="#1d4ed8"
         roofColor="#f8fafc"
-        routeNumber="SF-99"
         isMultiAxle={true}
       />
 
-      {/* Bus 6 at Bay 6: Yellow School / University Campus Bus */}
+      {/* Bus 6 at Bay 6: MTC Chennai Green Low-Floor Electric */}
       <CityBus
         position={[-3, 0, 26]}
         rotation={[0, -Math.PI / 2, 0]}
-        bodyColor="#eab308"
-        routeNumber="CAMPUS"
+        bodyColor="#059669"
+        roofColor="#f8fafc"
         isMultiAxle={false}
       />
 
       {/* ------------------------------------------------------------- */}
-      {/* 6. PASSENGER BARRICADES & ROADWAY MARKINGS                    */}
+      {/* 6. AAVIN MILK BOOTH & TEA STALL AT ENTRANCE                   */}
       {/* ------------------------------------------------------------- */}
-      <group position={[-16, 0.03, 0]}>
-        {/* Driveway Arrow Markings (Bus In & Out) */}
-        {[-20, 0, 20].map((az, ai) => (
-          <mesh key={`arrow-${ai}`} position={[0, 0.01, az]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[1.6, 4.5]} />
-            <meshBasicMaterial color="#ffffff" opacity={0.8} transparent />
-          </mesh>
-        ))}
+      <group position={[12, 0, 32]}>
+        <mesh position={[0, 1.4, 0]} castShadow>
+          <boxGeometry args={[3.2, 2.6, 2.8]} />
+          <meshStandardMaterial color="#0284c7" roughness={0.4} />
+        </mesh>
+        <mesh position={[0, 2.8, 1.45]}>
+          <boxGeometry args={[3.0, 0.6, 0.1]} />
+          <meshStandardMaterial color="#38bdf8" emissive="#0284c7" emissiveIntensity={1.8} />
+        </mesh>
+        <mesh position={[0, 1.2, 1.42]}>
+          <planeGeometry args={[2.4, 1.2]} />
+          <meshStandardMaterial color="#0f172a" />
+        </mesh>
       </group>
+
+      {/* ------------------------------------------------------------- */}
+      {/* 7. CHENNAI AUTO-RICKSHAW STAND (YELLOW & BLACK AUTOS)          */}
+      {/* ------------------------------------------------------------- */}
+      {[-24, -14, -4, 6, 16].map((az, ai) => (
+        <group key={`cmbt-auto-${ai}`} position={[-20, 0, az]} rotation={[0, -Math.PI / 2, 0]}>
+          <mesh position={[0, 1.1, 0]} castShadow>
+            <boxGeometry args={[1.3, 0.65, 2.0]} />
+            <meshStandardMaterial color="#facc15" roughness={0.3} />
+          </mesh>
+          <mesh position={[0, 0.55, 0]} castShadow>
+            <boxGeometry args={[1.35, 0.55, 2.1]} />
+            <meshStandardMaterial color="#090d16" roughness={0.8} />
+          </mesh>
+        </group>
+      ))}
     </group>
   );
 };

@@ -20,6 +20,12 @@ import { MetropolitanAirport } from './MetropolitanAirport';
 import { MetropolitanRailwayStation } from './MetropolitanRailwayStation';
 import { MetropolitanBusStand } from './MetropolitanBusStand';
 import { MetropolitanTowersDistrict } from './MetropolitanTowersDistrict';
+import { ChennaiKathiparaJunction } from './ChennaiKathiparaJunction';
+import { ChennaiMarinaAndLighthouse } from './ChennaiMarinaAndLighthouse';
+import { ChennaiTNagarCommercial } from './ChennaiTNagarCommercial';
+import { ChennaiTidelParkOMR } from './ChennaiTidelParkOMR';
+import { ChennaiTownshipApartments } from './ChennaiTownshipApartments';
+import { ChennaiEducationalCampus } from './ChennaiEducationalCampus';
 import { useGameStore } from '../../../store/useGameStore';
 
 export const MetropolitanCity: React.FC = () => {
@@ -95,6 +101,24 @@ export const MetropolitanCity: React.FC = () => {
 
       {/* 9.4 Metropolitan Towers & Skyscraper District (Twin Towers, Helipads, Mega Mall II, High-Rise Apts) */}
       <MetropolitanTowersDistrict />
+
+      {/* 9.5 Iconic Kathipara Cloverleaf Flyover Junction (Guindy) */}
+      <ChennaiKathiparaJunction />
+
+      {/* 9.6 Marina Beach Promenade & Chennai Maritime Lighthouse */}
+      <ChennaiMarinaAndLighthouse />
+
+      {/* 9.7 T. Nagar Commercial Hub, Showrooms, Theatres & Food Stalls */}
+      <ChennaiTNagarCommercial />
+
+      {/* 9.8 Tidel Park & OMR IT Expressway Corridor */}
+      <ChennaiTidelParkOMR />
+
+      {/* 9.9 Planned Township Residential Enclaves (Realistic Windows, Balconies, ACs, Water Tanks) */}
+      <ChennaiTownshipApartments />
+
+      {/* 9.10 Chennai Educational Campus (Engineering College Clock Tower, Schools, Sports Courts, Buses) */}
+      <ChennaiEducationalCampus />
 
       {/* 10. Under-Bridge Linear Park, Sports Turfs (Cricket, Football) & Flower Gardens */}
       <MetropolitanUnderBridgePark />

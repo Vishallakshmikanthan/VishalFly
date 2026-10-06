@@ -13,7 +13,12 @@ import {
   Bus,
   GraduationCap,
   Plane,
-  Utensils
+  Utensils,
+  Navigation,
+  Waves,
+  Store,
+  School,
+  Landmark,
 } from 'lucide-react';
 import { useGameStore } from '../../../store/useGameStore';
 import { LocationId } from '../../../types';
@@ -32,8 +37,8 @@ interface LandmarkBadge {
 /**
  * MetropolitanLabels:
  * 3D pinned floating landmark badges:
- * - Airport, Central Railway Station, Central Bus Terminal, Skyscraper Towers,
- *   Shopping Malls, Apartments, PG Room, Canteen, Gym, Lecture Hall
+ * - Chennai Landmarks: Kathipara Junction, Chennai Central, CMBT, Marina Beach & Lighthouse,
+ *   T. Nagar Commercial & Theatres, Tidel Park & OMR, Educational Campus, Airport
  * - Interactive: Clicking room badges instantly opens the Full Room Interface!
  */
 export const MetropolitanLabels: React.FC = () => {
@@ -44,31 +49,85 @@ export const MetropolitanLabels: React.FC = () => {
 
   const badges: LandmarkBadge[] = [
     {
+      id: 'kathipara_junction',
+      name: 'Kathipara Cloverleaf Flyover (Guindy)',
+      position: [0, 16, 50],
+      icon: Navigation,
+      bgClass: 'bg-[#15803d]/95',
+      borderClass: 'border-emerald-400/80 ring-1 ring-emerald-400/50',
+      textClass: 'text-emerald-100',
+    },
+    {
+      id: 'chennai_central',
+      name: 'Puratchi Thalaivar Dr. M.G.R Chennai Central',
+      position: [-55, 24, -40],
+      icon: Train,
+      bgClass: 'bg-[#991b1b]/95',
+      borderClass: 'border-rose-400/80 ring-1 ring-rose-400/50',
+      textClass: 'text-rose-100',
+    },
+    {
+      id: 'cmbt_bus',
+      name: 'CMBT Koyambedu Bus Terminus',
+      position: [-38, 16, 12],
+      icon: Bus,
+      bgClass: 'bg-[#065f46]/95',
+      borderClass: 'border-teal-400/80',
+      textClass: 'text-teal-100',
+    },
+    {
+      id: 'marina_lighthouse',
+      name: 'Marina Beach & Chennai Lighthouse',
+      position: [78, 28, 18],
+      icon: Waves,
+      bgClass: 'bg-[#0369a1]/95',
+      borderClass: 'border-cyan-400/80 ring-1 ring-cyan-400/50',
+      textClass: 'text-cyan-100',
+    },
+    {
+      id: 'tnagar_commercial',
+      name: 'T. Nagar • Pondy Bazaar & Theatres',
+      position: [-25, 20, -42],
+      icon: Store,
+      bgClass: 'bg-[#831843]/95',
+      borderClass: 'border-pink-400/80 ring-1 ring-pink-400/50',
+      textClass: 'text-pink-100',
+    },
+    {
+      id: 'tidel_park',
+      name: 'Tidel Park • OMR IT Expressway',
+      position: [-65, 26, 48],
+      icon: Landmark,
+      bgClass: 'bg-[#0f172a]/95',
+      borderClass: 'border-blue-400/80 ring-1 ring-blue-400/50',
+      textClass: 'text-blue-200',
+    },
+    {
+      id: 'township_residences',
+      name: 'Planned Township Residences',
+      position: [45, 22, -65],
+      icon: Building,
+      bgClass: 'bg-[#1e293b]/95',
+      borderClass: 'border-amber-400/80 ring-1 ring-amber-400/50',
+      textClass: 'text-amber-200',
+    },
+    {
+      id: 'educational_campus',
+      name: 'Chennai Engineering College & Public School',
+      position: [-78, 24, 92],
+      icon: School,
+      bgClass: 'bg-[#991b1b]/95',
+      borderClass: 'border-amber-400/80 ring-1 ring-amber-400/50',
+      textClass: 'text-amber-100',
+    },
+    {
       id: 'airport',
-      name: 'International Airport',
+      name: 'Chennai Meenambakkam Airport (MAA)',
       position: [125, 26, 135],
       icon: Plane,
       bgClass: 'bg-[#0369a1]/90',
       borderClass: 'border-sky-400/80',
       textClass: 'text-sky-100',
-    },
-    {
-      id: 'railway_station',
-      name: 'Central Railway Station',
-      position: [-55, 24, -40],
-      icon: Train,
-      bgClass: 'bg-[#1e3a8a]/90',
-      borderClass: 'border-blue-400/80',
-      textClass: 'text-blue-100',
-    },
-    {
-      id: 'bus_terminal',
-      name: 'Central Bus Terminal',
-      position: [-38, 16, 12],
-      icon: Bus,
-      bgClass: 'bg-[#065f46]/90',
-      borderClass: 'border-emerald-400/80',
-      textClass: 'text-emerald-100',
     },
     {
       id: 'apex_tower',
@@ -96,15 +155,6 @@ export const MetropolitanLabels: React.FC = () => {
       bgClass: 'bg-[#831843]/95',
       borderClass: 'border-pink-500/80',
       textClass: 'text-pink-200',
-    },
-    {
-      id: 'luxury_apartments',
-      name: 'Greenwood Sky Residences',
-      position: [15, 32, -68],
-      icon: Building,
-      bgClass: 'bg-[#0f172a]/95',
-      borderClass: 'border-amber-500/80',
-      textClass: 'text-amber-200',
     },
     {
       id: 'pg_bedroom',

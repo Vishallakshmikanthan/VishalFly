@@ -12,6 +12,8 @@ import { useGameStore } from '../../../store/useGameStore';
  */
 export const MetropolitanRoadsAndInfrastructure: React.FC = () => {
   const visible = useGameStore((state) => state.metropolitanLayers.roads);
+  const timeOfDay = useGameStore((state) => state.timeOfDay);
+  const isNightOrEvening = timeOfDay === 'night' || timeOfDay === 'evening';
 
   const crosswalkPositions = useMemo(() => [
     { x: 0, z: 22, rot: 0, width: 14 },
@@ -271,6 +273,22 @@ export const MetropolitanRoadsAndInfrastructure: React.FC = () => {
           </group>
         </React.Fragment>
       ))}
+
+      {/* Dynamic Night Street Illumination (Warm Golden Street Lighting) */}
+      {isNightOrEvening && (
+        <group name="StreetIlluminationRadiance">
+          {[-45, -10, 27, 65].map((zPoint, pIdx) => (
+            <pointLight
+              key={`st-light-${pIdx}`}
+              position={[0, 6.5, zPoint]}
+              color="#fef08a"
+              intensity={2.2}
+              distance={42}
+              decay={2}
+            />
+          ))}
+        </group>
+      )}
 
       {/* 6. Intersection Traffic Lights */}
       {[
